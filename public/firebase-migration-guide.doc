@@ -1,0 +1,393 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="UTF-8"><title>Firebase Migration Guide</title>
+<style>
+body { font-family: 'Calibri', Arial, sans-serif; font-size: 12pt; line-height: 1.6; margin: 40px; color: #1a1a1a; }
+h1 { font-size: 22pt; color: #d97706; border-bottom: 3px solid #d97706; padding-bottom: 8px; margin-top: 30px; }
+h2 { font-size: 16pt; color: #f59e0b; margin-top: 25px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+h3 { font-size: 13pt; color: #374151; margin-top: 18px; }
+p { margin: 6px 0; }
+ul, ol { margin: 6px 0 6px 20px; }
+li { margin: 3px 0; }
+code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 10pt; font-family: 'Consolas', monospace; }
+pre { background: #1e293b; color: #e2e8f0; padding: 12px 16px; border-radius: 6px; font-size: 10pt; font-family: 'Consolas', monospace; overflow-x: auto; }
+.note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 12px 0; border-radius: 4px; }
+.warn { background: #fef2f2; border-left: 4px solid #ef4444; padding: 10px 14px; margin: 12px 0; border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+th, td { border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; font-size: 11pt; }
+th { background: #f3f4f6; font-weight: bold; }
+</style></head>
+<body>
+
+<h1>MA'AD AHLIL AATHAR Assessment System<br>Firebase Migration Guide</h1>
+<p><em>Version 1.0 — May 2026</em></p>
+
+<h2>1. What is Firebase?</h2>
+<p>Firebase is Google's backend-as-a-service platform. It provides:</p>
+<ul>
+<li><strong>Firebase Authentication</strong> — email/password login, Google login, etc.</li>
+<li><strong>Cloud Firestore</strong> — a real-time NoSQL database (replaces IndexedDB)</li>
+<li><strong>Firebase Hosting</strong> — deploy your app with one command</li>
+<li><strong>Security Rules</strong> — control who can read/write data</li>
+</ul>
+
+<div class="note"><strong>Cost:</strong> Firebase has a generous free tier (Spark Plan) — 50K reads/day, 20K writes/day, 10 GB storage. Enough for a small school.</div>
+
+<h2>2. Prerequisites</h2>
+<ul>
+<li>A Google account (Gmail)</li>
+<li>Node.js installed (already have it)</li>
+<li>Basic understanding of JavaScript/Promises</li>
+</ul>
+
+<h2>3. Step-by-Step Migration Plan</h2>
+
+<h3>3.1 Create a Firebase Project</h3>
+<ol>
+<li>Go to <a href="https://console.firebase.google.com">console.firebase.google.com</a></li>
+<li>Click "Add project" → name it <code>maad-sas</code> → follow the prompts</li>
+<li>Once created, click the web icon <code>&lt;/&gt;</code> to register your app</li>
+<li>Copy the <strong>firebaseConfig</strong> object — you'll need it later</li>
+</ol>
+
+<h3>3.2 Enable Authentication</h3>
+<ol>
+<li>In the Firebase Console, go to "Authentication" → "Sign-in method"</li>
+<li>Enable "Email/Password" provider</li>
+<li>(Optional) Enable "Google" for Google login</li>
+</ol>
+
+<h3>3.3 Create Firestore Database</h3>
+<ol>
+<li>Go to "Firestore Database" → "Create database"</li>
+<li>Choose "Start in test mode" (we'll lock it down later)</li>
+<li>Choose a location closest to your users (e.g., <code>eur3</code> for Europe)</li>
+</ol>
+
+<h3>3.4 Install Firebase SDK</h3>
+<pre>npm install firebase</pre>
+
+<h3>3.5 Create Firebase Configuration File</h3>
+<p>Create a new file: <code>src/lib/firebase.js</code></p>
+<pre>import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+</pre>
+
+<h2>4. Migration Steps</h2>
+
+<h3>4.1 Migrate Authentication (authStore.js)</h3>
+<p><strong>File:</strong> <code>src/store/authStore.js</code></p>
+<p>Replace the existing login/logout/init logic with Firebase Auth calls:</p>
+
+<h4>Replacement code for authStore.js:</h4>
+<pre>import { create } from 'zustand';
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
+
+const useAuthStore = create((set, get) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+
+  init: () => {
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (userDoc.exists()) {
+          set({ user: { id: firebaseUser.uid, ...userDoc.data() }, isAuthenticated: true, isLoading: false });
+        } else {
+          set({ isLoading: false });
+        }
+      } else {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      }
+    });
+  },
+
+  login: async (email, password) => {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+    if (!userDoc.exists()) throw new Error('User profile not found');
+    const userData = { id: result.user.uid, ...userDoc.data() };
+    set({ user: userData, isAuthenticated: true });
+    return userData;
+  },
+
+  logout: async () => {
+    await signOut(auth);
+    set({ user: null, isAuthenticated: false });
+  },
+
+  addUser: async (data) => {
+    const { createUserWithEmailAndPassword } = await import('firebase/auth');
+    const result = await createUserWithEmailAndPassword(auth, data.email, data.password);
+    const { password, ...safeData } = data;
+    await setDoc(doc(db, 'users', result.user.uid), {
+      ...safeData,
+      createdAt: new Date().toISOString(),
+    });
+    return result.user.uid;
+  },
+
+  // Keep getUsers, updateUser, deleteUser using Firestore doc operations
+  // getUsers: async () => { ... } fetch all docs from 'users' collection
+  // updateUser: async (id, data) => { ... } update doc
+  // deleteUser: async (id) => { ... } delete doc
+}));
+
+export default useAuthStore;</pre>
+
+<h3>4.2 Migrate Database (replace db/database.js)</h3>
+<p><strong>File:</strong> <code>src/db/database.js</code> — replace entirely</p>
+<p>The current Dexie IndexedDB schema needs to be translated to Firestore collections:</p>
+
+<table>
+<tr><th>Dexie Table</th><th>Firestore Collection</th><th>Document ID</th></tr>
+<tr><td>users</td><td>users</td><td>Firebase Auth UID</td></tr>
+<tr><td>settings</td><td>settings</td><td>"school_settings"</td></tr>
+<tr><td>classes</td><td>classes</td><td>auto-generated</td></tr>
+<tr><td>students</td><td>students</td><td>auto-generated</td></tr>
+<tr><td>subjects</td><td>subjects</td><td>auto-generated</td></tr>
+<tr><td>results</td><td>results</td><td>auto-generated</td></tr>
+<tr><td>cumulativeAverages</td><td>cumulativeAverages</td><td>auto-generated</td></tr>
+<tr><td>promotions</td><td>promotions</td><td>auto-generated</td></tr>
+<tr><td>attendance</td><td>attendance</td><td>auto-generated</td></tr>
+</table>
+
+<pre>// src/db/database.js — Firestore version
+import { db } from '../lib/firebase';
+
+// Helper: convert Firestore collection snapshot to array
+const snapshotToArray = (snapshot) => {
+  const arr = [];
+  snapshot.forEach(doc => arr.push({ id: doc.id, ...doc.data() }));
+  return arr;
+};
+
+export { db, snapshotToArray };
+export default db;</pre>
+
+<h3>4.3 Migrate a Store (Example: studentsStore.js)</h3>
+<p><strong>File:</strong> <code>src/store/studentsStore.js</code></p>
+<p>Replace Dexie calls with Firestore calls. Here's the pattern for every store:</p>
+
+<pre>import { create } from 'zustand';
+import { 
+  collection, getDocs, getDoc, doc, addDoc, 
+  updateDoc, deleteDoc, query, where, orderBy 
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
+
+const useStudentsStore = create((set, get) => ({
+  students: [],
+  loading: true,
+
+  loadStudents: async () => {
+    const snapshot = await getDocs(collection(db, 'students'));
+    const students = [];
+    snapshot.forEach(d => students.push({ id: d.id, ...d.data() }));
+    set({ students, loading: false });
+  },
+
+  getStudent: async (id) => {
+    const docSnap = await getDoc(doc(db, 'students', String(id)));
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+  },
+
+  addStudent: async (data) => {
+    const docRef = await addDoc(collection(db, 'students'), {
+      ...data,
+      createdAt: new Date().toISOString(),
+    });
+    const all = await getDocs(collection(db, 'students'));
+    const students = [];
+    all.forEach(d => students.push({ id: d.id, ...d.data() }));
+    set({ students });
+    return docRef.id;
+  },
+
+  updateStudent: async (id, data) => {
+    await updateDoc(doc(db, 'students', String(id)), data);
+    const snapshot = await getDocs(collection(db, 'students'));
+    const students = [];
+    snapshot.forEach(d => students.push({ id: d.id, ...d.data() }));
+    set({ students });
+  },
+
+  deleteStudent: async (id) => {
+    await deleteDoc(doc(db, 'students', String(id)));
+    const snapshot = await getDocs(collection(db, 'students'));
+    const students = [];
+    snapshot.forEach(d => students.push({ id: d.id, ...d.data() }));
+    set({ students });
+  },
+
+  bulkAddStudents: async (records) => {
+    let success = 0;
+    let errors = 0;
+    for (const record of records) {
+      try {
+        await addDoc(collection(db, 'students'), {
+          ...record, createdAt: new Date().toISOString(),
+        });
+        success++;
+      } catch { errors++; }
+    }
+    const snapshot = await getDocs(collection(db, 'students'));
+    const students = [];
+    snapshot.forEach(d => students.push({ id: d.id, ...d.data() }));
+    set({ students });
+    return { success, errors };
+  },
+}));
+
+export default useStudentsStore;</pre>
+
+<h3>4.4 Migrate Settings Store (special case — single document)</h3>
+<pre>import { create } from 'zustand';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+
+const defaultSettings = {
+  schoolName: "MA'AD AHLIL AATHAR",
+  address: 'No 3, Mosadoluwa Street...',
+  phones: '08033719211, 08034660100, 08062837011',
+  // ... other defaults
+};
+
+const useSettingsStore = create((set) => ({
+  settings: null,
+  loading: true,
+
+  loadSettings: async () => {
+    const docSnap = await getDoc(doc(db, 'settings', 'school_settings'));
+    if (docSnap.exists()) {
+      set({ settings: docSnap.data(), loading: false });
+    } else {
+      await setDoc(doc(db, 'settings', 'school_settings'), defaultSettings);
+      set({ settings: defaultSettings, loading: false });
+    }
+  },
+
+  updateSettings: async (data) => {
+    await setDoc(doc(db, 'settings', 'school_settings'), data);
+    set({ settings: data });
+  },
+}));
+
+export default useSettingsStore;</pre>
+
+<h2>5. Database Conversion Script</h2>
+<p>To migrate existing data from IndexedDB to Firestore, create a one-time script:</p>
+<pre>// src/lib/migrateToFirebase.js
+import { collection, addDoc } from 'firebase/firestore';
+import { db as firestoreDb } from './firebase';
+import localDb from '../db/database';
+
+export async function migrateLocalData() {
+  const tables = ['users', 'settings', 'classes', 'students', 'subjects', 'results', 'cumulativeAverages', 'promotions', 'attendance'];
+  
+  for (const table of tables) {
+    const data = await localDb.table(table).toArray();
+    for (const item of data) {
+      const { id, ...rest } = item;
+      if (table === 'settings') {
+        await setDoc(doc(firestoreDb, 'settings', 'school_settings'), rest);
+      } else {
+        await addDoc(collection(firestoreDb, table), rest);
+      }
+    }
+    console.log(`Migrated ${data.length} records from ${table}`);
+  }
+  alert('Migration complete!');
+}</pre>
+
+<h2>6. Security Rules</h2>
+<p>In Firebase Console → Firestore → Rules, set these rules:</p>
+<pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Admin can read/write everything
+    match /{document=**} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid != null;
+    }
+    
+    // Users can only read their own profile
+    match /users/{userId} {
+      allow read: if request.auth != null 
+        && request.auth.uid == userId;
+      allow write: if request.auth != null 
+        && request.auth.token.role == 'admin';
+    }
+  }
+}</pre>
+
+<h2>7. Deployment</h2>
+<ol>
+<li>Install Firebase CLI: <code>npm install -g firebase-tools</code></li>
+<li>Login: <code>firebase login</code></li>
+<li>Init: <code>firebase init</code> → select Hosting → choose <code>dist/</code> as public directory</li>
+<li>Build: <code>npm run build</code></li>
+<li>Deploy: <code>firebase deploy</code></li>
+<li>Your app is live at <code>https://YOUR_PROJECT.web.app</code></li>
+</ol>
+
+<h2>8. Migration Checklist</h2>
+<table>
+<tr><th>Step</th><th>File</th><th>Status</th></tr>
+<tr><td>Create Firebase project</td><td>—</td><td>☐</td></tr>
+<tr><td>Enable Auth + Firestore</td><td>—</td><td>☐</td></tr>
+<tr><td>Install firebase SDK</td><td>—</td><td>☐</td></tr>
+<tr><td>Create src/lib/firebase.js</td><td>firebase.js</td><td>☐</td></tr>
+<tr><td>Migrate authStore</td><td>src/store/authStore.js</td><td>☐</td></tr>
+<tr><td>Migrate settingsStore</td><td>src/store/settingsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate classesStore</td><td>src/store/classesStore.js</td><td>☐</td></tr>
+<tr><td>Migrate studentsStore</td><td>src/store/studentsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate subjectsStore</td><td>src/store/subjectsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate resultsStore</td><td>src/store/resultsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate attendanceStore</td><td>src/store/attendanceStore.js</td><td>☐</td></tr>
+<tr><td>Migrate promotionStore</td><td>src/store/promotionStore.js</td><td>☐</td></tr>
+<tr><td>Migrate parentStore</td><td>src/store/parentStore.js</td><td>☐</td></tr>
+<tr><td>Run migration script</td><td>src/lib/migrateToFirebase.js</td><td>☐</td></tr>
+<tr><td>Set security rules</td><td>Firebase Console</td><td>☐</td></tr>
+<tr><td>Deploy to Firebase Hosting</td><td>—</td><td>☐</td></tr>
+</table>
+
+<h2>9. Estimated Effort</h2>
+<ul>
+<li><strong>Beginner developer:</strong> 1-2 weeks, following this guide step by step</li>
+<li><strong>Experienced developer:</strong> 2-3 days</li>
+<li><strong>Hiring a developer:</strong> ~$500-1500 USD depending on location and expertise</li>
+</ul>
+
+<div class="warn"><strong>Warning:</strong> Firestore charges per read/write/delete operation. The current app loads all data at once — for a school with 500+ students, you may hit Firestore quotas quickly. Consider adding pagination or optimizing queries after migration.</div>
+
+<h2>10. Common Errors & Solutions</h2>
+<table>
+<tr><th>Error</th><th>Solution</th></tr>
+<tr><td>Firebase: Error (auth/operation-not-allowed)</td><td>Enable Email/Password sign-in in Firebase Console → Authentication</td></tr>
+<tr><td>Missing or insufficient permissions</td><td>Set your Firestore rules to test mode temporarily or check your security rules</td></tr>
+<tr><td>Firebase App named '[DEFAULT]' already exists</td><td>Wrap initializeApp in a check: <code>if (!getApps().length) initializeApp(config)</code></td></tr>
+<tr><td>getDoc is not a function</td><td>Make sure you imported from 'firebase/firestore', not 'firebase/app'</td></tr>
+</table>
+
+</body></html>

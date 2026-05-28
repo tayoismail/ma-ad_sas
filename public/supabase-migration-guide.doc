@@ -1,0 +1,533 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="UTF-8"><title>Supabase Migration Guide</title>
+<style>
+body { font-family: 'Calibri', Arial, sans-serif; font-size: 12pt; line-height: 1.6; margin: 40px; color: #1a1a1a; }
+h1 { font-size: 22pt; color: #16a34a; border-bottom: 3px solid #16a34a; padding-bottom: 8px; margin-top: 30px; }
+h2 { font-size: 16pt; color: #22c55e; margin-top: 25px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+h3 { font-size: 13pt; color: #374151; margin-top: 18px; }
+p { margin: 6px 0; }
+ul, ol { margin: 6px 0 6px 20px; }
+li { margin: 3px 0; }
+code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 10pt; font-family: 'Consolas', monospace; }
+pre { background: #1e293b; color: #e2e8f0; padding: 12px 16px; border-radius: 6px; font-size: 10pt; font-family: 'Consolas', monospace; overflow-x: auto; }
+.note { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 10px 14px; margin: 12px 0; border-radius: 4px; }
+.warn { background: #fef2f2; border-left: 4px solid #ef4444; padding: 10px 14px; margin: 12px 0; border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+th, td { border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; font-size: 11pt; }
+th { background: #f3f4f6; font-weight: bold; }
+</style></head>
+<body>
+
+<h1>MA'AD AHLIL AATHAR Assessment System<br>Supabase Migration Guide</h1>
+<p><em>Version 1.0 — May 2026</em></p>
+
+<h2>1. What is Supabase?</h2>
+<p>Supabase is an open-source Firebase alternative. It provides:</p>
+<ul>
+<li><strong>PostgreSQL Database</strong> — a real SQL database (more powerful than Firestore)</li>
+<li><strong>Supabase Auth</strong> — email/password login, Google login, etc.</li>
+<li><strong>Row Level Security (RLS)</strong> — database-level permissions</li>
+<li><strong>Supabase Studio</strong> — a web UI to manage your database</li>
+<li><strong>Auto-generated REST API and SDK</strong></li>
+</ul>
+
+<div class="note"><strong>Why choose Supabase over Firebase?</strong> SQL databases support complex queries (joins, aggregations, filtering by multiple fields). Firestore (NoSQL) requires denormalization and has limited query capabilities. For a school system with reports, cumulative averages, and cross-table lookups, PostgreSQL is a better fit.</div>
+
+<h2>2. Prerequisites</h2>
+<ul>
+<li>A GitHub account (to sign up for Supabase)</li>
+<li>Node.js installed (already have it)</li>
+<li>Basic understanding of SQL and JavaScript</li>
+</ul>
+
+<h2>3. Step-by-Step Migration Plan</h2>
+
+<h3>3.1 Create a Supabase Project</h3>
+<ol>
+<li>Go to <a href="https://supabase.com">supabase.com</a> and sign up with GitHub</li>
+<li>Click "New project" → name it <code>maad-sas</code> → set a secure database password → choose a region close to you</li>
+<li>Wait ~2 minutes for the project to provision</li>
+<li>In the project dashboard, go to "Project Settings" → "API" → copy the <strong>Project URL</strong> and <strong>anon/public key</strong></li>
+</ol>
+
+<h3>3.2 Set Up Database Tables</h3>
+<p>Go to the "SQL Editor" in Supabase and run the following SQL to create all tables:</p>
+
+<pre>-- Users table (extends Supabase Auth)
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('admin', 'teacher', 'student', 'parent')),
+  password TEXT NOT NULL,
+  teacherSubjects INTEGER[] DEFAULT '{}',
+  lastLogin TIMESTAMPTZ,
+  createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Settings (single row)
+CREATE TABLE settings (
+  key TEXT PRIMARY KEY,
+  schoolName TEXT DEFAULT 'MA''AD AHLIL AATHAR',
+  address TEXT DEFAULT '',
+  phones TEXT DEFAULT '',
+  mission TEXT DEFAULT '',
+  currentSession TEXT DEFAULT '2024/2025',
+  currentSemester INTEGER DEFAULT 1,
+  useAttendanceUpgrade BOOLEAN DEFAULT FALSE,
+  semestersFinalized JSONB DEFAULT '{}',
+  gradingScale JSONB DEFAULT '[]'
+);
+
+-- Classes
+CREATE TABLE classes (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  section TEXT DEFAULT 'A',
+  "order" INTEGER,
+  promotionTo TEXT,
+  studentCount INTEGER DEFAULT 0
+);
+
+-- Students
+CREATE TABLE students (
+  id SERIAL PRIMARY KEY,
+  "studentId" TEXT,
+  name TEXT NOT NULL,
+  "arabicName" TEXT,
+  "dateOfBirth" TEXT,
+  "className" TEXT,
+  "parentName" TEXT,
+  "parentPhone" TEXT,
+  "parentEmail" TEXT,
+  "enrollmentDate" TEXT,
+  "createdAt" TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Subjects
+CREATE TABLE subjects (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  "arabicName" TEXT,
+  "className" TEXT NOT NULL,
+  "passingMark" INTEGER DEFAULT 50,
+  "createdAt" TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Results
+CREATE TABLE results (
+  id SERIAL PRIMARY KEY,
+  "studentId" TEXT,
+  "studentName" TEXT,
+  "subjectId" INTEGER,
+  "subjectName" TEXT,
+  "className" TEXT,
+  session TEXT,
+  semester INTEGER,
+  "examScore" REAL,
+  "testScore" REAL,
+  attendance REAL,
+  total REAL,
+  grade TEXT,
+  "remarkEn" TEXT,
+  "remarkAr" TEXT
+);
+
+-- Cumulative Averages (for promotions)
+CREATE TABLE "cumulativeAverages" (
+  id SERIAL PRIMARY KEY,
+  "studentId" TEXT,
+  "studentName" TEXT,
+  "className" TEXT,
+  "sem1Avg" REAL,
+  "sem2Avg" REAL,
+  cumulative REAL,
+  grade TEXT,
+  "shouldPromote" BOOLEAN,
+  "promoteTo" TEXT,
+  status TEXT DEFAULT 'pending',
+  session TEXT
+);
+
+-- Promotions
+CREATE TABLE promotions (
+  id SERIAL PRIMARY KEY,
+  "studentId" TEXT,
+  session TEXT,
+  status TEXT DEFAULT 'pending'
+);
+
+-- Attendance
+CREATE TABLE attendance (
+  id SERIAL PRIMARY KEY,
+  "studentId" TEXT,
+  "className" TEXT,
+  session TEXT,
+  semester INTEGER,
+  date TEXT,
+  status TEXT CHECK (status IN ('present', 'absent', 'late'))
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_results_class ON results("className", session, semester);
+CREATE INDEX idx_results_student ON results("studentId");
+CREATE INDEX idx_attendance_lookup ON attendance("studentId", session, semester);
+CREATE INDEX idx_students_class ON students("className");
+CREATE INDEX idx_students_email ON students("parentEmail");</pre>
+
+<h3>3.3 Install Supabase Client</h3>
+<pre>npm install @supabase/supabase-js</pre>
+
+<h3>3.4 Create Supabase Configuration</h3>
+<p>Create a new file: <code>src/lib/supabase.js</code></p>
+<pre>import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
+const supabaseAnonKey = 'YOUR_ANON_KEY';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export default supabase;</pre>
+
+<h2>4. Migration of Each Store</h2>
+
+<h3>4.1 Auth Store (authStore.js)</h3>
+<pre>import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+
+const useAuthStore = create((set, get) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+
+  init: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      set({ user: profile, isAuthenticated: !!profile, isLoading: false });
+    } else {
+      set({ isLoading: false });
+    }
+
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        set({ user: profile, isAuthenticated: true });
+      } else {
+        set({ user: null, isAuthenticated: false });
+      }
+    });
+  },
+
+  login: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    
+    const { data: profile } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+    
+    set({ user: profile, isAuthenticated: true });
+    return profile;
+  },
+
+  logout: async () => {
+    await supabase.auth.signOut();
+    set({ user: null, isAuthenticated: false });
+  },
+
+  addUser: async (data) => {
+    // Create auth user
+    const { data: authData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+    });
+    if (error) throw error;
+
+    // Create user profile
+    const { password, ...safeData } = data;
+    const { error: profileError } = await supabase
+      .from('users')
+      .update({ ...safeData, id: authData.user.id })
+      .eq('id', authData.user.id);
+    if (profileError) throw profileError;
+    
+    return authData.user.id;
+  },
+
+  // getUsers, updateUser, deleteUser — use supabase.from('users').select() etc.
+}));
+
+export default useAuthStore;</pre>
+
+<h3>4.2 Data Store Pattern (Example: studentsStore.js)</h3>
+<pre>import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+
+const useStudentsStore = create((set, get) => ({
+  students: [],
+  loading: true,
+
+  loadStudents: async () => {
+    const { data, error } = await supabase.from('students').select('*');
+    if (!error) set({ students: data || [], loading: false });
+  },
+
+  getStudent: async (id) => {
+    const { data } = await supabase.from('students').select('*').eq('id', id).single();
+    return data;
+  },
+
+  addStudent: async (record) => {
+    const { error } = await supabase.from('students').insert({
+      ...record,
+      createdAt: new Date().toISOString(),
+    });
+    if (error) throw error;
+    const { data } = await supabase.from('students').select('*');
+    set({ students: data || [] });
+  },
+
+  updateStudent: async (id, updates) => {
+    await supabase.from('students').update(updates).eq('id', id);
+    const { data } = await supabase.from('students').select('*');
+    set({ students: data || [] });
+  },
+
+  deleteStudent: async (id) => {
+    await supabase.from('students').delete().eq('id', id);
+    const { data } = await supabase.from('students').select('*');
+    set({ students: data || [] });
+  },
+
+  bulkAddStudents: async (records) => {
+    const enriched = records.map(r => ({ ...r, createdAt: new Date().toISOString() }));
+    const { error } = await supabase.from('students').insert(enriched);
+    if (error) return { success: 0, errors: enriched.length };
+    const { data } = await supabase.from('students').select('*');
+    set({ students: data || [] });
+    return { success: enriched.length, errors: 0 };
+  },
+}));
+
+export default useStudentsStore;</pre>
+
+<h3>4.3 Results Store with Filters</h3>
+<pre>import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+
+const useResultsStore = create((set, get) => ({
+  results: [],
+  loading: true,
+
+  loadResults: async (filters = {}) => {
+    let query = supabase.from('results').select('*');
+    if (filters.className) query = query.eq('className', filters.className);
+    if (filters.session) query = query.eq('session', filters.session);
+    if (filters.semester) query = query.eq('semester', Number(filters.semester));
+    const { data } = await query;
+    set({ results: data || [], loading: false });
+  },
+
+  getResultsForClass: async (className, session, semester, subjectId) => {
+    const { data } = await supabase
+      .from('results')
+      .select('*')
+      .eq('className', className)
+      .eq('session', session)
+      .eq('semester', Number(semester))
+      .eq('subjectId', Number(subjectId));
+    return data || [];
+  },
+
+  saveResult: async (result) => {
+    // Check if exists
+    const { data: existing } = await supabase
+      .from('results')
+      .select('id')
+      .eq('studentId', result.studentId)
+      .eq('subjectId', Number(result.subjectId))
+      .eq('session', result.session)
+      .eq('semester', Number(result.semester))
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from('results').update(result).eq('id', existing.id);
+      return existing.id;
+    }
+    const { data } = await supabase.from('results').insert(result).select();
+    return data?.[0]?.id;
+  },
+
+  saveResults: async (records) => {
+    // For bulk save, use upsert or delete+insert
+    // This is a simplified version
+    const { error } = await supabase.from('results').upsert(records, {
+      onConflict: 'studentId,subjectId,session,semester',
+    });
+    if (error) throw error;
+    const { data } = await supabase.from('results').select('*');
+    set({ results: data || [] });
+    return records.length;
+  },
+}));
+
+export default useResultsStore;</pre>
+
+<h2>5. Database Migration (Existing Data)</h2>
+<p>To import your current IndexedDB data into Supabase, create a migration file:</p>
+<pre>// src/lib/migrateToSupabase.js
+import { supabase } from './supabase';
+import localDb from '../db/database';
+
+export async function migrateLocalData() {
+  const tables = ['users', 'settings', 'classes', 'students', 'subjects', 'results', 'cumulativeAverages', 'promotions', 'attendance'];
+  
+  for (const table of tables) {
+    const data = await localDb.table(table).toArray();
+    
+    if (data.length > 0) {
+      const clean = data.map(({ id, ...rest }) => {
+        if (table === 'settings') return rest;
+        return rest;
+      });
+      
+      if (table === 'settings') {
+        await supabase.from('settings').upsert(clean[0], { onConflict: 'key' });
+      } else {
+        // Insert in batches of 100 to avoid timeout
+        for (let i = 0; i < clean.length; i += 100) {
+          const batch = clean.slice(i, i + 100);
+          const { error } = await supabase.from(table).insert(batch);
+          if (error) console.error(`Error migrating ${table} batch:`, error);
+        }
+      }
+      console.log(`Migrated ${data.length} records from ${table}`);
+    }
+  }
+  alert('Migration to Supabase complete!');
+}</pre>
+
+<h2>6. Row Level Security (RLS) Policies</h2>
+<p>In Supabase → SQL Editor, run:</p>
+<pre>-- Enable RLS on all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "cumulativeAverages" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promotions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
+
+-- Allow authenticated users to read most data
+CREATE POLICY "authenticated can read users"
+  ON users FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read settings"
+  ON settings FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read classes"
+  ON classes FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read students"
+  ON students FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read subjects"
+  ON subjects FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read results"
+  ON results FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read cumulativeAverages"
+  ON "cumulativeAverages" FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read promotions"
+  ON promotions FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated can read attendance"
+  ON attendance FOR SELECT TO authenticated USING (true);
+
+-- Only admins can write
+CREATE POLICY "admin can insert users"
+  ON users FOR INSERT TO authenticated 
+  WITH CHECK (auth.uid() IN (SELECT id FROM users WHERE role = 'admin'));
+-- (Repeat similar policies for UPDATE/DELETE on each table)
+
+-- For simplicity during development, allow all authenticated users to write:
+CREATE POLICY "authenticated can write settings"
+  ON settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "authenticated can write classes"
+  ON classes FOR ALL TO authenticated USING (true) WITH CHECK (true);
+-- ... repeat for each table</pre>
+
+<h2>7. Deployment</h2>
+<ol>
+<li>Build the app: <code>npm run build</code></li>
+<li>Deploy to any static host:
+  <ul>
+    <li><strong>Netlify:</strong> Drag & drop the <code>dist/</code> folder</li>
+    <li><strong>Vercel:</strong> Connect your GitHub repo, it auto-deploys</li>
+    <li><strong>Cloudflare Pages:</strong> Drag & drop <code>dist/</code></li>
+  </ul>
+</li>
+<li>Or use Supabase Hosting (currently in beta)</li>
+</ol>
+
+<h2>8. Comparison: Firebase vs Supabase</h2>
+<table>
+<tr><th>Feature</th><th>Firebase</th><th>Supabase</th></tr>
+<tr><td>Database Type</td><td>NoSQL (Firestore)</td><td>SQL (PostgreSQL)</td></tr>
+<tr><td>Queries</td><td>Limited (no joins, no "not equal")</td><td>Full SQL (joins, aggregations, complex filters)</td></tr>
+<tr><td>Auth</td><td>Built-in, easy</td><td>Built-in, easy</td></tr>
+<tr><td>Free Tier</td><td>50K reads/day, 20K writes/day</td><td>500 MB database, 2 GB bandwidth</td></tr>
+<tr><td>Scalability</td><td>Automatic</td><td>Automatic (managed Postgres)</td></tr>
+<tr><td>Learning Curve</td><td>Low (JSON documents)</td><td>Medium (needs SQL knowledge)</td></tr>
+<tr><td><strong>Best For</strong></td><td>Simple data structures</td><td><strong>This app</strong> — has reports, aggregations, cross-table queries</td></tr>
+</table>
+
+<h2>9. Recommendation</h2>
+<div class="note">
+<strong>For this specific app, Supabase (PostgreSQL) is the better choice because:</strong>
+<ul>
+  <li>The promotion system calculates cumulative averages across semesters — SQL makes this simple with <code>AVG()</code> and <code>GROUP BY</code></li>
+  <li>Report generation filters by class, session, semester, subject — SQL handles this natively</li>
+  <li>The attendance tracking queries by student, class, date range — SQL joins make this efficient</li>
+  <li>You can use the Supabase Studio UI to query data directly without writing code</li>
+</ul>
+</div>
+
+<h2>10. Migration Checklist</h2>
+<table>
+<tr><th>Step</th><th>File / Action</th><th>Status</th></tr>
+<tr><td>Create Supabase project</td><td>supabase.com</td><td>☐</td></tr>
+<tr><td>Run SQL to create tables</td><td>Supabase SQL Editor</td><td>☐</td></tr>
+<tr><td>Install supabase-js</td><td><code>npm install @supabase/supabase-js</code></td><td>☐</td></tr>
+<tr><td>Create src/lib/supabase.js</td><td>supabase.js</td><td>☐</td></tr>
+<tr><td>Migrate authStore</td><td>src/store/authStore.js</td><td>☐</td></tr>
+<tr><td>Migrate settingsStore</td><td>src/store/settingsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate classesStore</td><td>src/store/classesStore.js</td><td>☐</td></tr>
+<tr><td>Migrate studentsStore</td><td>src/store/studentsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate subjectsStore</td><td>src/store/subjectsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate resultsStore</td><td>src/store/resultsStore.js</td><td>☐</td></tr>
+<tr><td>Migrate attendanceStore</td><td>src/store/attendanceStore.js</td><td>☐</td></tr>
+<tr><td>Migrate promotionStore</td><td>src/store/promotionStore.js</td><td>☐</td></tr>
+<tr><td>Migrate parentStore</td><td>src/store/parentStore.js</td><td>☐</td></tr>
+<tr><td>Run migration script</td><td>src/lib/migrateToSupabase.js</td><td>☐</td></tr>
+<tr><td>Set up RLS policies</td><td>Supabase SQL Editor</td><td>☐</td></tr>
+<tr><td>Build & deploy</td><td><code>npm run build</code> then deploy</td><td>☐</td></tr>
+</table>
+
+<h2>11. Estimated Effort</h2>
+<ul>
+<li><strong>Beginner developer:</strong> 1-2 weeks (will need to learn basic SQL)</li>
+<li><strong>Experienced developer:</strong> 2-4 days</li>
+<li><strong>Hiring a developer:</strong> ~$500-2000 USD</li>
+</ul>
+
+<div class="warn"><strong>Important:</strong> If you're not comfortable with SQL, Firebase may be easier to start with. However, once you need complex queries (which this app does), Supabase will save you significant time and money in the long run.</div>
+
+</body></html>

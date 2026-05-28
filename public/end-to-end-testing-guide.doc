@@ -1,0 +1,266 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="UTF-8"><title>End-to-End Testing Guide</title>
+<style>
+body { font-family: 'Calibri', Arial, sans-serif; font-size: 12pt; line-height: 1.6; margin: 40px; color: #1a1a1a; }
+h1 { font-size: 22pt; color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 8px; margin-top: 30px; }
+h2 { font-size: 16pt; color: #2563eb; margin-top: 25px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+h3 { font-size: 13pt; color: #374151; margin-top: 18px; }
+p { margin: 6px 0; }
+ul, ol { margin: 6px 0 6px 20px; }
+li { margin: 3px 0; }
+code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 10pt; font-family: 'Consolas', monospace; }
+.note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px 14px; margin: 12px 0; border-radius: 4px; }
+.step { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 10px 14px; margin: 12px 0; border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+th, td { border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; font-size: 11pt; }
+th { background: #f3f4f6; font-weight: bold; }
+</style></head>
+<body>
+
+<h1>MA'AD AHLIL AATHAR Assessment System<br>End-to-End Testing Guide</h1>
+<p><em>Version 1.0 — May 2026</em></p>
+
+<h2>1. Overview</h2>
+<p>This guide walks you through testing every feature of the system with real data, from account creation to generating reports and processing promotions. All data is stored locally in your browser's IndexedDB.</p>
+
+<div class="note"><strong>Prerequisite:</strong> Run <code>npm run dev</code> in the project root to start the development server, then open http://localhost:5173 in your browser.</div>
+
+<h2>2. Login & Authentication</h2>
+
+<h3>2.1 Demo Accounts</h3>
+<table>
+<tr><th>Role</th><th>Email</th><th>Password</th></tr>
+<tr><td>Admin</td><td>admin@maad.edu</td><td>Admin123</td></tr>
+<tr><td>Teacher</td><td>teacher@maad.edu</td><td>Teacher123</td></tr>
+<tr><td>Student</td><td>student@maad.edu</td><td>Student123</td></tr>
+<tr><td>Parent</td><td>parent@maad.edu</td><td>Parent123</td></tr>
+</table>
+
+<h3>2.2 Test Steps</h3>
+<ol>
+<li>Navigate to http://localhost:5173 — the Landing page should display</li>
+<li>Click "Sign In" — the Login page should appear</li>
+<li>Enter <code>admin@maad.edu</code> / <code>Admin123</code> and click "Sign In"</li>
+<li>Verify you're redirected to the Admin Dashboard</li>
+<li>Check the dashboard shows stats: Total Students, Subjects, Active Classes, Current Session</li>
+<li>Click the avatar/name area — verify your name and role display correctly</li>
+<li>Toggle the theme (light/dark) using the moon/sun icon — verify it persists on page refresh</li>
+<li>Log out and test each account role (teacher, student, parent) — verify each dashboard shows appropriate data for that role</li>
+</ol>
+
+<h2>3. User Management (Admin Only)</h2>
+<ol>
+<li>Navigate to Users (/admin/users) from the sidebar</li>
+<li>Verify all seeded accounts appear in the table (admin, teacher, student, parent)</li>
+<li>Click "Add User" — fill in Name, Email, Password, select "teacher" role</li>
+<li>Submit — verify the new user appears in the table</li>
+<li>Click the edit (pencil) icon on the new user — change the name and save</li>
+<li>Click the key icon to reset a user's password — enter a new password and confirm</li>
+<li>Click the delete (trash) icon — confirm deletion — verify user is removed</li>
+<li>Try deleting your own admin account — verify you get an error message ("Cannot delete your own account")</li>
+</ol>
+
+<h2>4. Student Management</h2>
+
+<h3>4.1 Adding Students Individually</h3>
+<ol>
+<li>Navigate to Students (/admin/students)</li>
+<li>Click "Add Student"</li>
+<li>Fill in: Student Name (required), Arabic Name (optional), Student ID, Date of Birth, Class, Enrollment Date</li>
+<li>Fill Parent/Guardian: Name, Phone, Email</li>
+<li>Click "Register Student" — verify success message and redirect to students list</li>
+<li>Repeat to add 3-5 students across different classes</li>
+</ol>
+
+<h3>4.2 Mass Upload Students (CSV/Excel)</h3>
+<ol>
+<li>On the Students page, click "Mass Upload"</li>
+<li>Prepare a CSV or Excel file with these columns: <code>name</code>, <code>arabic_name</code>, <code>student_id</code>, <code>date_of_birth</code>, <code>class</code>, <code>parent_name</code>, <code>parent_phone</code>, <code>parent_email</code></li>
+<li>Upload the file — verify the preview table shows parsed records</li>
+<li>Click "Import" — verify success count and that students appear in the list</li>
+</ol>
+
+<h3>4.3 Student Features</h3>
+<ol>
+<li>Use the search bar — search by student name, ID, or parent name</li>
+<li>Use the class filter dropdown — filter students by class</li>
+<li>Click the eye icon on a student — verify the Student Profile page loads with all details</li>
+<li>Click "View Transcript" from the profile — verify the transcript page loads</li>
+<li>Click the edit icon — verify the edit form pre-fills with the student's data</li>
+<li>Click the transcript icon (FileText) — verify the full academic record page loads</li>
+<li>Click the delete icon — confirm deletion — verify student is removed from the list</li>
+</ol>
+
+<h2>5. Class Management</h2>
+<ol>
+<li>Navigate to Classes (/admin/classes)</li>
+<li>Verify 11 default classes are pre-configured: Class 1 through Senior 3</li>
+<li>Click "Add Class" — select class name, section, promotion path — click "Create"</li>
+<li>Click the edit icon on a class — change the section or promotion path — click "Update"</li>
+<li>Click the delete icon on the new class — confirm — verify it's removed</li>
+<li>Verify each class card shows: section, student count, promotion path</li>
+</ol>
+
+<h2>6. Subject Management</h2>
+<ol>
+<li>Navigate to Subjects (/admin/subjects)</li>
+<li>Click "Add Subject" — enter English name, Arabic name (optional), select class, set passing mark</li>
+<li>Add 3-5 subjects per class (e.g., Mathematics, English, Arabic, Quran, Science)</li>
+<li>Verify subjects appear grouped by class in the grid</li>
+<li>Click the edit icon on a subject — change the name and save</li>
+<li>Click the delete icon — confirm deletion</li>
+</ol>
+
+<h2>7. Attendance</h2>
+<ol>
+<li>Navigate to Attendance (/admin/attendance)</li>
+<li>Select a class from the filter panel</li>
+<li>Verify the calendar shows the current month with selectable dates</li>
+<li>Select a date — verify students appear in the table</li>
+<li>Click "P" (Present), "A" (Absent), or "L" (Late) for each student</li>
+<li>Click "All Present" — verify all students are marked present</li>
+<li>Click "All Absent" — verify all students are marked absent</li>
+<li>Change the date — verify attendance for the new date loads independently</li>
+<li>Navigate to another page, then return — verify attendance records persist</li>
+</ol>
+
+<h2>8. Results / Scores Entry</h2>
+<ol>
+<li>Navigate to Results (/admin/results)</li>
+<li>Select Session, Semester, Class, and Subject from the filters</li>
+<li>Toggle "Include Test Scores" and/or "Include Attendance %" as needed</li>
+<li>Verify students appear in the score entry table</li>
+<li>Enter exam scores (0-100) for each student</li>
+<li>If enabled, enter test scores (0-40)</li>
+<li>Verify the Total and Grade columns update automatically</li>
+<li>Click "Save All" — verify success message</li>
+<li>Refresh the page and re-select the same class/subject — verify saved scores persist</li>
+<li>Repeat for multiple subjects and semesters</li>
+</ol>
+
+<h3>8.1 Mass Upload Results</h3>
+<ol>
+<li>Click "Mass Upload"</li>
+<li>Upload CSV/Excel with columns: <code>student_id</code>, <code>subject_id</code>, <code>session</code>, <code>semester</code>, <code>exam_score</code>, <code>test_score</code>, <code>attendance</code></li>
+<li>Verify import count and data appears in the table</li>
+</ol>
+
+<h2>9. Reports</h2>
+
+<h3>9.1 Class Result Sheet</h3>
+<ol>
+<li>Navigate to Reports (/admin/reports)</li>
+<li>Select the "Class Result Sheet" tab</li>
+<li>Enter Session, Semester, select a Class</li>
+<li>Click "Generate" — verify the full result sheet displays with all subjects as columns</li>
+<li>Check that student names, scores, totals, averages, and grades are visible and properly aligned</li>
+<li>Verify text contrast is clear and readable</li>
+<li>Click "Print" — verify a print preview opens</li>
+<li>Click "PDF" — verify a PDF file downloads</li>
+</ol>
+
+<h3>9.2 Student Report Card</h3>
+<ol>
+<li>Switch to the "Student Report Card" tab</li>
+<li>Select Session, Semester, Class, then a Student</li>
+<li>Click "Generate" — verify the full report card displays</li>
+<li>Check: school header, student info, subject scores table, semester summary, signature section</li>
+<li>Click "Print" / "PDF" — verify output</li>
+</ol>
+
+<h2>10. Attendance Report</h2>
+<ol>
+<li>Navigate to Attendance Report (/admin/attendance/report)</li>
+<li>Select Session, Semester, Class</li>
+<li>Click "Generate Report"</li>
+<li>Verify summary cards show: total students, average attendance, above 90%, below 50%</li>
+<li>Verify the student table shows each student's attendance percentage and status</li>
+<li>Click "Print" — verify print output</li>
+</ol>
+
+<h2>11. Promotion / End Session</h2>
+<ol>
+<li>Navigate to Promotion (/admin/promotion)</li>
+<li>Verify the current session displays at the top</li>
+<li>Click "Calculate Cumulative"</li>
+<li>Verify summary cards: Promote count, Repeat count, No Data count</li>
+<li>Verify the promoted table shows students grouped by class with: from class, to class, cumulative score, grade</li>
+<li>Click "Print" — verify the print window opens with promotion list grouped by class</li>
+<li>Click "Promote" for an individual student — verify action updates to "Done"</li>
+<li>Click "Confirm All" — confirm in the modal — verify all promotions are processed</li>
+<li>Go to Students page — verify promoted students now show the new class name</li>
+</ol>
+
+<h2>12. Backup & Restore</h2>
+<ol>
+<li>Navigate to Backup (/admin/backup)</li>
+<li>Click "Export to JSON" — verify a JSON file downloads</li>
+<li>Open the JSON file — verify it contains all data tables (users, settings, classes, students, subjects, results, cumulativeAverages, promotions, attendance)</li>
+<li>Click "Choose backup file" — select the downloaded JSON — verify "Data restored successfully" message</li>
+</ol>
+
+<h2>13. Settings</h2>
+<ol>
+<li>Navigate to Settings (/admin/settings)</li>
+<li>Change the School Name, Address, Phone Numbers, Mission Statement</li>
+<li>Change the Current Session (e.g., "2025/2026") and Current Semester</li>
+<li>Toggle "Enable Attendance Upgrade"</li>
+<li>Toggle the theme (light/dark)</li>
+<li>Modify the grading scale min/max values and remarks</li>
+<li>Click "Save Settings" — verify success message</li>
+<li>Navigate to another page and back — verify settings persist</li>
+</ol>
+
+<h2>14. Student Portal (Student Role)</h2>
+<ol>
+<li>Log out and log in as <code>student@maad.edu</code> / <code>Student123</code></li>
+<li>Verify the Student Dashboard loads with student info, class, and results</li>
+<li>Check that the profile section shows the correct student matched to the account</li>
+<li>Click "View Full Academic Record" — verify the transcript page loads</li>
+</ol>
+
+<h2>15. Parent Portal (Parent Role)</h2>
+<ol>
+<li>Log out and log in as <code>parent@maad.edu</code> / <code>Parent123</code></li>
+<li>Verify the Parent Dashboard shows "No Children Linked" message (or linked children if parentEmail was set on student profiles)</li>
+</ol>
+
+<h2>16. Teacher Portal (Teacher Role)</h2>
+<ol>
+<li>Log out and log in as <code>teacher@maad.edu</code> / <code>Teacher123</code></li>
+<li>Verify the Teacher Dashboard loads</li>
+<li>If subjects are assigned, verify the teacher sees their classes and students</li>
+</ol>
+
+<h2>17. Transcript / Full Academic Record</h2>
+<ol>
+<li>Navigate to any student's transcript (from student profile or students list)</li>
+<li>Verify the transcript header shows: school name, address, phones</li>
+<li>Verify student information section shows all details</li>
+<li>For each session, verify: subject scores for both semesters, attendance percentages, cumulative average, promotion status</li>
+<li>Scroll to the Overall Summary — verify sessions completed, overall GPA, current class, status</li>
+<li>Click "Download PDF" — verify the full transcript PDF downloads</li>
+</ol>
+
+<h2>18. Edge Cases to Test</h2>
+<ul>
+<li><strong>Empty states:</strong> Navigate to pages before adding data — verify helpful empty state messages display</li>
+<li><strong>Loading states:</strong> Note the loading spinners when data is being fetched</li>
+<li><strong>Error handling:</strong> Try invalid login credentials — verify error message displays</li>
+<li><strong>Duplicate prevention:</strong> Try adding a student with an existing ID — verify error message</li>
+<li><strong>Finalized semester:</strong> Finalize a semester in Settings — verify Results page shows "Finalized" badge and disables editing</li>
+<li><strong>Responsive design:</strong> Resize the browser to mobile width — verify sidebar and layout adapt</li>
+<li><strong>No data:</strong> In Reports, generate for a class with no results — verify "No results found" message</li>
+</ol>
+
+<h2>19. Common Issues & Troubleshooting</h2>
+<table>
+<tr><th>Issue</th><th>Solution</th></tr>
+<tr><td>Page crashes on load</td><td>Clear browser cache and reload. Run <code>npm run build</code> to check for compilation errors.</td></tr>
+<tr><td>Data not persisting</td><td>Ensure browser allows IndexedDB. Check the Application tab in DevTools → IndexedDB → MaadSAS</td></tr>
+<tr><td>Results not showing in reports</td><td>Verify the session and semester match exactly between results entry and report filters</td></tr>
+<tr><td>"No results found" when there should be data</td><td>Check that the class name, session, and semester values match across the data entry and report filters</td></tr>
+<tr><td>Student not appearing in attendance</td><td>Verify the student's class name matches the class selected in attendance filter</td></tr>
+</table>
+
+</body></html>

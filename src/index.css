@@ -1,0 +1,308 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 10%;
+    --card-foreground: 210 40% 96%;
+    --primary: 231 73% 65%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 210 40% 96%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 231 73% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2a4a7f 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.gradient-warm {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+}
+
+.gradient-cool {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.animate-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(1deg); }
+  66% { transform: translateY(5px) rotate(-1deg); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+.bg-white\/60,
+.bg-white\/70,
+.bg-white\/80,
+.bg-white\/90,
+.bg-white\/95 {
+  background-color: hsl(var(--card)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.dark .bg-slate-300,
+.dark .bg-slate-200,
+.dark .bg-slate-100 {
+  background-color: hsl(var(--background)) !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-50\/50,
+.dark .bg-gray-50\/30 {
+  background-color: hsl(var(--muted) / 0.5) !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-gray-400,
+.dark .text-gray-300 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .border-gray-200,
+.dark .border-gray-100,
+.dark .border-gray-300,
+.dark .border-white\/10,
+.dark .border-white\/20,
+.dark .border-white\/5 {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-gray-100\/50:hover,
+.dark .hover\:bg-gray-50\/50:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.dark .hover\:bg-blue-50:hover {
+  background-color: hsl(221 60% 30% / 0.3) !important;
+}
+
+.dark .hover\:bg-amber-50:hover {
+  background-color: hsl(40 60% 30% / 0.3) !important;
+}
+
+.dark .hover\:bg-red-50:hover {
+  background-color: hsl(0 63% 30% / 0.3) !important;
+}
+
+.dark .shadow-xl.shadow-black\/5,
+.dark .shadow-lg.shadow-black\/5,
+.dark .shadow-md.shadow-black\/5,
+.dark .shadow-sm.shadow-black\/5 {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .gradient-primary {
+  background: linear-gradient(135deg, #0f1a2e 0%, #1a2d4a 100%) !important;
+}
+
+.dark .gradient-secondary {
+  background: linear-gradient(135deg, #0a0f1a 0%, #141b2d 100%);
+}
+
+.dark .gradient-accent {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+}
+
+.dark .gradient-warm {
+  background: linear-gradient(135deg, #b45309 0%, #dc2626 100%) !important;
+}
+
+.dark .gradient-cool {
+  background: linear-gradient(135deg, #0891b2 0%, #2563eb 100%) !important;
+}
+
+.dark .text-gradient {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+.dark select {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .bg-red-50,
+.dark .bg-red-50\/50 {
+  background-color: hsl(0 63% 30% / 0.3) !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/50 {
+  background-color: hsl(160 60% 30% / 0.3) !important;
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-50\/50 {
+  background-color: hsl(40 60% 30% / 0.3) !important;
+}
+
+.dark .bg-blue-50,
+.dark .bg-blue-50\/50 {
+  background-color: hsl(221 60% 30% / 0.3) !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: hsl(var(--muted) / 0.5) !important;
+}
+
+.dark .bg-gray-100\/50,
+.dark .bg-gray-100 {
+  background-color: hsl(var(--muted) / 0.3) !important;
+}
+
+.dark .bg-white\/30,
+.dark .bg-white\/40 {
+  background-color: hsl(var(--card) / 0.3) !important;
+}
+
+.dark .hover\:bg-white\/30:hover,
+.dark .hover\:bg-white\/40:hover,
+.dark .hover\:bg-white\/50:hover {
+  background-color: hsl(var(--card) / 0.5) !important;
+}
+
+.dark .bg-white\/80 {
+  background-color: hsl(var(--card)) !important;
+}
