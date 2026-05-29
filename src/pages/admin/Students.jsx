@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Plus, Upload, Download, Bell, Menu,
-  User, Mail, Phone,
-  Calendar, Trash2, Pencil, Eye, X, ChevronRight,
+  Search, Plus, Upload, Download, Menu,
+  Trash2, Pencil, Eye, X,
   FileSpreadsheet, AlertCircle, CheckCircle2, Loader2,
-  FileText, Printer
+  FileText
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import useAuthStore from '../../store/authStore';
@@ -22,7 +21,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 export default function StudentsPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { classes, loadClasses, loading: classesLoading } = useClassesStore();
   const { students, loadStudents, deleteStudent, bulkAddStudents, loading: studentsLoading } = useStudentsStore();
   const { subjects, loadSubjects } = useSubjectsStore();
@@ -39,11 +38,13 @@ export default function StudentsPage() {
     loadClasses();
     loadStudents();
     loadSubjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const teacherClassNames = useMemo(() => {
     if (user?.role !== 'teacher') return null;
-    const teacherSubjectIds = user?.teacherSubjects || [];
+    const teacherSubjectIds = user?.teacherSubjects;
+    if (!teacherSubjectIds || teacherSubjectIds.length === 0) return [];
     return [...new Set(
       subjects
         .filter((s) => teacherSubjectIds.includes(s.id))
@@ -201,11 +202,6 @@ export default function StudentsPage() {
       ),
     },
   ];
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   return (
     <div className="min-h-screen bg-slate-300">

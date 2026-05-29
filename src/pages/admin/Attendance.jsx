@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Save, Loader2, CheckCircle2, XCircle,
-  AlertCircle, ChevronLeft, ChevronRight, Bell, Menu,
+  ArrowLeft, CheckCircle2, XCircle,
+  AlertCircle, ChevronLeft, ChevronRight, Menu,
   CalendarDays, Users
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -10,6 +10,7 @@ import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import useSettingsStore from '../../store/settingsStore';
+import { semesterLabel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -20,11 +21,11 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 export default function AttendancePage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { classes, loadClasses } = useClassesStore();
   const { students, loadStudents } = useStudentsStore();
   const { settings, loadSettings } = useSettingsStore();
-  const { getRecordsForClass, markAttendance, markBulk, loading: attLoading } = useAttendanceStore();
+  const { getRecordsForClass, markAttendance, markBulk } = useAttendanceStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filters, setFilters] = useState({ session: '', semester: '1', className: '' });
   const [today, setToday] = useState(new Date());
@@ -33,26 +34,32 @@ export default function AttendancePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => { loadSettings(); loadClasses(); loadStudents(); }, []);
+  useEffect(() => { loadSettings(); loadClasses(); loadStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (settings) {
       setFilters((f) => ({ ...f, session: settings.currentSession, semester: String(settings.currentSemester) }));
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [settings]);
 
-  useEffect(() => {
-    if (filters.className && selectedDate) {
-      loadAttendance();
-    }
-  }, [filters.className, selectedDate]);
-
-  const loadAttendance = async () => {
+  const loadAttendance = useCallback(async () => {
     const records = await getRecordsForClass(filters.className, filters.session, filters.semester, selectedDate);
     const map = {};
     records.forEach((r) => { map[r.studentId] = r.status; });
     setAttendanceMap(map);
-  };
+  }, [filters.className, filters.session, filters.semester, selectedDate, getRecordsForClass]);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (filters.className && selectedDate) {
+      loadAttendance();
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [filters.className, selectedDate, loadAttendance]);
 
   const classStudents = students.filter((s) => s.className === filters.className);
 
@@ -88,7 +95,7 @@ export default function AttendancePage() {
   for (let i = 0; i < firstDay; i++) calendarDays.push(null);
   for (let d = 1; d <= daysInMonth; d++) calendarDays.push(d);
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+
 
   const statusBadge = (status) => {
     if (status === 'present') return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600"><CheckCircle2 className="w-3 h-3" /> Present</span>;
@@ -163,7 +170,7 @@ export default function AttendancePage() {
                     <label className="block text-xs font-medium text-gray-600 mb-1">Semester</label>
                     <select value={filters.semester} onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
                       className="flex h-9 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
-                      <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                      <option value="1">{semesterLabel(1)}</option><option value="2">{semesterLabel(2)}</option>
                     </select>
                   </div>
                   <div>

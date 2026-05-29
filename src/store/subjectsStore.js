@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import db from '../db/database';
 
-const useSubjectsStore = create((set, get) => ({
+const useSubjectsStore = create((set) => ({
   subjects: [],
   loading: true,
 

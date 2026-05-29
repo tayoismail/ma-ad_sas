@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import db from '../db/database';
 
-const useStudentsStore = create((set, get) => ({
+const useStudentsStore = create((set) => ({
   students: [],
   loading: true,
 

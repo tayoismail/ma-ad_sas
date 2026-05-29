@@ -19,7 +19,7 @@ const defaultSettings = {
   ],
 };
 
-const useSettingsStore = create((set, get) => ({
+const useSettingsStore = create((set) => ({
   settings: null,
   loading: true,
 

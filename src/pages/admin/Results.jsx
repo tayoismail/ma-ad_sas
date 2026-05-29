@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Save, Upload, Award, Calendar,
-  Bell, Menu, Loader2, CheckCircle2, AlertCircle,
+  ArrowLeft, Save, Upload, Award,
+  Menu, Loader2, CheckCircle2, AlertCircle,
   X, Download, FileSpreadsheet, Lock, Users
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -12,6 +12,7 @@ import useStudentsStore from '../../store/studentsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import useResultsStore from '../../store/resultsStore';
 import { calculateGrade, calculateTotal } from '../../lib/grading';
+import { semesterLabel } from '../../lib/utils';
 import * as XLSX from 'xlsx';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -21,7 +22,7 @@ import AdminSidebar from '../../components/AdminSidebar';
 
 export default function ResultsPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { classes, loadClasses, loading: classesLoading } = useClassesStore();
   const { subjects, loadSubjects, loading: subjectsLoading } = useSubjectsStore();
   const { students, loadStudents, loading: studentsLoading } = useStudentsStore();
@@ -35,7 +36,7 @@ export default function ResultsPage() {
     subjectId: '',
   });
   const [scores, setScores] = useState({});
-  const [existingResults, setExistingResults] = useState([]);
+  const [, setExistingResults] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
@@ -51,21 +52,25 @@ export default function ResultsPage() {
     loadClasses();
     loadSubjects();
     loadStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (settings) {
       setFilters((f) => ({ ...f, session: settings.currentSession, semester: String(settings.currentSemester) }));
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [settings]);
 
-  const teacherSubjectIds = user?.role === 'teacher' ? (user?.teacherSubjects || []) : null;
+  const isTeacher = user?.role === 'teacher';
+  const teacherSubjectIds = isTeacher ? (user?.teacherSubjects ?? null) : null;
   const filteredSubjects = subjects.filter((s) => s.className === filters.className && (!teacherSubjectIds || teacherSubjectIds.includes(s.id)));
   const filteredClasses = useMemo(() => {
-    if (user?.role !== 'teacher' || !teacherSubjectIds) return classes;
+    if (!isTeacher || !teacherSubjectIds) return classes;
     const names = [...new Set(subjects.filter((s) => teacherSubjectIds.includes(s.id)).map((s) => s.className))];
     return classes.filter((c) => names.includes(c.name));
-  }, [classes, subjects, teacherSubjectIds, user]);
+  }, [classes, subjects, teacherSubjectIds, isTeacher]);
   const classStudents = students.filter((s) => s.className === filters.className);
   const isFinalized = settings?.semestersFinalized?.[`${filters.session}_sem${filters.semester}`];
 
@@ -85,7 +90,10 @@ export default function ResultsPage() {
   };
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (filters.className && filters.subjectId) handleLoadResults();
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.className, filters.subjectId]);
 
   const updateScore = (studentId, field, value) => {
@@ -108,7 +116,6 @@ export default function ResultsPage() {
     setSaving(true);
     const subj = subjects.find((s) => s.id === Number(filters.subjectId));
     const scale = settings?.gradingScale;
-    let count = 0;
     for (const student of classStudents) {
       const s = scores[student.studentId] || {};
       const examScore = Number(s.examScore) || 0;
@@ -129,7 +136,6 @@ export default function ResultsPage() {
         total,
         ...gradeInfo,
       });
-      count++;
     }
     setSaving(false);
     setSaved(true);
@@ -224,8 +230,6 @@ export default function ResultsPage() {
     const colors = { A: 'bg-emerald-500/10 text-emerald-600 border-emerald-200', B: 'bg-blue-500/10 text-blue-600 border-blue-200', C: 'bg-amber-500/10 text-amber-600 border-amber-200', D: 'bg-orange-500/10 text-orange-600 border-orange-200', F: 'bg-red-500/10 text-red-600 border-red-200' };
     return <span className={`px-2 py-0.5 rounded text-xs font-medium border ${colors[g.grade] || colors.F}`}>{g.grade}</span>;
   };
-
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className="min-h-screen bg-slate-300">
@@ -322,7 +326,7 @@ export default function ResultsPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Semester</label>
                 <select value={filters.semester} onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
                   className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
-                  <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                  <option value="1">{semesterLabel(1)}</option><option value="2">{semesterLabel(2)}</option>
                 </select>
               </div>
               <div>
@@ -364,7 +368,7 @@ export default function ResultsPage() {
                   <h3 className="font-semibold text-gray-900">
                     {filters.className} — {subjects.find((s) => s.id === Number(filters.subjectId))?.name}
                   </h3>
-                  <span className="text-xs text-gray-400">Semester {filters.semester} · {filters.session}</span>
+                  <span className="text-xs text-gray-400">{semesterLabel(filters.semester)} · {filters.session}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500">{classStudents.length} students</span>

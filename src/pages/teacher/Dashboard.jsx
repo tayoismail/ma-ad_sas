@@ -8,6 +8,7 @@ import useSubjectsStore from '../../store/subjectsStore';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
+import { semesterLabel } from '../../lib/utils';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -29,6 +30,7 @@ export default function TeacherDashboard() {
     loadSubjects();
     loadStudents();
     loadResults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const teacherSubjects = user?.teacherSubjects || [];
@@ -88,7 +90,7 @@ export default function TeacherDashboard() {
         {!classesLoading && !subjectsLoading && !studentsLoading && !resultsLoading && !settingsLoading ? (
         <><div className="animate-fade-in">
           <h2 className="text-xl font-semibold text-card-foreground mb-1">Welcome, {user?.name || 'Teacher'}</h2>
-          <p className="text-sm text-muted-foreground">Session: {settings?.currentSession} — Semester {settings?.currentSemester}</p>
+          <p className="text-sm text-muted-foreground">Session: {settings?.currentSession} — {semesterLabel(settings?.currentSemester)}</p>
         </div>
 
         {teacherSubjects.length === 0 && !classesLoading && !subjectsLoading && (

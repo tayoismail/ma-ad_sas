@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Download, Upload, Bell, Menu, CheckCircle2,
+  ArrowLeft, Download, Upload, Menu, CheckCircle2,
   AlertCircle, Loader2
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 export default function BackupPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -67,8 +67,6 @@ export default function BackupPage() {
     reader.readAsText(file);
     e.target.value = '';
   };
-
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className="min-h-screen bg-slate-300">

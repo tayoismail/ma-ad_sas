@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import db from '../db/database';
 
-const useAttendanceStore = create((set, get) => ({
+const useAttendanceStore = create((set) => ({
   records: [],
   loading: false,
 
@@ -46,7 +46,7 @@ const useAttendanceStore = create((set, get) => ({
           await db.attendance.add(r);
         }
         count++;
-      } catch {}
+      } catch { /* skip individual record errors */ }
     }
     const all = await db.attendance.toArray();
     set({ records: all });

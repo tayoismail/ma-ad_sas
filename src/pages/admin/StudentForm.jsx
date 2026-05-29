@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Save, User, School, Phone, Mail,
-  Calendar, Hash, Bell, Menu, Loader2, CheckCircle2, AlertCircle
+  ArrowLeft, Save, User, Menu, Loader2, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useClassesStore from '../../store/classesStore';
@@ -18,7 +17,7 @@ export default function StudentForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { classes, loadClasses } = useClassesStore();
   const { addStudent, updateStudent, getStudent } = useStudentsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,12 +38,16 @@ export default function StudentForm() {
 
   useEffect(() => {
     loadClasses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (classes.length > 0 && !form.className) {
       setForm((f) => ({ ...f, className: classes[0].name }));
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classes]);
 
   useEffect(() => {
@@ -65,6 +68,7 @@ export default function StudentForm() {
         }
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleSubmit = async (e) => {
@@ -95,11 +99,6 @@ export default function StudentForm() {
       setFormError(err.message || 'Failed to save student');
       setSaving(false);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
   };
 
   return (

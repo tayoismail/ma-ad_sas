@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import db from '../db/database';
 import useAttendanceStore from './attendanceStore';
 
-const useParentStore = create((set, get) => ({
+const useParentStore = create((set) => ({
   children: [],
   childrenResults: [],
   childrenAttendance: {},

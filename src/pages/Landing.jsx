@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, BookOpen, MapPin, Phone, Target, ArrowRight, Star, Sparkles } from 'lucide-react';
+import { GraduationCap, BookOpen, MapPin, Phone, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
 
 export default function Landing() {
   const navigate = useNavigate();

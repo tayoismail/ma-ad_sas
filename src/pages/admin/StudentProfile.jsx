@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, User, Mail, Phone, Calendar, School,
-  Pencil, Bell, Menu, GraduationCap, Users,
-  Hash, MapPin, UserCircle, FileText
+  Pencil, Menu,
+  Hash, FileText
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -15,19 +15,15 @@ import AdminSidebar from '../../components/AdminSidebar';
 export default function StudentProfile() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { getStudent } = useStudentsStore();
   const [student, setStudent] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     getStudent(Number(id)).then(setStudent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   if (!student) {
     return (

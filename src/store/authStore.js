@@ -17,7 +17,7 @@ const useAuthStore = create((set, get) => ({
     let storedUser = null;
     const sessionData = sessionStorage.getItem('maad_user');
     if (sessionData) {
-      try { storedUser = JSON.parse(sessionData); } catch {}
+      try { storedUser = JSON.parse(sessionData); } catch { /* ignore parse errors */ }
     }
     if (!storedUser) {
       const localData = localStorage.getItem('maad_user');
@@ -29,7 +29,7 @@ const useAuthStore = create((set, get) => ({
           } else {
             storedUser = parsed;
           }
-        } catch {}
+        } catch { /* ignore parse errors */ }
       }
     }
 
@@ -45,7 +45,7 @@ const useAuthStore = create((set, get) => ({
             set({ isLoading: false });
             return;
           }
-        } catch {}
+        } catch { /* ignore parse errors */ }
       }
       const exists = await db.users.where('id').equals(storedUser.id).first();
       if (exists) {
@@ -90,7 +90,7 @@ const useAuthStore = create((set, get) => ({
     const now = new Date().toISOString();
     await db.users.update(user.id, { lastLogin: now });
 
-    const { password: _, ...safeUser } = user;
+    const safeUser = (({ password: _pw, ...rest }) => rest)(user); // eslint-disable-line no-unused-vars
     safeUser.lastLogin = now;
 
     sessionStorage.setItem('maad_session', JSON.stringify({ lastActivity: Date.now() }));

@@ -4,11 +4,11 @@ import {
   ArrowLeft, Download, BookOpen, School, Calendar, Award,
   FileText, GraduationCap, CheckCircle, AlertCircle
 } from 'lucide-react';
-import useAuthStore from '../../store/authStore';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
 import useAttendanceStore from '../../store/attendanceStore';
+import { semesterLabel } from '../../lib/utils';
 import db from '../../db/database';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -58,7 +58,9 @@ export default function TranscriptPage() {
   const [loading, setLoading] = useState(true);
   const transcriptRef = useRef(null);
 
-  useEffect(() => { loadSettings(); }, []);
+  useEffect(() => { loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -85,6 +87,7 @@ export default function TranscriptPage() {
         setLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const sessions = [...new Set(allResults.map((r) => r.session))].sort(sortSessions);
@@ -247,8 +250,8 @@ export default function TranscriptPage() {
                     <span className="text-sm text-gray-600">{className}</span>
                   </div>
                   <div className="flex items-center gap-4 text-xs">
-                    {attSem1 !== null && <span className="text-gray-500">Att: <span className="font-medium text-gray-700">Sem1 {attSem1}%</span></span>}
-                    {attSem2 !== null && <span className="text-gray-500">Sem2 {attSem2}%</span>}
+                    {attSem1 !== null && <span className="text-gray-500">Att: <span className="font-medium text-gray-700">ف1 {attSem1}%</span></span>}
+                    {attSem2 !== null && <span className="text-gray-500">ف2 {attSem2}%</span>}
                     {promo && (
                       <span className={`flex items-center gap-1 font-medium ${promo.status === 'promoted' || promo.status === 'graduated' ? 'text-emerald-600' : 'text-red-600'}`}>
                         {promo.status === 'promoted' || promo.status === 'graduated' ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
@@ -274,8 +277,8 @@ export default function TranscriptPage() {
                       </tr>
                       <tr className="bg-gray-50/50 border-b border-gray-200">
                         <th />
-                        <th colSpan={4} className="text-center px-3 py-1 text-[10px] font-semibold text-blue-600 uppercase">Semester 1</th>
-                        <th colSpan={4} className="text-center px-3 py-1 text-[10px] font-semibold text-purple-600 uppercase">Semester 2</th>
+                        <th colSpan={4} className="text-center px-3 py-1 text-[10px] font-semibold text-blue-600">{semesterLabel(1)}</th>
+                        <th colSpan={4} className="text-center px-3 py-1 text-[10px] font-semibold text-purple-600">{semesterLabel(2)}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -300,11 +303,11 @@ export default function TranscriptPage() {
 
                   <div className="flex flex-wrap gap-3 text-xs">
                     <div className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100">
-                      <span className="text-blue-500 font-medium">Sem 1 Avg: </span>
+                      <span className="text-blue-500 font-medium">معدل {semesterLabel(1)}: </span>
                       <span className={`font-bold ${statColor(sem1Avg)}`}>{sem1Avg ?? '--'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-purple-50 border border-purple-100">
-                      <span className="text-purple-500 font-medium">Sem 2 Avg: </span>
+                      <span className="text-purple-500 font-medium">معدل {semesterLabel(2)}: </span>
                       <span className={`font-bold ${statColor(sem2Avg)}`}>{sem2Avg ?? '--'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200">

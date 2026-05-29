@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import db from '../db/database';
 
-const useResultsStore = create((set, get) => ({
+const useResultsStore = create((set) => ({
   results: [],
   loading: true,
 
@@ -51,7 +51,7 @@ const useResultsStore = create((set, get) => ({
           await db.results.add(r);
         }
         success++;
-      } catch { /* skip errors */ }
+      } catch { /* skip individual record errors */ }
     }
     const all = await db.results.toArray();
     set({ results: all });

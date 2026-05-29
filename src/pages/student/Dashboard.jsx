@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Award, BarChart3, Clock, Bell, LogOut, Menu, TrendingUp, FileText, User, School, Hash, Calendar, GraduationCap, Download, Moon, Sun } from 'lucide-react';
+import { BookOpen, Award, LogOut, Menu, TrendingUp, User, School, Hash, Calendar, Download, Moon, Sun, Clock } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
+import { semesterLabel } from '../../lib/utils';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -23,6 +24,7 @@ export default function StudentDashboard() {
     loadSettings();
     loadStudents();
     loadResults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const profile = students.find((s) => s.parentEmail === user?.email || s.studentId === user?.email?.split('@')[0] || s.name === user?.name);
@@ -34,7 +36,7 @@ export default function StudentDashboard() {
   const cumulative = (sem1Avg !== null && sem2Avg !== null) ? Math.round(((sem1Avg + sem2Avg) / 2) * 100) / 100 : (sem1Avg ?? sem2Avg);
 
   const stats = [
-    { label: 'Current Term', value: `Sem ${settings?.currentSemester || 1}`, icon: Clock, cardBg: 'from-blue-600 to-indigo-700' },
+    { label: 'الفصل الحالي', value: semesterLabel(settings?.currentSemester || 1), icon: Clock, cardBg: 'from-blue-600 to-indigo-700' },
     { label: 'Class', value: profile?.className || '--', icon: School, cardBg: 'from-purple-600 to-pink-700' },
     { label: 'Average', value: cumulative ?? '--', icon: TrendingUp, cardBg: 'from-emerald-600 to-teal-700' },
     { label: 'Subjects', value: myResults.length ? [...new Set(myResults.map((r) => r.subjectName))].length : '--', icon: BookOpen, cardBg: 'from-amber-600 to-orange-700' },
@@ -137,7 +139,7 @@ export default function StudentDashboard() {
                   <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-card-foreground truncate">{r.subjectName}</p>
-                      <p className="text-xs text-muted-foreground">Sem {r.semester}</p>
+                      <p className="text-xs text-muted-foreground">{semesterLabel(r.semester)}</p>
                     </div>
                     <span className="text-sm font-semibold text-card-foreground">{r.total}</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${gradeColor(r.grade)}`}>{r.grade}</span>

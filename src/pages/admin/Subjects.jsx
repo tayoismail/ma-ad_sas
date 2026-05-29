@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, BookOpen, GraduationCap, School,
-  LogOut, Bell, Menu, Pencil, Trash2, X, Check,
-  Loader2, BookMarked, Users, Globe, AlertCircle,
-  Award, CalendarDays, TrendingUp, Database, Settings, LayoutDashboard, Printer
+  ArrowLeft, Plus, School,
+  Menu, Pencil, Trash2, X, Check,
+  Loader2, BookMarked, AlertCircle
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useClassesStore from '../../store/classesStore';
@@ -17,7 +16,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 export default function SubjectsPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { classes, loadClasses } = useClassesStore();
   const { subjects, loadSubjects, addSubject, updateSubject, deleteSubject } = useSubjectsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,6 +31,7 @@ export default function SubjectsPage() {
   useEffect(() => {
     loadClasses();
     loadSubjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resetForm = () => {
@@ -63,7 +63,7 @@ export default function SubjectsPage() {
     setDeleteConfirm(null);
   };
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+
 
   const grouped = {};
   subjects.forEach((s) => {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, GraduationCap, Settings, School, Calendar, LogOut, Menu, ArrowUpRight, Bell, ChevronRight, Award, Moon, Sun, BarChart3, BookMarked, TrendingUp, Printer } from 'lucide-react';
+import { Users, GraduationCap, Settings, School, Calendar, Menu, ArrowUpRight, ChevronRight, Award, Moon, Sun, BarChart3, BookMarked, TrendingUp, Bell } from 'lucide-react';
 import AdminSidebar from '../../components/AdminSidebar';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import useAuthStore from '../../store/authStore';
@@ -10,15 +10,15 @@ import useSubjectsStore from '../../store/subjectsStore';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
 import { useThemeStore } from '../../store/themeStore';
+import { semesterLabel } from '../../lib/utils';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
 
 const COLORS = ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#ef4444'];
 
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { settings, loadSettings } = useSettingsStore();
   const { classes, loadClasses } = useClassesStore();
   const { subjects, loadSubjects } = useSubjectsStore();
@@ -33,6 +33,7 @@ export default function AdminDashboard() {
     loadSubjects();
     loadStudents();
     loadResults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stats = [
@@ -84,8 +85,6 @@ export default function AdminDashboard() {
     { name: 'D', value: gradeCounts.D, color: '#f97316' },
     { name: 'F', value: gradeCounts.F, color: '#ef4444' },
   ];
-
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className="min-h-screen bg-slate-300">
@@ -185,7 +184,7 @@ export default function AdminDashboard() {
                 {[
                   { icon: School, label: 'School Name', value: settings?.schoolName },
                   { icon: Calendar, label: 'Current Session', value: settings?.currentSession },
-                  { icon: GraduationCap, label: 'Semester', value: `Semester ${settings?.currentSemester || 1}` },
+                  { icon: GraduationCap, label: 'الفصل الدراسي', value: semesterLabel(settings?.currentSemester || 1) },
                   { icon: Users, label: 'Classes', value: `${classes.length} configured` },
                   { icon: BookMarked, label: 'Subjects', value: `${subjects.length} total` },
                   { icon: Users, label: 'Students', value: `${students.length} enrolled` },

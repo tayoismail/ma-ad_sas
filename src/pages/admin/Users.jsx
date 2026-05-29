@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 export default function UsersPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { subjects, loadSubjects } = useSubjectsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
@@ -36,7 +36,12 @@ export default function UsersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { loadUsers(); loadSubjects(); }, []);
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    loadUsers(); loadSubjects();
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resetForm = () => {
     setForm({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [] });
@@ -107,7 +112,7 @@ export default function UsersPage() {
 
   const roleColors = { admin: 'bg-purple-500/10 text-purple-600', teacher: 'bg-blue-500/10 text-blue-600', student: 'bg-emerald-500/10 text-emerald-600', parent: 'bg-orange-500/10 text-orange-600' };
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+
 
   const userColumns = [
     { key: 'user', label: 'User', render: (u) => (

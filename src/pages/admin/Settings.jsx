@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Save, School, Phone, MapPin, BookOpen,
-  GraduationCap, Calendar, Layers, Loader2, CheckCircle2,
-  BookMarked, LogOut, Bell, Menu, Users, Award, TrendingUp,
-  CalendarDays, Database, Settings as SettingsIcon, LayoutDashboard, Printer,
-  Lock, Unlock, AlertCircle, Moon, Sun
+  ArrowLeft, Save, School,
+  Calendar, Layers, Loader2, CheckCircle2,
+  Bell, Menu,
+  Lock, Unlock, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useSettingsStore from '../../store/settingsStore';
@@ -16,10 +15,11 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+import { semesterLabel } from '../../lib/utils';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { settings, loadSettings, updateSettings } = useSettingsStore();
   const { theme, toggleTheme } = useThemeStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,10 +41,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         schoolName: settings.schoolName || '',
         address: settings.address || '',
@@ -85,11 +87,6 @@ export default function SettingsPage() {
     const scale = [...form.gradingScale];
     scale[index] = { ...scale[index], [field]: value };
     setForm({ ...form, gradingScale: scale });
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
   };
 
   return (
@@ -201,7 +198,7 @@ export default function SettingsPage() {
                           : 'bg-white/80 border-2 border-border/50 text-gray-600 hover:border-amber-500/30'
                       }`}
                     >
-                      Semester {sem}
+                      {semesterLabel(sem)}
                     </button>
                   ))}
                 </div>
@@ -247,7 +244,7 @@ export default function SettingsPage() {
                 return (
                   <div key={sem} className={`flex-1 p-4 rounded-xl ${finalized ? 'bg-gray-100/50 border border-emerald-200' : 'bg-amber-50/50 border border-amber-200'}`}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-gray-700">Semester {sem}</span>
+                      <span className="text-sm font-semibold text-gray-700">{semesterLabel(sem)}</span>
                       {finalized ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-600"><Lock className="w-3 h-3" /> Finalized</span>
                       ) : (
@@ -258,7 +255,7 @@ export default function SettingsPage() {
                     {!finalized && (
                       <Button size="sm" variant="outline" className="w-full text-red-500 border-red-200 hover:bg-red-50"
                         onClick={() => setFinalizeConfirm(sem)}>
-                        <Lock className="w-3.5 h-3.5 mr-1" /> Finalize Sem {sem}
+                        <Lock className="w-3.5 h-3.5 mr-1" /> إنهاء {semesterLabel(sem)}
                       </Button>
                     )}
                   </div>
@@ -360,7 +357,7 @@ export default function SettingsPage() {
       <ConfirmModal
         open={finalizeConfirm !== null}
         title="Finalize Semester?"
-        message={`This will lock all results for ${form.currentSession} Semester ${finalizeConfirm}. No further edits will be allowed. This action cannot be undone.`}
+        message={`This will lock all results for ${form.currentSession} ${semesterLabel(finalizeConfirm)}. No further edits will be allowed. This action cannot be undone.`}
         confirmLabel="Finalize"
         variant="warning"
         loading={finalizing}

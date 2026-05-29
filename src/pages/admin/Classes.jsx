@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, School, Users, LogOut, Bell, Menu,
-  Pencil, Trash2, ArrowRight, BookOpen, GraduationCap,
-  X, Check, Save, Loader2,   BookMarked, Award, CalendarDays, TrendingUp,
-  Database, Settings, LayoutDashboard, Printer
+  ArrowLeft, Plus, School, Users, Menu, Bell,
+  Pencil, Trash2, ArrowRight,
+  X, Check, Loader2
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useClassesStore from '../../store/classesStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 const classColors = [
@@ -25,30 +23,26 @@ const classColors = [
   { gradient: 'from-violet-500 to-purple-500', badge: 'bg-violet-500/10 text-violet-600' },
   { gradient: 'from-cyan-500 to-blue-500', badge: 'bg-cyan-500/10 text-cyan-600' },
   { gradient: 'from-pink-500 to-rose-500', badge: 'bg-pink-500/10 text-pink-600' },
-  { gradient: 'from-orange-500 to-amber-500', badge: 'bg-orange-500/10 text-orange-600' },
-];
-
-const classList = [
-  'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
-  'Class 6', 'Class 7', 'Class 8', 'Senior 1', 'Senior 2', 'Senior 3'
+  { gradient: 'from-orange-500 to-amber-500', badge: 'bg-orange-500/10 text-amber-600' },
 ];
 
 export default function ClassesPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { classes, loadClasses, addClass, updateClass, deleteClass } = useClassesStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: 'Class 1', section: 'A', promotionTo: 'Class 2' });
+  const [form, setForm] = useState({ name: '', section: 'A', promotionTo: '' });
 
   useEffect(() => {
     loadClasses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resetForm = () => {
-    setForm({ name: 'Class 1', section: 'A', promotionTo: 'Class 2' });
+    setForm({ name: '', section: 'A', promotionTo: '' });
     setEditingId(null);
     setShowForm(false);
   };
@@ -60,9 +54,11 @@ export default function ClassesPage() {
   };
 
   const handleSubmit = async () => {
+    if (!form.name.trim()) return;
     setSaving(true);
     const data = {
       ...form,
+      name: form.name.trim(),
       order: editingId ? undefined : classes.length + 1,
       studentCount: editingId ? undefined : 0,
     };
@@ -81,19 +77,12 @@ export default function ClassesPage() {
     }
   };
 
-  const getClassColor = (name) => {
-    const idx = classList.indexOf(name);
-    return classColors[Math.max(0, idx % classColors.length)];
+  const getClassColor = (_, index) => {
+    return classColors[index % classColors.length];
   };
 
-  const getNextClass = (name) => {
-    const idx = classList.indexOf(name);
-    return idx >= 0 && idx < classList.length - 1 ? classList[idx + 1] : 'Graduated';
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const getPromotionOptions = (currentName) => {
+    return classes.filter((c) => c.name !== currentName).map((c) => c.name).concat('Graduated');
   };
 
   return (
@@ -158,16 +147,13 @@ export default function ClassesPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-card-foreground mb-1.5">Class Name</label>
-                    <select
+                    <input
+                      type="text"
                       value={form.name}
-                      onChange={(e) => {
-                        const next = getNextClass(e.target.value);
-                        setForm({ ...form, name: e.target.value, promotionTo: next });
-                      }}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="e.g. SS1, Grade 1, etc."
                       className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
-                    >
-                      {classList.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-card-foreground mb-1.5">Section</label>
@@ -186,7 +172,8 @@ export default function ClassesPage() {
                       onChange={(e) => setForm({ ...form, promotionTo: e.target.value })}
                       className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                     >
-                      {[...classList.filter(c => c !== form.name), 'Graduated'].map((c) => (
+                      <option value="">-- Select --</option>
+                      {getPromotionOptions(form.name).map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
@@ -206,7 +193,7 @@ export default function ClassesPage() {
           {/* Classes Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {classes.map((cls, i) => {
-              const colors = getClassColor(cls.name);
+              const colors = getClassColor(cls.name, i);
               return (
                 <Card key={cls.id} className="group bg-card border-border hover:shadow-xl hover:shadow-black/5 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                   <div className={`h-2 bg-gradient-to-r ${colors.gradient}`} />

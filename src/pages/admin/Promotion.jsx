@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Award, Bell, Menu, CheckCircle2, AlertCircle, Loader2,
-  ChevronRight, RefreshCw, UserCheck, UserX, Printer
+  ArrowLeft, Award, Menu, CheckCircle2, AlertCircle, Loader2,
+  RefreshCw, UserCheck, UserX, Printer
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useSettingsStore from '../../store/settingsStore';
@@ -16,10 +16,10 @@ import AdminSidebar from '../../components/AdminSidebar';
 
 export default function PromotionPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { settings, loadSettings } = useSettingsStore();
-  const { cumulativeData, promotions, loading, calculateCumulative, confirmPromotion, confirmAll } = usePromotionStore();
-  const { classes, loadClasses } = useClassesStore();
+  const { cumulativeData, promotions, calculateCumulative, confirmPromotion, confirmAll } = usePromotionStore();
+  const { loadClasses } = useClassesStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [calculated, setCalculated] = useState(false);
   const [calcLoading, setCalcLoading] = useState(false);
@@ -90,6 +90,7 @@ export default function PromotionPage() {
   useEffect(() => {
     loadSettings();
     loadClasses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCalculate = async () => {
@@ -104,8 +105,6 @@ export default function PromotionPage() {
   const promoted = cumulativeData.filter((d) => d.shouldPromote);
   const repeating = cumulativeData.filter((d) => !d.shouldPromote && d.cumulative !== null);
   const noData = cumulativeData.filter((d) => d.cumulative === null);
-
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className="min-h-screen bg-slate-300">

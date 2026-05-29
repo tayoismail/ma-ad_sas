@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Download, Printer, Bell, Menu,
+  ArrowLeft, Download, Printer, Menu,
   Search, FileText, Users, GraduationCap
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -12,12 +12,13 @@ import useResultsStore from '../../store/resultsStore';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
-import { calculateGrade, calculateTotal } from '../../lib/grading';
+import { calculateGrade } from '../../lib/grading';
+import { semesterLabel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 
 export default function ReportsPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { settings, loadSettings } = useSettingsStore();
   const { classes, loadClasses } = useClassesStore();
   const { students, loadStudents } = useStudentsStore();
@@ -49,14 +50,17 @@ export default function ReportsPage() {
     loadClasses();
     loadStudents();
     loadResults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (settings) {
       const s = settings.currentSession;
       const sem = String(settings.currentSemester);
+      /* eslint-disable react-hooks/set-state-in-effect */
       setClassFilters((f) => ({ ...f, session: s, semester: sem }));
       setStudentFilters((f) => ({ ...f, session: s, semester: sem }));
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [settings]);
 
@@ -115,8 +119,6 @@ export default function ReportsPage() {
     win.document.close();
     setTimeout(() => { win.print(); win.close(); }, 300);
   };
-
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   const gradeInfo = (total) => {
     if (total >= 75) return { grade: 'A', color: 'text-emerald-600', bg: 'bg-emerald-500/10' };
@@ -186,7 +188,7 @@ export default function ReportsPage() {
                   <label className="block text-xs font-medium text-gray-600 mb-1">Semester</label>
                   <select value={classFilters.semester} onChange={(e) => setClassFilters({ ...classFilters, semester: e.target.value })}
                     className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
-                    <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                    <option value="1">{semesterLabel(1)}</option><option value="2">{semesterLabel(2)}</option>
                   </select>
                 </div>
                 <div>
@@ -217,7 +219,7 @@ export default function ReportsPage() {
                   <p className="text-white/70 text-xs mt-1">{settings?.address}</p>
                   <div className="w-16 h-0.5 bg-white/30 mx-auto my-3" />
                   <h2 className="text-lg font-semibold">Class Result Sheet</h2>
-                  <p className="text-white/60 text-xs mt-1">{classFilters.className} — {classFilters.session} — Semester {classFilters.semester}</p>
+                  <p className="text-white/60 text-xs mt-1">{classFilters.className} — {classFilters.session} — {semesterLabel(classFilters.semester)}</p>
                 </div>
 
                 <div className="p-4 overflow-x-auto">
@@ -289,7 +291,7 @@ export default function ReportsPage() {
                   <label className="block text-xs font-medium text-gray-600 mb-1">Semester</label>
                   <select value={studentFilters.semester} onChange={(e) => setStudentFilters({ ...studentFilters, semester: e.target.value })}
                     className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
-                    <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                    <option value="1">{semesterLabel(1)}</option><option value="2">{semesterLabel(2)}</option>
                   </select>
                 </div>
                 <div>
@@ -336,7 +338,7 @@ export default function ReportsPage() {
                   <p className="text-white/60 text-xs">{settings?.phones}</p>
                   <div className="w-16 h-0.5 bg-white/30 mx-auto my-3" />
                   <h2 className="text-lg font-semibold">Student Report Card</h2>
-                  <p className="text-white/60 text-xs mt-1">{studentFilters.session} — Semester {studentFilters.semester}</p>
+                  <p className="text-white/60 text-xs mt-1">{studentFilters.session} — {semesterLabel(studentFilters.semester)}</p>
                 </div>
 
                 {/* Student Info */}

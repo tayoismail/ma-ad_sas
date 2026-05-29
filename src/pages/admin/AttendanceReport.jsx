@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Loader2, FileText, Download, Bell, Menu,
+  ArrowLeft, Loader2, FileText, Menu,
   Printer
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -9,6 +9,7 @@ import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import useSettingsStore from '../../store/settingsStore';
+import { semesterLabel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -16,7 +17,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 export default function AttendanceReportPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { classes, loadClasses } = useClassesStore();
   const { students, loadStudents } = useStudentsStore();
   const { settings, loadSettings } = useSettingsStore();
@@ -27,12 +28,16 @@ export default function AttendanceReportPage() {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState({ total: 0, avg: 0, above90: 0, below50: 0 });
 
-  useEffect(() => { loadSettings(); loadClasses(); loadStudents(); }, []);
+  useEffect(() => { loadSettings(); loadClasses(); loadStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (settings) {
       setFilters((f) => ({ ...f, session: settings.currentSession, semester: String(settings.currentSemester) }));
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [settings]);
 
   const generateReport = async () => {
@@ -59,8 +64,6 @@ export default function AttendanceReportPage() {
     setReportData(data);
     setLoading(false);
   };
-
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   const handlePrint = () => { window.print(); };
 
@@ -95,7 +98,7 @@ export default function AttendanceReportPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Semester</label>
                 <select value={filters.semester} onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
                   className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
-                  <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                  <option value="1">{semesterLabel(1)}</option><option value="2">{semesterLabel(2)}</option>
                 </select>
               </div>
               <div>
@@ -139,7 +142,7 @@ export default function AttendanceReportPage() {
               <Card className="overflow-hidden bg-card border-border print:bg-white print:shadow-none">
                 <div className="p-4 border-b border-white/10">
                   <h3 className="font-semibold text-gray-900">{filters.className} — Attendance Report</h3>
-                  <p className="text-xs text-gray-400">{filters.session} · Semester {filters.semester}</p>
+                  <p className="text-xs text-gray-400">{filters.session} · {semesterLabel(filters.semester)}</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
