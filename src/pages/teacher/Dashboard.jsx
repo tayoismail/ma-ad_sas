@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Award, LogOut, Menu, ClipboardList, School, TrendingUp, Moon, Sun, AlertCircle } from 'lucide-react';
+import { BookOpen, Users, Award, LogOut, ClipboardList, School, TrendingUp, Moon, Sun, AlertCircle, CalendarDays } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
@@ -14,7 +14,6 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 
 export default function TeacherDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses, loading: classesLoading } = useClassesStore();
@@ -55,7 +54,6 @@ export default function TeacherDashboard() {
       <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 rounded-lg hover:bg-accent text-muted-foreground"><Menu className="w-5 h-5" /></button>
             <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-purple-500/20"><BookOpen className="w-4 h-4 text-white" /></div>
               <h1 className="text-lg font-semibold text-card-foreground">Teacher Dashboard</h1>
@@ -121,7 +119,7 @@ export default function TeacherDashboard() {
                   <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-accent/50 transition-colors">
                     <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center"><School className="w-5 h-5 text-purple-500" /></div>
                     <div className="flex-1"><p className="text-sm font-bold text-card-foreground">{c.name}</p><p className="text-xs font-semibold text-muted-foreground">{count} students</p></div>
-                    <Button size="sm" variant="ghost" onClick={() => navigate('/admin/results')}><Award className="w-4 h-4 text-purple-500" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => navigate('/teacher/results')}><Award className="w-4 h-4 text-purple-500" /></Button>
                   </div>
                 );
               })}
@@ -131,11 +129,14 @@ export default function TeacherDashboard() {
           <Card className="p-6 border-border shadow-md">
             <h3 className="text-base font-bold text-card-foreground mb-5 flex items-center gap-2"><ClipboardList className="w-5 h-5 text-purple-500" /> Quick Actions</h3>
             <div className="space-y-3">
-              <Button className="w-full justify-start gradient-accent text-white border-0 font-bold text-sm" onClick={() => navigate('/admin/results')}>
+              <Button className="w-full justify-start gradient-accent text-white border-0 font-bold text-sm" onClick={() => navigate('/teacher/results')}>
                 <Award className="w-4 h-4 mr-2" /> Enter Results
               </Button>
-              <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/admin/students')}>
-                <Users className="w-4 h-4 mr-2" /> View Students
+              <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/teacher/students')}>
+                <Users className="w-4 h-4 mr-2" /> My Students
+              </Button>
+              <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/teacher/attendance')}>
+                <CalendarDays className="w-4 h-4 mr-2" /> Take Attendance
               </Button>
               <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/admin/promotion')}>
                 <TrendingUp className="w-4 h-4 mr-2" /> Promotion Status

@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, GraduationCap, Settings, School, Calendar, Menu, ArrowUpRight, ChevronRight, Award, Moon, Sun, BarChart3, BookMarked, TrendingUp, Bell } from 'lucide-react';
+import { Users, GraduationCap, Settings, School, Calendar, Menu, ArrowUpRight, ChevronRight, Award, Moon, Sun, BarChart3, BookMarked, TrendingUp, Bell, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import AdminSidebar from '../../components/AdminSidebar';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import useAuthStore from '../../store/authStore';
@@ -13,6 +13,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { semesterLabel } from '../../lib/utils';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
+import db from '../../db/database';
 
 const COLORS = ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#ef4444'];
 
@@ -35,6 +36,51 @@ export default function AdminDashboard() {
     loadResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const [pendingTeachers, setPendingTeachers] = useState([]);
+  const [teachersLoading, setTeachersLoading] = useState(true);
+
+  const loadPendingTeachers = useCallback(async () => {
+    try {
+      const allUsers = await db.users.toArray();
+      const teachers = allUsers.filter((u) => u.role === 'teacher' && u.teacherSubjects?.length);
+      if (!teachers.length || !settings) {
+        setPendingTeachers([]);
+        setTeachersLoading(false);
+        return;
+      }
+      const session = settings.currentSession;
+      const semester = settings.currentSemester;
+      const pending = [];
+      for (const t of teachers) {
+        const subjectIds = t.teacherSubjects;
+        const missingSubjects = [];
+        for (const sid of subjectIds) {
+          const count = await db.results
+            .where({ subjectId: sid, session, semester })
+            .count();
+          if (count === 0) {
+            const sub = subjects.find((s) => s.id === sid);
+            if (sub) missingSubjects.push(sub);
+          }
+        }
+        if (missingSubjects.length) {
+          pending.push({ teacher: t, missingSubjects });
+        }
+      }
+      setPendingTeachers(pending);
+    } catch { /* ignore */ }
+    setTeachersLoading(false);
+  }, [settings, subjects]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (settings && subjects.length) {
+      loadPendingTeachers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings, subjects]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const stats = [
     { label: 'Total Students', value: students.length || '--', icon: Users, cardBg: 'from-blue-600 to-indigo-700' },
@@ -212,6 +258,56 @@ export default function AdminDashboard() {
               </div>
             </Card>
           </div>
+          {/* Teachers Pending Results */}
+          <Card className="p-6 border-border shadow-md">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold text-card-foreground flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" /> Teachers Yet to Upload Results
+              </h3>
+              {!teachersLoading && (
+                <span className="text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">
+                  {pendingTeachers.length} pending
+                </span>
+              )}
+            </div>
+            {teachersLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : pendingTeachers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <CheckCircle className="w-12 h-12 text-emerald-500/40 mb-3" />
+                <p className="text-sm font-medium text-card-foreground">All teachers have uploaded results</p>
+                <p className="text-xs text-muted-foreground mt-1">No pending subjects for the current session</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingTeachers.map(({ teacher, missingSubjects }) => (
+                  <div key={teacher.id} className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                        <XCircle className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-card-foreground">{teacher.name}</p>
+                        <p className="text-xs text-muted-foreground">{teacher.email}</p>
+                      </div>
+                      <span className="ml-auto text-xs font-medium text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-full">
+                        {missingSubjects.length} subject{missingSubjects.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {missingSubjects.map((sub) => (
+                        <span key={sub.id} className="text-xs bg-card border border-border px-2.5 py-1 rounded-full text-muted-foreground">
+                          {sub.name} <span className="text-[10px] opacity-60">({sub.className})</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </main>
       </div>
     </div>

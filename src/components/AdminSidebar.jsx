@@ -22,8 +22,9 @@ const allLinks = [
 
 const teacherLinks = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher/dashboard' },
-  { label: 'Students', icon: GraduationCap, path: '/admin/students' },
-  { label: 'Results', icon: Award, path: '/admin/results' },
+  { label: 'My Students', icon: GraduationCap, path: '/teacher/students' },
+  { label: 'My Results', icon: Award, path: '/teacher/results' },
+  { label: 'Attendance', icon: CalendarDays, path: '/teacher/attendance' },
   { label: 'Promotion', icon: TrendingUp, path: '/admin/promotion' },
 ];
 

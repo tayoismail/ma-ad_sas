@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Award, LogOut, Menu, TrendingUp, User, School, Hash, Calendar, Download, Moon, Sun, Clock } from 'lucide-react';
+import { BookOpen, Award, LogOut, TrendingUp, User, School, Hash, Calendar, Download, Moon, Sun, Clock, BarChart3, CalendarDays } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -12,7 +12,6 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 
 export default function StudentDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { students, loadStudents, loading: studentsLoading } = useStudentsStore();
@@ -54,7 +53,6 @@ export default function StudentDashboard() {
       <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 rounded-lg hover:bg-accent text-muted-foreground"><Menu className="w-5 h-5" /></button>
             <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-purple-500/20"><BookOpen className="w-4 h-4 text-white" /></div>
               <h1 className="text-lg font-semibold text-card-foreground">Student Portal</h1>
@@ -147,6 +145,17 @@ export default function StudentDashboard() {
                 ))}
               </div>
             )}
+          </Card>
+          <Card className="p-6 border-border shadow-md">
+            <h3 className="text-base font-bold text-card-foreground mb-5 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-emerald-500" /> Quick Actions</h3>
+            <div className="space-y-3">
+              <Button className="w-full justify-start gradient-accent text-white border-0 font-bold text-sm" onClick={() => navigate('/student/results')}>
+                <Award className="w-4 h-4 mr-2" /> View All Results
+              </Button>
+              <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/student/attendance')}>
+                <CalendarDays className="w-4 h-4 mr-2" /> Attendance History
+              </Button>
+            </div>
           </Card>
         </div>
         </>)}

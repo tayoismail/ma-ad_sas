@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Users, Award, LogOut, Menu,
+  BookOpen, Users, Award, LogOut,
   GraduationCap, School, Hash,
-  Download, Moon, Sun
+  Download, Moon, Sun, BarChart3, CalendarDays
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -15,7 +15,6 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 
 export default function ParentDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { settings, loadSettings } = useSettingsStore();
@@ -54,7 +53,6 @@ export default function ParentDashboard() {
       <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 rounded-lg hover:bg-accent text-muted-foreground"><Menu className="w-5 h-5" /></button>
             <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-purple-500/20"><BookOpen className="w-4 h-4 text-white" /></div>
               <h1 className="text-lg font-semibold text-card-foreground">Parent Portal</h1>
@@ -187,6 +185,16 @@ export default function ParentDashboard() {
                   </Card>
                 );
               })
+            )}
+            {children.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Button className="w-full justify-start gradient-accent text-white border-0 font-bold text-sm shadow-lg shadow-purple-500/20" onClick={() => navigate('/parent/results')}>
+                  <BarChart3 className="w-4 h-4 mr-2" /> View Full Results
+                </Button>
+                <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/parent/attendance')}>
+                  <CalendarDays className="w-4 h-4 mr-2" /> Attendance History
+                </Button>
+              </div>
             )}
           </>
         )}

@@ -121,11 +121,21 @@ export default function ReportsPage() {
   };
 
   const gradeInfo = (total) => {
-    if (total >= 75) return { grade: 'A', color: 'text-emerald-600', bg: 'bg-emerald-500/10' };
-    if (total >= 60) return { grade: 'B', color: 'text-blue-600', bg: 'bg-blue-500/10' };
-    if (total >= 50) return { grade: 'C', color: 'text-amber-600', bg: 'bg-amber-500/10' };
-    if (total >= 40) return { grade: 'D', color: 'text-orange-600', bg: 'bg-orange-500/10' };
-    return { grade: 'F', color: 'text-red-600', bg: 'bg-red-500/10' };
+    const calc = calculateGrade(total, settings?.gradingScale);
+    const colors = { A: 'text-emerald-600', B: 'text-blue-600', C: 'text-amber-600', D: 'text-orange-600', F: 'text-red-600' };
+    const bg = { A: 'bg-emerald-500/10', B: 'bg-blue-500/10', C: 'bg-amber-500/10', D: 'bg-orange-500/10', F: 'bg-red-500/10' };
+    return { grade: calc.grade, remarkAr: calc.remarkAr, color: colors[calc.grade] || 'text-gray-600', bg: bg[calc.grade] || 'bg-gray-100' };
+  };
+
+  const promotionStatus = (avg) => {
+    if (avg === null || avg === undefined) return null;
+    const promoted = avg >= 50;
+    return {
+      status: promoted ? 'promoted' : 'repeat',
+      en: promoted ? 'Promoted' : 'Repeat',
+      ar: promoted ? 'منتقل' : 'راسب',
+      color: promoted ? 'text-emerald-600 bg-emerald-500/10' : 'text-red-600 bg-red-500/10',
+    };
   };
 
   return (
@@ -234,15 +244,17 @@ export default function ReportsPage() {
                         ))}
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Total</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Avg</th>
-                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Grade</th>
+                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Grade (الدرجة)</th>
+                        {Number(classFilters.semester) === 2 && <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Status (الحالة)</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {studentRows.length === 0 && (
-                        <tr><td colSpan={5 + classSubjects.length} className="text-center py-8 text-gray-500">No results found for this class</td></tr>
+                        <tr><td colSpan={6 + classSubjects.length + (Number(classFilters.semester) === 2 ? 1 : 0)} className="text-center py-8 text-gray-500">No results found for this class</td></tr>
                       )}
                       {studentRows.sort((a, b) => (b.avg || 0) - (a.avg || 0)).map((row, i) => {
-                        const g = row.avg !== null ? gradeInfo(row.avg) : { grade: '--', color: '', bg: '' };
+                        const g = row.avg !== null ? gradeInfo(row.avg) : { grade: '--', color: '', bg: '', remarkAr: '' };
+                        const promo = Number(classFilters.semester) === 2 ? promotionStatus(row.avg) : null;
                         return (
                           <tr key={row.student.id} className="border-b border-gray-200 hover:bg-gray-50/50">
                             <td className="px-3 py-2.5 text-gray-500 text-xs">{i + 1}</td>
@@ -255,8 +267,19 @@ export default function ReportsPage() {
                             <td className="px-3 py-2.5 text-center font-semibold text-gray-900">{row.total || 0}</td>
                             <td className="px-3 py-2.5 text-center font-semibold text-gray-900">{row.avg !== null ? row.avg : '--'}</td>
                             <td className="px-3 py-2.5 text-center">
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${g.color} ${g.bg}`}>{g.grade}</span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${g.color} ${g.bg}`}>{g.grade}</span>
+                                <span className="text-[10px] text-gray-500 font-medium" dir="rtl">{g.remarkAr}</span>
+                              </div>
                             </td>
+                            {promo && (
+                              <td className="px-3 py-2.5 text-center">
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${promo.color}`}>{promo.en}</span>
+                                  <span className="text-[10px] font-medium" dir="rtl">{promo.ar}</span>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         );
                       })}
@@ -364,7 +387,7 @@ export default function ReportsPage() {
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Test Score</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Total</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Grade</th>
-                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Remark</th>
+                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Remark (الوصف)</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -373,7 +396,7 @@ export default function ReportsPage() {
                       )}
                       {studentReportResults.sort((a, b) => a.subjectName?.localeCompare(b.subjectName)).map((r, i) => {
                         const g = gradeInfo(r.total || 0);
-                        const calc = calculateGrade(r.total || 0, settings?.gradingScale || 'standard');
+                        const calc = calculateGrade(r.total || 0, settings?.gradingScale);
                         return (
                           <tr key={r.id || i} className="border-b border-gray-200">
                             <td className="px-3 py-2.5 text-gray-500 text-xs">{i + 1}</td>
@@ -384,7 +407,7 @@ export default function ReportsPage() {
                             <td className="px-3 py-2.5 text-center">
                               <span className={`px-2 py-0.5 rounded text-xs font-semibold ${g.color} ${g.bg}`}>{r.grade || g.grade}</span>
                             </td>
-                            <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-700">{calc?.remarkEn || '--'}</td>
+                            <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-700" dir="rtl">{calc?.remarkAr || '--'}</td>
                           </tr>
                         );
                       })}
@@ -402,7 +425,7 @@ export default function ReportsPage() {
                           const total = studentReportResults.reduce((s, r) => s + (r.total || 0), 0);
                           const avg = Math.round((total / studentReportResults.length) * 100) / 100;
                           const g = gradeInfo(avg);
-                          const calc = calculateGrade(avg, settings?.gradingScale || 'standard');
+                          const calc = calculateGrade(avg, settings?.gradingScale);
                           return <>
                             <div className="text-center p-3 rounded-lg bg-white/60">
                               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Subjects</p>
@@ -417,9 +440,18 @@ export default function ReportsPage() {
                               <p className={`text-lg font-bold ${g.color}`}>{avg}</p>
                             </div>
                             <div className="text-center p-3 rounded-lg bg-white/60">
-                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Grade / Remark</p>
-                              <p className={`text-lg font-bold ${g.color}`}>{g.grade} ({calc?.remarkEn || '--'})</p>
+                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Grade / التقدير</p>
+                              <p className={`text-lg font-bold ${g.color}`}>{g.grade} — <span dir="rtl">{calc?.remarkAr || '--'}</span></p>
                             </div>
+                            {Number(studentFilters.semester) === 2 && (() => {
+                              const p = promotionStatus(avg);
+                              return p ? (
+                                <div className="text-center p-3 rounded-lg bg-white/60">
+                                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Status / الحالة</p>
+                                  <p className={`text-lg font-bold ${p.color}`}>{p.en} / <span dir="rtl">{p.ar}</span></p>
+                                </div>
+                              ) : null;
+                            })()}
                           </>;
                         })()}
                       </div>

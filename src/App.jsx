@@ -16,13 +16,20 @@ import AdminResults from './pages/admin/Results';
 import AdminPromotion from './pages/admin/Promotion';
 import AdminTranscript from './pages/admin/Transcript';
 import TeacherDashboard from './pages/teacher/Dashboard';
+import TeacherMyStudents from './pages/teacher/MyStudents';
+import TeacherMyResults from './pages/teacher/MyResults';
+import TeacherMyAttendance from './pages/teacher/MyAttendance';
 import StudentDashboard from './pages/student/Dashboard';
+import StudentMyResults from './pages/student/MyResults';
+import StudentMyAttendance from './pages/student/MyAttendance';
 import BackupPage from './pages/admin/Backup';
 import ReportsPage from './pages/admin/Reports';
 import UsersPage from './pages/admin/Users';
 import AttendancePage from './pages/admin/Attendance';
 import AttendanceReportPage from './pages/admin/AttendanceReport';
 import ParentDashboard from './pages/parent/Dashboard';
+import ParentChildrenResults from './pages/parent/ChildrenResults';
+import ParentChildrenAttendance from './pages/parent/ChildrenAttendance';
 
 export default function App() {
   const { init, seedAccounts, isLoading, isAuthenticated, updateLastActivity, checkSession, logout } = useAuthStore();
@@ -95,8 +102,15 @@ export default function App() {
         <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'teacher']}><ReportsPage /></ProtectedRoute>} />
         <Route path="/admin/backup" element={<ProtectedRoute roles={['admin']}><BackupPage /></ProtectedRoute>} />
         <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
+        <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><TeacherMyStudents /></ProtectedRoute>} />
+        <Route path="/teacher/results" element={<ProtectedRoute roles={['teacher']}><TeacherMyResults /></ProtectedRoute>} />
+        <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><TeacherMyAttendance /></ProtectedRoute>} />
         <Route path="/student/dashboard" element={<ProtectedRoute roles={['student']}><StudentDashboard /></ProtectedRoute>} />
+        <Route path="/student/results" element={<ProtectedRoute roles={['student']}><StudentMyResults /></ProtectedRoute>} />
+        <Route path="/student/attendance" element={<ProtectedRoute roles={['student']}><StudentMyAttendance /></ProtectedRoute>} />
         <Route path="/parent/dashboard" element={<ProtectedRoute roles={['parent']}><ParentDashboard /></ProtectedRoute>} />
+        <Route path="/parent/results" element={<ProtectedRoute roles={['parent']}><ParentChildrenResults /></ProtectedRoute>} />
+        <Route path="/parent/attendance" element={<ProtectedRoute roles={['parent']}><ParentChildrenAttendance /></ProtectedRoute>} />
         <Route path="/transcript/:id" element={<ProtectedRoute roles={['student', 'teacher', 'admin']}><AdminTranscript /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

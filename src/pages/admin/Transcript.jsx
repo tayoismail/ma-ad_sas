@@ -255,7 +255,7 @@ export default function TranscriptPage() {
                     {promo && (
                       <span className={`flex items-center gap-1 font-medium ${promo.status === 'promoted' || promo.status === 'graduated' ? 'text-emerald-600' : 'text-red-600'}`}>
                         {promo.status === 'promoted' || promo.status === 'graduated' ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                        {promo.status === 'promoted' ? `Promoted to ${promo.promoteTo || '--'}` : promo.status === 'graduated' ? 'Graduated' : 'Repeated'}
+                        {promo.status === 'promoted' ? `Promoted to ${promo.promoteTo || '--'} / منقول إلى ${promo.promoteTo || '--'}` : promo.status === 'graduated' ? 'Graduated / متخرج' : 'Repeated / راسب'}
                       </span>
                     )}
                   </div>
@@ -291,11 +291,25 @@ export default function TranscriptPage() {
                           <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem1?.examScore ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem1?.testScore ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-900">{data.sem1?.total ?? '--'}</td>
-                          <td className="px-3 py-2.5 text-center">{data.sem1?.grade ? <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${gradeColor(data.sem1.grade)}`}>{data.sem1.grade}</span> : '--'}</td>
+                          <td className="px-3 py-2.5 text-center">
+                            {data.sem1?.grade ? (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${gradeColor(data.sem1.grade)}`}>{data.sem1.grade}</span>
+                                <span className="text-[9px] text-gray-500" dir="rtl">{data.sem1.remarkAr || ''}</span>
+                              </div>
+                            ) : '--'}
+                          </td>
                           <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem2?.examScore ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem2?.testScore ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-900">{data.sem2?.total ?? '--'}</td>
-                          <td className="px-3 py-2.5 text-center">{data.sem2?.grade ? <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${gradeColor(data.sem2.grade)}`}>{data.sem2.grade}</span> : '--'}</td>
+                          <td className="px-3 py-2.5 text-center">
+                            {data.sem2?.grade ? (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${gradeColor(data.sem2.grade)}`}>{data.sem2.grade}</span>
+                                <span className="text-[9px] text-gray-500" dir="rtl">{data.sem2.remarkAr || ''}</span>
+                              </div>
+                            ) : '--'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -314,6 +328,16 @@ export default function TranscriptPage() {
                       <span className="text-gray-500 font-medium">Cumulative: </span>
                       <span className={`font-bold ${cumAvg !== null && cumAvg >= 50 ? 'text-emerald-600' : 'text-red-600'}`}>{cumAvg ?? '--'}</span>
                     </div>
+                    {sem2.length > 0 && (() => {
+                      const pass = cumAvg !== null && cumAvg >= 50;
+                      return (
+                        <div className={`px-3 py-1.5 rounded-lg border ${pass ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                          <span className={`font-medium ${pass ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {pass ? 'Promoted / منتقل' : 'Repeat / راسب'}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

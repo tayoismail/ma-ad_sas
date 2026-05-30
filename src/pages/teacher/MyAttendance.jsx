@@ -1,0 +1,198 @@
+import { useState, useEffect, useCallback } from 'react';
+import { CheckCircle2, XCircle, AlertCircle, ChevronLeft, ChevronRight, Menu, CalendarDays, School } from 'lucide-react';
+import useAuthStore from '../../store/authStore';
+import useClassesStore from '../../store/classesStore';
+import useStudentsStore from '../../store/studentsStore';
+import useAttendanceStore from '../../store/attendanceStore';
+import useSettingsStore from '../../store/settingsStore';
+import useSubjectsStore from '../../store/subjectsStore';
+import AdminSidebar from '../../components/AdminSidebar';
+import { Card } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+export default function TeacherMyAttendance() {
+  const { user } = useAuthStore();
+  const { classes, loadClasses } = useClassesStore();
+  const { students, loadStudents } = useStudentsStore();
+  const { subjects, loadSubjects } = useSubjectsStore();
+  const { settings, loadSettings } = useSettingsStore();
+  const { getRecordsForClass, markAttendance, markBulk } = useAttendanceStore();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [filters, setFilters] = useState({ session: '', semester: '1', className: '' });
+  const [today] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceMap, setAttendanceMap] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => { loadSettings(); loadClasses(); loadStudents(); loadSubjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (settings) {
+      setFilters((f) => ({ ...f, session: settings.currentSession, semester: String(settings.currentSemester) }));
+    }
+  }, [settings]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const teacherSubjectIds = user?.teacherSubjects || [];
+  const teacherClassNames = [...new Set(
+    subjects.filter((s) => teacherSubjectIds.includes(s.id)).map((s) => s.className)
+  )];
+  const filteredClasses = classes.filter((c) => teacherClassNames.includes(c.name));
+
+  const loadAttendance = useCallback(async () => {
+    if (!filters.className) return;
+    const records = await getRecordsForClass(filters.className, filters.session, filters.semester, selectedDate);
+    const map = {};
+    records.forEach((r) => { map[r.studentId] = r.status; });
+    setAttendanceMap(map);
+  }, [filters.className, filters.session, filters.semester, selectedDate, getRecordsForClass]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (filters.className && selectedDate) loadAttendance();
+  }, [filters.className, selectedDate, loadAttendance]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const classStudents = students.filter((s) => s.className === filters.className);
+
+  const toggleStatus = async (studentId, currentStatus) => {
+    const next = currentStatus === 'present' ? 'absent' : currentStatus === 'absent' ? 'late' : 'present';
+    setAttendanceMap((prev) => ({ ...prev, [studentId]: next }));
+    await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, next);
+  };
+
+  const markAll = async (status) => {
+    setSaving(true);
+    const records = classStudents.map((s) => ({
+      studentId: s.studentId, className: filters.className,
+      session: filters.session, semester: Number(filters.semester),
+      date: selectedDate, status,
+    }));
+    await markBulk(records);
+    const map = {};
+    records.forEach((r) => { map[r.studentId] = r.status; });
+    setAttendanceMap(map);
+    setSaved(true); setTimeout(() => setSaved(false), 2000);
+    setSaving(false);
+  };
+
+  const dateStr = `${DAYS[today.getDay()]}, ${MONTHS[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+
+  const changeDate = (offset) => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + offset);
+    setSelectedDate(d.toISOString().split('T')[0]);
+  };
+
+  const statusIcon = (status) => {
+    if (status === 'present') return <CheckCircle2 className="w-6 h-6 text-emerald-500" />;
+    if (status === 'absent') return <XCircle className="w-6 h-6 text-red-500" />;
+    if (status === 'late') return <AlertCircle className="w-6 h-6 text-amber-500" />;
+    return <div className="w-6 h-6 rounded-full border-2 border-dashed border-gray-300" />;
+  };
+
+  const statusLabel = (status) => {
+    if (status === 'present') return 'Present';
+    if (status === 'absent') return 'Absent';
+    if (status === 'late') return 'Late';
+    return 'Mark';
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-300">
+      <AdminSidebar activePath="/teacher/attendance" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div className="lg:pl-72">
+        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+          <div className="flex items-center justify-between px-4 lg:px-8 h-16">
+            <div className="flex items-center gap-4">
+              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <h1 className="text-lg font-semibold text-card-foreground">My Attendance</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 pl-3 border-l border-border">
+                <p className="text-sm font-medium text-card-foreground hidden sm:block">{user?.name || 'Teacher'}</p>
+                <Avatar className="ring-2 ring-primary/20"><AvatarFallback className="bg-primary/10 text-primary">{(user?.name || 'T').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="p-4 lg:p-8 space-y-6">
+          {saved && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in"><CheckCircle2 className="w-4 h-4" /> Attendance saved</div>
+          )}
+          {teacherClassNames.length === 0 ? (
+            <Card className="p-12 text-center border-border">
+              <School className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-card-foreground mb-2">No Classes Assigned</h3>
+              <p className="text-sm text-muted-foreground">Ask an admin to assign subjects to you.</p>
+            </Card>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <select value={filters.className} onChange={(e) => setFilters({ ...filters, className: e.target.value })}
+                  className="h-11 rounded-xl border-2 border-border/50 bg-white/60 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 min-w-[200px]">
+                  <option value="">Select Class</option>
+                  {filteredClasses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+              {filters.className && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium text-card-foreground">{dateStr}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => changeDate(-1)}><ChevronLeft className="w-4 h-4" /></Button>
+                      <span className="text-sm font-medium text-card-foreground min-w-[100px] text-center">{selectedDate}</span>
+                      <Button variant="outline" size="sm" onClick={() => changeDate(1)}><ChevronRight className="w-4 h-4" /></Button>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="outline" size="sm" onClick={() => markAll('present')} disabled={saving} className="text-emerald-600 border-emerald-200 hover:bg-emerald-50">All Present</Button>
+                      <Button variant="outline" size="sm" onClick={() => markAll('absent')} disabled={saving} className="text-red-600 border-red-200 hover:bg-red-50">All Absent</Button>
+                    </div>
+                  </div>
+                  <Card className="overflow-hidden border-border">
+                    <div className="divide-y divide-border">
+                      {classStudents.length === 0 ? (
+                        <div className="p-8 text-center text-sm text-muted-foreground">No students in this class.</div>
+                      ) : classStudents.map((s) => {
+                        const status = attendanceMap[s.studentId];
+                        return (
+                          <div key={s.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/20 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
+                                {s.name?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-card-foreground">{s.name}</p>
+                                <p className="text-xs text-muted-foreground">{s.studentId}</p>
+                              </div>
+                            </div>
+                            <button onClick={() => toggleStatus(s.studentId, status)}
+                              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
+                              {statusIcon(status)}
+                              <span className="text-xs font-medium text-muted-foreground">{statusLabel(status)}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                </>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
