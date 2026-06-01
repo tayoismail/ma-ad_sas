@@ -46,7 +46,7 @@ export default function Login() {
         </div>
         <div className="hidden sm:block">
           <p className="text-white font-semibold text-sm">MA'AD AHLIL AATHAR</p>
-          <p className="text-white/40 text-[10px]">Assessment System</p>
+          <p className="text-white/40 text-xs">Assessment System</p>
         </div>
       </button>
 

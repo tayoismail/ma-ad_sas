@@ -24,14 +24,14 @@ export default function Landing() {
         </div>
         <div className="hidden sm:block">
           <p className="text-white font-semibold text-sm">MA'AD AHLIL AATHAR</p>
-          <p className="text-white/40 text-[10px]">Assessment System</p>
+          <p className="text-white/40 text-xs">Assessment System</p>
         </div>
       </div>
 
       <div className="absolute top-4 right-3 sm:top-8 sm:right-8 z-10 animate-fade-in flex items-center gap-3">
         <Button
           onClick={() => navigate('/login')}
-          className="bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-9 sm:h-11 text-xs sm:text-sm px-3 sm:px-4"
+          className="bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-11 text-xs sm:text-sm px-3 sm:px-4"
         >
           Sign In <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
         </Button>

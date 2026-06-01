@@ -74,11 +74,11 @@ export default function TeacherMyStudents() {
       ),
     },
     {
-      key: 'actions', label: 'Actions', sortable: false, width: '120px',
+      key: 'actions', label: 'Actions', sortable: false, width: '160px',
       render: (row) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => navigate(`/transcript/${row.id}`)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500" title="View Profile"><Eye className="w-4 h-4" /></button>
-          <button onClick={() => navigate(`/transcript/${row.id}`)} className="p-1.5 rounded-lg hover:bg-purple-50 text-purple-500" title="Academic Record"><FileText className="w-4 h-4" /></button>
+          <button onClick={() => navigate(`/transcript/${row.id}`)} className="p-2 rounded-lg hover:bg-blue-50 text-blue-500" title="View Profile"><Eye className="w-4 h-4" /></button>
+          <button onClick={() => navigate(`/transcript/${row.id}`)} className="p-2 rounded-lg hover:bg-purple-50 text-purple-500" title="Academic Record"><FileText className="w-4 h-4" /></button>
         </div>
       ),
     },

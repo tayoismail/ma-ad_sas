@@ -162,13 +162,13 @@ export default function StudentsPage() {
     {
       key: 'actions',
       label: 'Actions',
-      width: '200px',
+      width: '260px',
       sortable: false,
       render: (row) => (
         <div className="flex items-center gap-1">
           <button
             onClick={() => navigate(`/admin/students/${row.id}`)}
-            className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 transition-colors"
+            className="p-2 rounded-lg hover:bg-blue-50 text-blue-500 transition-colors"
             title="View Profile"
           >
             <Eye className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function StudentsPage() {
           {user?.role !== 'teacher' && (
             <button
               onClick={() => navigate(`/admin/students/${row.id}/edit`)}
-              className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 transition-colors"
+              className="p-2 rounded-lg hover:bg-amber-50 text-amber-500 transition-colors"
               title="Edit"
             >
               <Pencil className="w-4 h-4" />
@@ -184,7 +184,7 @@ export default function StudentsPage() {
           )}
           <button
             onClick={() => navigate(`/admin/transcript/${row.id}`)}
-            className="p-1.5 rounded-lg hover:bg-purple-50 text-purple-500 transition-colors"
+            className="p-2 rounded-lg hover:bg-purple-50 text-purple-500 transition-colors"
             title="View Full Academic Record"
           >
             <FileText className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function StudentsPage() {
           {user?.role !== 'teacher' && (
             <button
               onClick={() => setDeleteConfirm(row.id)}
-              className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+              className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />

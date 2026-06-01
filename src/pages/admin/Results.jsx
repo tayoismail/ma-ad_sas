@@ -328,19 +328,19 @@ export default function ResultsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Session</label>
-                <Input value={filters.session} onChange={(e) => setFilters({ ...filters, session: e.target.value })} className="bg-white/80 h-10" />
+                <Input value={filters.session} onChange={(e) => setFilters({ ...filters, session: e.target.value })} className="bg-white/80 h-11" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Semester</label>
                 <select value={filters.semester} onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
+                  className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
                   <option value="1">{semesterLabel(1)}</option><option value="2">{semesterLabel(2)}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Class</label>
                 <select value={filters.className} onChange={(e) => setFilters({ ...filters, className: e.target.value, subjectId: '' })}
-                  className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
+                  className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
                   <option value="">Select Class</option>
                    {filteredClasses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                 </select>
@@ -348,7 +348,7 @@ export default function ResultsPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Subject</label>
                 <select value={filters.subjectId} onChange={(e) => setFilters({ ...filters, subjectId: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40"
+                  className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40"
                   disabled={!filters.className}>
                   <option value="">Select Subject</option>
                   {filteredSubjects.map((s) => <option key={s.id} value={s.id}>{s.name} {s.arabicName ? `(${s.arabicName})` : ''}</option>)}
@@ -418,7 +418,10 @@ export default function ResultsPage() {
                               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
                                 {student.name?.charAt(0)?.toUpperCase() || '?'}
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">{student.name}</span>
+                              <div>
+                                <p className="font-medium text-gray-900 text-sm">{student.name}</p>
+                                {student.arabicName && <p className="text-xs text-gray-400" dir="rtl">{student.arabicName}</p>}
+                              </div>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-center text-xs font-mono text-gray-400">{student.studentId || '--'}</td>
@@ -426,20 +429,20 @@ export default function ResultsPage() {
                             <Input type="number" min={0} max={100} value={s.examScore ?? ''}
                               onChange={(e) => updateScore(student.studentId, 'examScore', e.target.value)}
                               disabled={isFinalized}
-                              className="w-20 h-9 text-center bg-white/60 mx-auto text-sm" />
+                              className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
                           </td>
                           {useTest && (
                             <td className="px-3 py-3">
                               <Input type="number" min={0} max={40} value={s.testScore ?? ''}
                                 onChange={(e) => updateScore(student.studentId, 'testScore', e.target.value)}
-                                className="w-20 h-9 text-center bg-white/60 mx-auto text-sm" />
+                                className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
                             </td>
                           )}
                           {useAttendance && (
                             <td className="px-3 py-3">
                               <Input type="number" min={0} max={100} value={s.attendance ?? ''}
                                 onChange={(e) => updateScore(student.studentId, 'attendance', e.target.value)}
-                                className="w-20 h-9 text-center bg-white/60 mx-auto text-sm" />
+                                className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
                             </td>
                           )}
                           <td className="px-3 py-3 text-center font-semibold text-gray-900">{total}</td>

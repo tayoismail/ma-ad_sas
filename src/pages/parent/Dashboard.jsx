@@ -66,7 +66,7 @@ export default function ParentDashboard() {
               <p className="text-sm font-medium text-card-foreground">{user?.name || 'Parent'}</p>
               <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
               {user?.lastLogin && (
-                <p className="text-[10px] text-muted-foreground mt-0.5">Last login: {new Date(user.lastLogin).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Last login: {new Date(user.lastLogin).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
               )}
             </div>
             <Avatar className="ring-2 ring-indigo-500/20"><AvatarFallback className="bg-indigo-500/10 text-indigo-500">{(user?.name || 'P').charAt(0).toUpperCase()}</AvatarFallback></Avatar>

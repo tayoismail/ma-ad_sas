@@ -49,7 +49,7 @@ export default function AdminSidebar({ activePath, sidebarOpen, setSidebarOpen, 
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-72 bg-card/80 backdrop-blur-xl border-r border-border shadow-2xl shadow-black/5 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${className}`}>
+      <aside role="navigation" aria-label="Main navigation" className={`fixed top-0 left-0 z-50 h-full w-72 bg-card/80 backdrop-blur-xl border-r border-border shadow-2xl shadow-black/5 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${className}`}>
         <div className="flex flex-col h-full">
           <button onClick={() => navigate('/')} className="p-6 border-b border-border w-full text-left hover:opacity-80 transition-opacity">
             <div className="flex items-center gap-3">
@@ -58,7 +58,7 @@ export default function AdminSidebar({ activePath, sidebarOpen, setSidebarOpen, 
               </div>
               <div>
                 <p className="font-semibold text-sm text-card-foreground">MA'AD AHLIL AATHAR</p>
-                <p className="text-[10px] text-muted-foreground">Assessment System</p>
+                <p className="text-xs text-muted-foreground">Assessment System</p>
               </div>
             </div>
           </button>
@@ -69,6 +69,7 @@ export default function AdminSidebar({ activePath, sidebarOpen, setSidebarOpen, 
               return (
                 <button
                   key={link.label}
+                  aria-label={`Navigate to ${link.label}`}
                   onClick={() => {
                     navigate(path);
                     setSidebarOpen(false);
@@ -79,7 +80,7 @@ export default function AdminSidebar({ activePath, sidebarOpen, setSidebarOpen, 
                       : 'text-muted-foreground hover:bg-gray-100/50'
                   }`}
                 >
-                  <link.icon className="w-4 h-4" /> {link.label}
+                  <link.icon className="w-4 h-4" aria-hidden="true" /> {link.label}
                 </button>
               );
             })}

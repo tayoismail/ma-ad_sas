@@ -160,7 +160,7 @@ export default function AttendancePage() {
                 </div>
                 <p className="text-center font-medium text-sm text-gray-700 mb-3">{MONTHS[month]} {year}</p>
                 <div className="grid grid-cols-7 gap-0.5 text-center">
-                  {DAYS.map((d) => <div key={d} className="text-[10px] font-semibold text-gray-400 py-1">{d}</div>)}
+                  {DAYS.map((d) => <div key={d} className="text-xs font-semibold text-gray-400 py-1">{d}</div>)}
                   {calendarDays.map((d, i) => {
                     const dateStr = d ? `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null;
                     const isSelected = dateStr === selectedDate;
@@ -182,19 +182,19 @@ export default function AttendancePage() {
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Session</label>
                     <input value={filters.session} onChange={(e) => setFilters({ ...filters, session: e.target.value })}
-                      className="flex h-9 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40" />
+                      className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Semester</label>
                     <select value={filters.semester} onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
-                      className="flex h-9 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
+                      className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
                       <option value="1">{semesterLabel(1)}</option><option value="2">{semesterLabel(2)}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Class</label>
                     <select value={filters.className} onChange={(e) => setFilters({ ...filters, className: e.target.value })}
-                      className="flex h-9 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
+                      className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
                       <option value="">Select</option>
                       {classes.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>

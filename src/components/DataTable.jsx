@@ -94,7 +94,7 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
               size="icon"
               disabled={page === 0}
               onClick={() => setPage((p) => Math.max(0, p - 1))}
-              className="h-8 w-8"
+              className="h-10 w-10"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -108,7 +108,7 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
               for (let i = start; i < end; i++) {
                 pages.push(
                   <Button key={i} variant={page === i ? 'default' : 'ghost'} size="icon"
-                    onClick={() => setPage(i)} className="h-8 w-8 text-xs">{i + 1}</Button>
+                    onClick={() => setPage(i)} className="h-10 w-10 text-xs">{i + 1}</Button>
                 );
               }
               if (end < totalPages) pages.push(<span key="end" className="text-xs text-gray-400 px-1">...</span>);
@@ -119,7 +119,7 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
               size="icon"
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              className="h-8 w-8"
+              className="h-10 w-10"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>

@@ -188,6 +188,7 @@ export default function TeacherMyResults() {
                                   </div>
                                   <div>
                                     <p className="font-medium text-card-foreground">{s.name}</p>
+                                    {s.arabicName && <p className="text-xs text-muted-foreground" dir="rtl">{s.arabicName}</p>}
                                     <p className="text-xs text-muted-foreground">{s.studentId}</p>
                                   </div>
                                 </div>
@@ -195,18 +196,18 @@ export default function TeacherMyResults() {
                               <td className="px-4 py-3 text-center">
                                 <input type="number" min="0" max="100" value={exam}
                                   onChange={(e) => updateScore(s.studentId, 'examScore', e.target.value)}
-                                  className="w-20 h-9 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                  className="w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <input type="number" min="0" max="100" value={test}
                                   onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
-                                  className="w-20 h-9 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                  className="w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                               </td>
                               {useAttendance && (
                                 <td className="px-4 py-3 text-center">
                                   <input type="number" min="0" max="100" value={scores[s.studentId]?.attendance ?? ''}
                                     onChange={(e) => updateScore(s.studentId, 'attendance', e.target.value)}
-                                    className="w-20 h-9 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                    className="w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                                 </td>
                               )}
                               <td className="px-4 py-3 text-center font-semibold text-card-foreground">{total}</td>
