@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
 import { useThemeStore } from './store/themeStore';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -102,7 +103,7 @@ export default function App() {
         <Route path="/admin/backup" element={<ProtectedRoute roles={['admin']}><BackupPage /></ProtectedRoute>} />
         <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
         <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><TeacherMyStudents /></ProtectedRoute>} />
-        <Route path="/teacher/results" element={<ProtectedRoute roles={['teacher']}><TeacherMyResults /></ProtectedRoute>} />
+        <Route path="/teacher/results" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyResults /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><TeacherMyAttendance /></ProtectedRoute>} />
         <Route path="/student/dashboard" element={<ProtectedRoute roles={['student']}><StudentDashboard /></ProtectedRoute>} />
         <Route path="/student/results" element={<ProtectedRoute roles={['student']}><StudentMyResults /></ProtectedRoute>} />

@@ -61,21 +61,21 @@ export default function Landing() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 mt-10" style={{ animation: 'slideUp 0.6s ease-out 0.2s both' }}>
-          <div className="flex items-center gap-2 text-white/50 text-sm">
-            <MapPin className="w-4 h-4 text-blue-400" />
-            <span>No 3, Mosadoluwa Street, behind Osogbo Local Govt., Oke Baale, Osogbo, Osun State</span>
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-10 px-4" style={{ animation: 'slideUp 0.6s ease-out 0.2s both' }}>
+            <div className="flex items-start gap-2 text-white/50 text-sm max-w-full">
+              <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+              <span className="break-words">No 3, Mosadoluwa Street, behind Osogbo Local Govt., Oke Baale, Osogbo, Osun State</span>
+            </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-6 mt-3" style={{ animation: 'slideUp 0.6s ease-out 0.3s both' }}>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3" style={{ animation: 'slideUp 0.6s ease-out 0.3s both' }}>
           <div className="flex items-center gap-2 text-white/50 text-sm">
-            <Phone className="w-4 h-4 text-purple-400" />
+            <Phone className="w-4 h-4 text-purple-400 shrink-0" />
             <span>08033719211</span>
           </div>
-          <span className="text-white/20">|</span>
+          <span className="text-white/20 hidden sm:inline">|</span>
           <span className="text-white/50 text-sm">08034660100</span>
-          <span className="text-white/20">|</span>
+          <span className="text-white/20 hidden sm:inline">|</span>
           <span className="text-white/50 text-sm">08062837011</span>
         </div>
 

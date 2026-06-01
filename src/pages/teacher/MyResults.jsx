@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Save, Award, Menu, Loader2, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useSettingsStore from '../../store/settingsStore';
@@ -21,11 +21,13 @@ export default function TeacherMyResults() {
   const { getResultsForClass, saveResults } = useResultsStore();
   const { settings, loadSettings } = useSettingsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [filters, setFilters] = useState({ className: '', subjectId: '' });
+  const [filters, setFilters] = useState({ className: '', subjectId: '', session: settings?.currentSession || '2024/2025', semester: String(settings?.currentSemester || 1) });
   const [scores, setScores] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [useAttendance, setUseAttendance] = useState(false);
+  const latestFilterRef = useRef('');
 
   useEffect(() => { loadSettings(); loadClasses(); loadSubjects(); loadStudents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -34,7 +36,7 @@ export default function TeacherMyResults() {
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (settings) {
-      setFilters((f) => ({ ...f }));
+      setFilters((f) => ({ ...f, session: settings.currentSession, semester: String(settings.currentSemester) }));
     }
   }, [settings]);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -51,19 +53,25 @@ export default function TeacherMyResults() {
 
   const handleLoadResults = async () => {
     if (!filters.className || !filters.subjectId) return;
-    const results = await getResultsForClass(filters.className, settings.currentSession, settings.currentSemester, filters.subjectId);
-    const map = {};
-    for (const r of results) {
-      map[r.studentId] = { examScore: r.examScore || 0, testScore: r.testScore || 0 };
+    const token = `${filters.className}_${filters.subjectId}_${filters.session}_${filters.semester}`;
+    latestFilterRef.current = token;
+    try {
+      const results = await getResultsForClass(filters.className, filters.session, filters.semester, filters.subjectId);
+      if (latestFilterRef.current !== token) return;
+      const map = {};
+      for (const r of results) {
+        map[r.studentId] = { examScore: r.examScore || 0, testScore: r.testScore || 0, attendance: r.attendance ?? '' };
+      }
+      setScores(map);
+    } catch {
+      setError('Failed to load results');
     }
-    setScores(map);
   };
 
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => { handleLoadResults();
+  useEffect(() => {
+    if (filters.className && filters.subjectId) handleLoadResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.className, filters.subjectId]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const updateScore = (studentId, field, value) => {
     const num = Math.max(0, Math.min(100, Number(value) || 0));
@@ -72,18 +80,20 @@ export default function TeacherMyResults() {
 
   const handleSaveAll = async () => {
     if (!filters.className || !filters.subjectId) { setError('Select class and subject'); return; }
+    if (!settings) { setError('Settings not loaded yet'); return; }
     setSaving(true); setError(''); setSaved(false);
+    const subj = filteredSubjects.find((sub) => String(sub.id) === String(filters.subjectId));
     const records = classStudents.map((s) => {
       const exam = scores[s.studentId]?.examScore || 0;
       const test = scores[s.studentId]?.testScore || 0;
       const total = calculateTotal(exam, test);
-      const session = settings.currentSession;
-      const semester = settings.currentSemester;
+      const gradeInfo = calculateGrade(total, settings?.gradingScale);
       return {
         studentId: s.studentId, className: filters.className,
-        subjectId: filters.subjectId, subjectName: filteredSubjects.find((sub) => String(sub.id) === String(filters.subjectId))?.name || '',
-        session, semester: Number(semester), examScore: exam, testScore: test, total,
-        grade: calculateGrade(total, settings?.gradingScale),
+        subjectId: filters.subjectId, subjectName: subj?.name || '',
+        session: filters.session, semester: Number(filters.semester), examScore: exam, testScore: test, total,
+        attendance: useAttendance ? (Number(scores[s.studentId]?.attendance) || null) : null,
+        ...gradeInfo,
         enteredBy: user?.id, enteredAt: new Date().toISOString(),
       };
     });
@@ -119,7 +129,7 @@ export default function TeacherMyResults() {
             <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm"><CheckCircle2 className="w-4 h-4" /> Results saved successfully</div>
           )}
           <div className="flex flex-col sm:flex-row gap-3">
-            <select value={filters.className} onChange={(e) => setFilters({ className: e.target.value, subjectId: '' })}
+            <select value={filters.className} onChange={(e) => setFilters({ ...filters, className: e.target.value, subjectId: '' })}
               className="h-11 rounded-xl border-2 border-border/50 bg-white/60 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 min-w-[200px]">
               <option value="">Select Class</option>
               {filteredClasses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
@@ -133,8 +143,14 @@ export default function TeacherMyResults() {
             )}
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span>Session: <strong>{settings?.currentSession}</strong></span>
-            <span>Semester: <strong>{semesterLabel(settings?.currentSemester)}</strong></span>
+            <span>Session: <strong>{filters.session}</strong></span>
+            <span>Semester: <strong>{semesterLabel(Number(filters.semester))}</strong></span>
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input type="checkbox" checked={useAttendance} onChange={() => setUseAttendance(!useAttendance)} className="rounded border-gray-300" />
+              Include Attendance %
+            </label>
           </div>
           {filters.className && filters.subjectId && (
             <>
@@ -152,6 +168,7 @@ export default function TeacherMyResults() {
                           <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Student</th>
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Exam Score</th>
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Test Score</th>
+                          {useAttendance && <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Attend %</th>}
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Total</th>
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Grade</th>
                         </tr>
@@ -161,7 +178,7 @@ export default function TeacherMyResults() {
                           const exam = scores[s.studentId]?.examScore ?? '';
                           const test = scores[s.studentId]?.testScore ?? '';
                           const total = calculateTotal(Number(exam) || 0, Number(test) || 0);
-                          const grade = calculateGrade(total, settings?.gradingScale);
+                          const g = calculateGrade(total, settings?.gradingScale);
                           return (
                             <tr key={s.id} className="border-t border-border hover:bg-muted/20">
                               <td className="px-4 py-3">
@@ -185,15 +202,22 @@ export default function TeacherMyResults() {
                                   onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
                                   className="w-20 h-9 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                               </td>
+                              {useAttendance && (
+                                <td className="px-4 py-3 text-center">
+                                  <input type="number" min="0" max="100" value={scores[s.studentId]?.attendance ?? ''}
+                                    onChange={(e) => updateScore(s.studentId, 'attendance', e.target.value)}
+                                    className="w-20 h-9 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                </td>
+                              )}
                               <td className="px-4 py-3 text-center font-semibold text-card-foreground">{total}</td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                  grade === 'A' ? 'text-emerald-600 bg-emerald-500/10' :
-                                  grade === 'B' ? 'text-blue-600 bg-blue-500/10' :
-                                  grade === 'C' ? 'text-amber-600 bg-amber-500/10' :
-                                  grade === 'D' ? 'text-orange-600 bg-orange-500/10' :
+                                  g.grade === 'A' ? 'text-emerald-600 bg-emerald-500/10' :
+                                  g.grade === 'B' ? 'text-blue-600 bg-blue-500/10' :
+                                  g.grade === 'C' ? 'text-amber-600 bg-amber-500/10' :
+                                  g.grade === 'D' ? 'text-orange-600 bg-orange-500/10' :
                                   'text-red-600 bg-red-500/10'
-                                }`}>{grade}</span>
+                                }`}>{g.grade}</span>
                               </td>
                             </tr>
                           );
