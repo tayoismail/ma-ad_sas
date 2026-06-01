@@ -40,11 +40,11 @@ export default function Login() {
         <div className="absolute top-[30%] right-[20%] w-[30%] h-[30%] rounded-full bg-cyan-500/5 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <button onClick={() => navigate('/')} className="absolute top-8 left-8 flex items-center gap-3 z-10 hover:opacity-80 transition-opacity">
-        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
-          <GraduationCap className="w-5 h-5 text-white" />
+      <button onClick={() => navigate('/')} className="absolute top-4 left-3 sm:top-8 sm:left-8 flex items-center gap-3 z-10 hover:opacity-80 transition-opacity">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
+          <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </div>
-        <div>
+        <div className="hidden sm:block">
           <p className="text-white font-semibold text-sm">MA'AD AHLIL AATHAR</p>
           <p className="text-white/40 text-[10px]">Assessment System</p>
         </div>

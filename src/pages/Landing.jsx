@@ -18,26 +18,26 @@ export default function Landing() {
         <div className="absolute bottom-[30%] left-[10%] w-[20%] h-[20%] rounded-full bg-emerald-500/5 blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <div className="absolute top-6 left-6 sm:top-8 sm:left-8 flex items-center gap-3 z-10 animate-fade-in">
-        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
-          <GraduationCap className="w-5 h-5 text-white" />
+      <div className="absolute top-4 left-3 sm:top-8 sm:left-8 flex items-center gap-3 z-10 animate-fade-in">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
+          <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </div>
-        <div>
+        <div className="hidden sm:block">
           <p className="text-white font-semibold text-sm">MA'AD AHLIL AATHAR</p>
           <p className="text-white/40 text-[10px]">Assessment System</p>
         </div>
       </div>
 
-      <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-10 animate-fade-in flex items-center gap-3">
+      <div className="absolute top-4 right-3 sm:top-8 sm:right-8 z-10 animate-fade-in flex items-center gap-3">
         <Button
           onClick={() => navigate('/login')}
-          className="bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20"
+          className="bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-9 sm:h-11 text-xs sm:text-sm px-3 sm:px-4"
         >
-          Sign In <ArrowRight className="w-4 h-4 ml-2" />
+          Sign In <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
         </Button>
       </div>
 
-      <div className="relative z-10 w-full max-w-4xl animate-fade-in text-center">
+      <div className="relative z-10 w-full max-w-4xl animate-fade-in text-center pt-16 sm:pt-0">
         <div className="mb-3" style={{ animation: 'slideUp 0.6s ease-out' }}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/50 text-xs mb-6">
             <Sparkles className="w-3 h-3" /> Islamic Educational Institution
@@ -47,15 +47,15 @@ export default function Landing() {
             بسم الله الرحمن الرحيم
           </p>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-2 tracking-tight">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-1 sm:mb-2 tracking-tight">
             MA'AD AHLIL
           </h1>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-tight mb-6 tracking-tight
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black leading-tight mb-4 sm:mb-6 tracking-tight
             text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300">
             AATHAR
           </h1>
 
-          <p className="text-xl sm:text-2xl font-bold text-white/80 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-2xl font-bold text-white/80 max-w-2xl mx-auto leading-relaxed px-2">
             Elevating The Religion with Qur'an and Sunnah<br />
             <span className="text-white/60 font-semibold">Upon the way of the Salaf.</span>
           </p>
