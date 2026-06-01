@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Download, Upload, Menu, CheckCircle2,
   AlertCircle, Loader2
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
-import db from '../../db/database';
+import { collection, getDocs, deleteDoc, setDoc, doc } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+import ConfirmModal from '../../components/ConfirmModal';
+
+const COLLECTIONS = ['users', 'settings', 'classes', 'students', 'subjects', 'results', 'promotions', 'attendance'];
 
 export default function BackupPage() {
   const navigate = useNavigate();
@@ -18,15 +22,16 @@ export default function BackupPage() {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState(null);
-
-  const tables = ['users', 'settings', 'classes', 'students', 'subjects', 'results', 'cumulativeAverages', 'promotions'];
+  const [restoreConfirm, setRestoreConfirm] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleExport = async () => {
     setExporting(true);
     try {
       const data = {};
-      for (const table of tables) {
-        data[table] = await db.table(table).toArray();
+      for (const name of COLLECTIONS) {
+        const snap = await getDocs(collection(db, name));
+        data[name] = snap.docs.map((d) => ({ _id: d.id, ...d.data() }));
       }
       const json = JSON.stringify(data, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -44,18 +49,31 @@ export default function BackupPage() {
     setTimeout(() => setResult(null), 5000);
   };
 
-  const handleImport = (e) => {
+  const handleFileSelected = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setRestoreConfirm(file);
+    e.target.value = '';
+  };
+
+  const handleImport = async () => {
+    if (!restoreConfirm) return;
     setImporting(true);
+    setRestoreConfirm(null);
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
         const data = JSON.parse(evt.target.result);
-        for (const table of tables) {
-          if (data[table]?.length) {
-            await db.table(table).clear();
-            await db.table(table).bulkAdd(data[table]);
+        for (const name of COLLECTIONS) {
+          const snap = await getDocs(collection(db, name));
+          for (const d of snap.docs) {
+            await deleteDoc(doc(db, name, d.id));
+          }
+          if (data[name]?.length) {
+            for (const item of data[name]) {
+              const { _id, ...rest } = item;
+              await setDoc(doc(db, name, _id), rest);
+            }
           }
         }
         setResult({ type: 'success', message: 'Data restored successfully! Please refresh the page.' });
@@ -64,8 +82,7 @@ export default function BackupPage() {
       }
       setImporting(false);
     };
-    reader.readAsText(file);
-    e.target.value = '';
+    reader.readAsText(restoreConfirm);
   };
 
   return (
@@ -119,11 +136,21 @@ export default function BackupPage() {
             <label className="flex items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 bg-white/30 hover:bg-white/50 cursor-pointer transition-colors">
               {importing ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Upload className="w-5 h-5 text-primary" />}
               <span className="text-sm text-gray-600">{importing ? 'Restoring...' : 'Choose backup file'}</span>
-              <input type="file" accept=".json" className="hidden" onChange={handleImport} disabled={importing} />
+              <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileSelected} disabled={importing} />
             </label>
           </Card>
         </main>
       </div>
+      <ConfirmModal
+        open={restoreConfirm !== null}
+        title="Restore Data?"
+        message="This will OVERWRITE all existing data including all students, results, attendance, and settings. This action cannot be undone. Are you sure?"
+        confirmLabel="Yes, Restore Everything"
+        variant="danger"
+        loading={importing}
+        onConfirm={handleImport}
+        onCancel={() => { setRestoreConfirm(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+      />
     </div>
   );
 }

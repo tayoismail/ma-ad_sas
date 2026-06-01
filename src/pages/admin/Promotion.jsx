@@ -95,9 +95,13 @@ export default function PromotionPage() {
 
   const handleCalculate = async () => {
     setCalcLoading(true);
-    await calculateCumulative(settings?.currentSession || '2024/2025');
+    try {
+      await calculateCumulative(settings?.currentSession || '2024/2025');
+      setCalculated(true);
+    } catch (err) {
+      console.error('Failed to calculate cumulative:', err);
+    }
     setCalcLoading(false);
-    setCalculated(true);
   };
 
   const confirmed = (studentId) => promotions.find((p) => p.studentId === studentId && p.status === 'confirmed');

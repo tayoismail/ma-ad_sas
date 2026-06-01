@@ -9,7 +9,8 @@ import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import { semesterLabel } from '../../lib/utils';
-import db from '../../db/database';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 
@@ -67,18 +68,18 @@ export default function TranscriptPage() {
     (async () => {
       try {
         setLoading(true);
-        const s = await getStudent(Number(id));
+        const s = await getStudent(id);
         setStudent(s);
         if (s) {
-          const [r, a, cum, prom] = await Promise.all([
+          const [r, a, promSnap] = await Promise.all([
             loadResultsByStudent(s.studentId),
             getAttendanceByStudent(s.studentId),
-            db.cumulativeAverages.where('studentId').equals(s.studentId).toArray(),
-            db.promotions.where('studentId').equals(s.studentId).toArray(),
+            getDocs(query(collection(db, 'promotions'), where('studentId', '==', s.studentId))),
           ]);
+          const prom = promSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
           setAllResults(r);
           setAllAttendance(a);
-          setCumulativeRecords(cum);
+          setCumulativeRecords([]);
           setPromoRecords(prom);
         }
         setLoading(false);
@@ -93,7 +94,7 @@ export default function TranscriptPage() {
   const sessions = [...new Set(allResults.map((r) => r.session))].sort(sortSessions);
 
   const overallCum = (() => {
-    const avgs = cumulativeRecords.map((c) => c.cumulative).filter(Boolean);
+    const avgs = cumulativeRecords.map((c) => c.cumulative).filter((v) => v !== null && v !== undefined);
     if (avgs.length === 0) return null;
     return Math.round((avgs.reduce((s, v) => s + v, 0) / avgs.length) * 100) / 100;
   })();

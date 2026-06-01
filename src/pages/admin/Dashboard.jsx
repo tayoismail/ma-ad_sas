@@ -13,7 +13,8 @@ import { useThemeStore } from '../../store/themeStore';
 import { semesterLabel } from '../../lib/utils';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
-import db from '../../db/database';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 const COLORS = ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#ef4444'];
 
@@ -42,7 +43,8 @@ export default function AdminDashboard() {
 
   const loadPendingTeachers = useCallback(async () => {
     try {
-      const allUsers = await db.users.toArray();
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const allUsers = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
       const teachers = allUsers.filter((u) => u.role === 'teacher' && u.teacherSubjects?.length);
       if (!teachers.length || !settings) {
         setPendingTeachers([]);
@@ -51,14 +53,16 @@ export default function AdminDashboard() {
       }
       const session = settings.currentSession;
       const semester = settings.currentSemester;
+      const resultsSnap = await getDocs(
+        query(collection(db, 'results'), where('session', '==', session), where('semester', '==', semester))
+      );
+      const results = resultsSnap.docs.map((d) => d.data());
       const pending = [];
       for (const t of teachers) {
         const subjectIds = t.teacherSubjects;
         const missingSubjects = [];
         for (const sid of subjectIds) {
-          const count = await db.results
-            .where({ subjectId: sid, session, semester })
-            .count();
+          const count = results.filter((r) => String(r.subjectId) === String(sid)).length;
           if (count === 0) {
             const sub = subjects.find((s) => s.id === sid);
             if (sub) missingSubjects.push(sub);

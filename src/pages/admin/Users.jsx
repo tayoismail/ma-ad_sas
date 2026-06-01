@@ -6,7 +6,6 @@ import {
 import useAuthStore from '../../store/authStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import useSubjectsStore from '../../store/subjectsStore';
-import db from '../../db/database';
 import DataTable from '../../components/DataTable';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -19,21 +18,22 @@ export default function UsersPage() {
   const { subjects, loadSubjects } = useSubjectsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
-  const [, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
-  const [newPassword, setNewPassword] = useState('');
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [] });
 
   const loadUsers = async () => {
-    const all = await db.users.toArray();
-    setUsers(all);
-    setLoading(false);
+    try {
+      const all = await useAuthStore.getState().getUsers();
+      setUsers(all);
+    } catch (err) {
+      setError(err.message || 'Failed to load users');
+    }
   };
 
   useEffect(() => {
@@ -54,6 +54,7 @@ export default function UsersPage() {
     setForm({ name: u.name, email: u.email, password: '', role: u.role, teacherSubjects: u.teacherSubjects || [] });
     setEditingId(u.id);
     setShowForm(true);
+    setError('');
   };
 
   const handleSubmit = async () => {
@@ -91,21 +92,23 @@ export default function UsersPage() {
 
   const handleDelete = async (id) => {
     if (id === user?.id) { setError('Cannot delete your own account'); setDeleteConfirm(null); return; }
-    await useAuthStore.getState().deleteUser(id);
-    await loadUsers();
+    try {
+      await useAuthStore.getState().deleteUser(id);
+      await loadUsers();
+    } catch (err) {
+      setError(err.message || 'Failed to delete user');
+    }
     setDeleteConfirm(null);
   };
 
   const handleResetPassword = async () => {
-    if (!newPassword.trim() || newPassword.length < 4) { setError('Password must be at least 4 characters'); return; }
     setResetting(true);
     setError('');
     try {
-      await useAuthStore.getState().resetPassword(resetPasswordUser.id, newPassword);
+      await useAuthStore.getState().resetPassword(resetPasswordUser.email);
       setResetPasswordUser(null);
-      setNewPassword('');
     } catch (e) {
-      setError(e.message || 'Failed to reset password');
+      setError(e.message || 'Failed to send reset email');
     }
     setResetting(false);
   };
@@ -128,7 +131,7 @@ export default function UsersPage() {
     { key: 'actions', label: 'Actions', sortable: false, width: '140px', render: (u) => (
       <div className="flex items-center justify-end gap-1">
         <button onClick={(e) => { e.stopPropagation(); handleEdit(u); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500"><Pencil className="w-3.5 h-3.5" /></button>
-        <button onClick={(e) => { e.stopPropagation(); setResetPasswordUser(u); setNewPassword(''); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500"><Key className="w-3.5 h-3.5" /></button>
+        <button onClick={(e) => { e.stopPropagation(); setResetPasswordUser(u); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500"><Key className="w-3.5 h-3.5" /></button>
         <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(u); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
       </div>
     )},
@@ -241,34 +244,24 @@ export default function UsersPage() {
       )}
 
       {resetPasswordUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && (setResetPasswordUser(null), setNewPassword(''), setError(''))}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && (setResetPasswordUser(null), setError(''))}>
           <Card className="w-full max-w-md p-6 bg-white/90 backdrop-blur-2xl border-white/20 shadow-2xl animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Reset Password</h3>
-              <button onClick={() => { setResetPasswordUser(null); setNewPassword(''); setError(''); }} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-5 h-5" /></button>
+              <button onClick={() => { setResetPasswordUser(null); setError(''); }} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-5 h-5" /></button>
             </div>
             <p className="text-sm text-gray-500 mb-4">
-              Resetting password for <strong>{resetPasswordUser.name}</strong> ({resetPasswordUser.email})
+              Send password reset email to <strong>{resetPasswordUser.name}</strong> ({resetPasswordUser.email})
             </p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  className="bg-white/80"
-                  autoFocus
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" className="flex-1" onClick={() => { setResetPasswordUser(null); setNewPassword(''); setError(''); }}>Cancel</Button>
-                <Button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white" onClick={handleResetPassword} disabled={resetting}>
-                  {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
-                  Reset Password
-                </Button>
-              </div>
+            <p className="text-sm text-gray-400 mb-6">
+              An email will be sent to their inbox with instructions to reset their password.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => { setResetPasswordUser(null); setError(''); }}>Cancel</Button>
+              <Button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white" onClick={handleResetPassword} disabled={resetting}>
+                {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
+                Send Reset Email
+              </Button>
             </div>
           </Card>
         </div>

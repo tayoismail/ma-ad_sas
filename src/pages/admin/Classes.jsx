@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, School, Users, Menu, Bell,
+  ArrowLeft, Plus, School, Users, Menu, Bell, AlertCircle,
   Pencil, Trash2, ArrowRight,
   X, Check, Loader2
 } from 'lucide-react';
@@ -34,6 +34,7 @@ export default function ClassesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', section: 'A', promotionTo: '' });
 
   useEffect(() => {
@@ -54,26 +55,33 @@ export default function ClassesPage() {
   };
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) { setError('Class name is required'); return; }
     setSaving(true);
-    const data = {
-      ...form,
-      name: form.name.trim(),
-      order: editingId ? undefined : classes.length + 1,
-      studentCount: editingId ? undefined : 0,
-    };
-    if (editingId) {
-      await updateClass(editingId, data);
-    } else {
-      await addClass(data);
+    setError('');
+    try {
+      const data = {
+        ...form,
+        name: form.name.trim(),
+        order: editingId ? undefined : classes.length + 1,
+        studentCount: editingId ? undefined : 0,
+      };
+      if (editingId) {
+        await updateClass(editingId, data);
+      } else {
+        await addClass(data);
+      }
+      resetForm();
+    } catch (err) {
+      setError(err.message || 'Failed to save class');
     }
     setSaving(false);
-    resetForm();
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this class?')) {
+    try {
       await deleteClass(id);
+    } catch (err) {
+      setError(err.message || 'Failed to delete class');
     }
   };
 
@@ -124,6 +132,11 @@ export default function ClassesPage() {
         </header>
 
         <main className="p-4 lg:p-8 space-y-6">
+          {error && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm animate-fade-in">
+              <AlertCircle className="w-4 h-4" /> {error}
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">All Classes</h2>

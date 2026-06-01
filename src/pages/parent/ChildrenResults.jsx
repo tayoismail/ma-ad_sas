@@ -28,15 +28,21 @@ export default function ParentChildrenResults() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (children.length > 0 && settings) {
-      if (!selectedSession) setSelectedSession(settings.currentSession);
-      loadChildrenResults(children, selectedSession || settings.currentSession);
+      const session = selectedSession || settings.currentSession;
+      loadChildrenResults(children, session);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [children, settings, selectedSession]);
+
+  useEffect(() => {
+    if (children.length > 0 && settings && !selectedSession) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedSession(settings.currentSession);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, settings]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleLogout = () => { logout(); navigate('/login'); };
 

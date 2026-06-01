@@ -27,7 +27,7 @@ export default function StudentMyAttendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const profile = students.find((s) => s.parentEmail === user?.email || s.studentId === user?.email?.split('@')[0] || s.name === user?.name);
+  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0] || s.parentEmail === user?.email || s.name === user?.name);
 
   useEffect(() => {
     if (!profile || !settings) return;
@@ -43,9 +43,10 @@ export default function StudentMyAttendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, settings]);
 
-  const present = attendanceRecords.filter((r) => r.status === 'present').length;
-  const absent = attendanceRecords.filter((r) => r.status === 'absent').length;
-  const late = attendanceRecords.filter((r) => r.status === 'late').length;
+  const sessionRecords = attendanceRecords.filter((r) => r.session === settings?.currentSession);
+  const present = sessionRecords.filter((r) => r.status === 'present').length;
+  const absent = sessionRecords.filter((r) => r.status === 'absent').length;
+  const late = sessionRecords.filter((r) => r.status === 'late').length;
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -119,7 +120,7 @@ export default function StudentMyAttendance() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {attendanceRecords.slice().reverse().slice(0, 50).map((r, i) => (
+                  {sessionRecords.slice().reverse().slice(0, 50).map((r, i) => (
                     <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center gap-3">
                         {statusIcon(r.status)}

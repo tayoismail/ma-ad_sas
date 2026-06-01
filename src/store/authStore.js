@@ -1,10 +1,28 @@
 import { create } from 'zustand';
-import db from '../db/database';
-import { hashPassword, verifyPassword } from '../lib/crypto';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+} from 'firebase/auth';
+import {
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  orderBy,
+} from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
-const REMEMBER_ME_DAYS = 7;
-const REMEMBER_ME_MS = REMEMBER_ME_DAYS * 24 * 60 * 60 * 1000;
+const API_KEY = import.meta.env.VITE_FIREBASE_API_KEY;
 
 const useAuthStore = create((set, get) => ({
   user: null,
@@ -12,49 +30,43 @@ const useAuthStore = create((set, get) => ({
   isLoading: true,
 
   init: async () => {
-    await get().migratePasswords();
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const session = sessionStorage.getItem('maad_session');
+        if (session) {
+          try {
+            const { lastActivity } = JSON.parse(session);
+            if (Date.now() - lastActivity > SESSION_TIMEOUT) {
+              await signOut(auth);
+              sessionStorage.removeItem('maad_session');
+              set({ user: null, isAuthenticated: false, isLoading: false });
+              return;
+            }
+          } catch { /* ignore parse error */ }
+        }
 
-    let storedUser = null;
-    const sessionData = sessionStorage.getItem('maad_user');
-    if (sessionData) {
-      try { storedUser = JSON.parse(sessionData); } catch { /* ignore parse errors */ }
-    }
-    if (!storedUser) {
-      const localData = localStorage.getItem('maad_user');
-      if (localData) {
         try {
-          const parsed = JSON.parse(localData);
-          if (parsed.loginTime && Date.now() - parsed.loginTime > REMEMBER_ME_MS) {
-            localStorage.removeItem('maad_user');
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            set({ user: { id: firebaseUser.uid, ...userDoc.data() }, isAuthenticated: true, isLoading: false });
+            get().updateLastActivity();
           } else {
-            storedUser = parsed;
+            const profile = {
+              name: firebaseUser.email.split('@')[0],
+              email: firebaseUser.email,
+              role: 'admin',
+              createdAt: new Date().toISOString(),
+            };
+            await setDoc(doc(db, 'users', firebaseUser.uid), profile);
+            set({ user: { id: firebaseUser.uid, ...profile }, isAuthenticated: true, isLoading: false });
           }
-        } catch { /* ignore parse errors */ }
+        } catch {
+          set({ isLoading: false });
+        }
+      } else {
+        set({ user: null, isAuthenticated: false, isLoading: false });
       }
-    }
-
-    if (storedUser) {
-      const session = sessionStorage.getItem('maad_session');
-      if (session) {
-        try {
-          const { lastActivity } = JSON.parse(session);
-          if (Date.now() - lastActivity > SESSION_TIMEOUT) {
-            sessionStorage.removeItem('maad_user');
-            sessionStorage.removeItem('maad_session');
-            localStorage.removeItem('maad_user');
-            set({ isLoading: false });
-            return;
-          }
-        } catch { /* ignore parse errors */ }
-      }
-      const exists = await db.users.where('id').equals(storedUser.id).first();
-      if (exists) {
-        set({ user: exists, isAuthenticated: true, isLoading: false });
-        get().updateLastActivity();
-        return;
-      }
-    }
-    set({ isLoading: false });
+    });
   },
 
   updateLastActivity: () => {
@@ -69,11 +81,11 @@ const useAuthStore = create((set, get) => ({
       try {
         const { lastActivity } = JSON.parse(session);
         if (Date.now() - lastActivity > SESSION_TIMEOUT) {
-          get().logout();
+          signOut(auth);
           return false;
         }
       } catch {
-        get().logout();
+        signOut(auth);
         return false;
       }
     }
@@ -81,135 +93,67 @@ const useAuthStore = create((set, get) => ({
   },
 
   login: async (email, password, rememberMe = false) => {
-    const user = await db.users.where('email').equals(email).first();
-    if (!user) throw new Error('Invalid email or password');
-
-    const valid = await verifyPassword(password, user.password);
-    if (!valid) throw new Error('Invalid email or password');
-
-    const now = new Date().toISOString();
-    await db.users.update(user.id, { lastLogin: now });
-
-    const safeUser = (({ password: _pw, ...rest }) => rest)(user); // eslint-disable-line no-unused-vars
-    safeUser.lastLogin = now;
-
-    sessionStorage.setItem('maad_session', JSON.stringify({ lastActivity: Date.now() }));
-
-    const userData = JSON.stringify({ ...safeUser, loginTime: Date.now(), rememberMe });
-    if (rememberMe) {
-      localStorage.setItem('maad_user', userData);
-      sessionStorage.removeItem('maad_user');
-    } else {
-      sessionStorage.setItem('maad_user', userData);
-      localStorage.removeItem('maad_user');
+    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+    if (!userDoc.exists()) {
+      throw new Error('User profile not found');
     }
-
-    set({ user: safeUser, isAuthenticated: true });
-    return safeUser;
+    const profile = userDoc.data();
+    try {
+      await updateDoc(doc(db, 'users', userCredential.user.uid), { lastLogin: new Date().toISOString() });
+    } catch { /* lastLogin is best-effort */ }
+    get().updateLastActivity();
+    return { id: userCredential.user.uid, ...profile };
   },
 
-  logout: () => {
-    sessionStorage.removeItem('maad_user');
+  logout: async () => {
     sessionStorage.removeItem('maad_session');
-    localStorage.removeItem('maad_user');
-    set({ user: null, isAuthenticated: false });
+    await signOut(auth);
   },
 
   getUsers: async () => {
-    return await db.users.toArray();
+    const snapshot = await getDocs(query(collection(db, 'users'), orderBy('name')));
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
   addUser: async (data) => {
-    const existing = await db.users.where('email').equals(data.email).first();
-    if (existing) throw new Error('Email already exists');
-    const hashedPassword = await hashPassword(data.password);
-    const id = await db.users.add({
-      ...data,
-      password: hashedPassword,
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      }
+    );
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.error?.message || 'Failed to create user');
+    }
+    const uid = result.localId;
+    await setDoc(doc(db, 'users', uid), {
+      name: data.name,
+      email: data.email,
+      role: data.role,
+      teacherSubjects: data.teacherSubjects || [],
       createdAt: new Date().toISOString(),
     });
-    return id;
+    return uid;
   },
 
   updateUser: async (id, data) => {
-    const updates = { ...data };
-    if (data.password) {
-      updates.password = await hashPassword(data.password);
+    const { password, ...profile } = data;
+    if (Object.keys(profile).length > 0) {
+      await updateDoc(doc(db, 'users', id), profile);
     }
-    await db.users.update(id, updates);
   },
 
   deleteUser: async (id) => {
-    await db.users.delete(id);
+    await deleteDoc(doc(db, 'users', id));
   },
 
-  resetPassword: async (id, newPassword) => {
-    const hashed = await hashPassword(newPassword);
-    await db.users.update(id, { password: hashed });
-  },
-
-  migratePasswords: async () => {
-    const migrated = localStorage.getItem('maad_pwd_migrated');
-    if (migrated) return;
-    const users = await db.users.toArray();
-    let didMigrate = false;
-    for (const user of users) {
-      if (user.password && !user.password.startsWith('$2')) {
-        const hashed = await hashPassword(user.password);
-        await db.users.update(user.id, { password: hashed });
-        didMigrate = true;
-      }
-    }
-    if (didMigrate) {
-      localStorage.setItem('maad_pwd_migrated', '1');
-    }
-  },
-
-  seedAccounts: async () => {
-    const adminPassword = await hashPassword('Admin123');
-    const teacherPassword = await hashPassword('Teacher123');
-    const studentPassword = await hashPassword('Student123');
-    const parentPassword = await hashPassword('Parent123');
-
-    const adminExists = await db.users.where('email').equals('admin@maad.edu').first();
-    if (!adminExists) {
-      await db.users.add({
-        name: 'Admin', email: 'admin@maad.edu', password: adminPassword,
-        role: 'admin', createdAt: new Date().toISOString(),
-      });
-    } else if (!adminExists.password.startsWith('$2')) {
-      await db.users.update(adminExists.id, { password: adminPassword });
-    }
-
-    const teacherExists = await db.users.where('email').equals('teacher@maad.edu').first();
-    if (!teacherExists) {
-      await db.users.add({
-        name: 'Teacher', email: 'teacher@maad.edu', password: teacherPassword,
-        role: 'teacher', createdAt: new Date().toISOString(),
-      });
-    } else if (!teacherExists.password.startsWith('$2')) {
-      await db.users.update(teacherExists.id, { password: teacherPassword });
-    }
-
-    const studentExists = await db.users.where('email').equals('student@maad.edu').first();
-    if (!studentExists) {
-      await db.users.add({
-        name: 'Student', email: 'student@maad.edu', password: studentPassword,
-        role: 'student', createdAt: new Date().toISOString(),
-      });
-    } else if (!studentExists.password.startsWith('$2')) {
-      await db.users.update(studentExists.id, { password: studentPassword });
-    }
-
-    const parentExists = await db.users.where('email').equals('parent@maad.edu').first();
-    if (!parentExists) {
-      await db.users.add({
-        name: 'Parent', email: 'parent@maad.edu', password: parentPassword,
-        role: 'parent', createdAt: new Date().toISOString(),
-      });
-    } else if (!parentExists.password.startsWith('$2')) {
-      await db.users.update(parentExists.id, { password: parentPassword });
-    }
+  resetPassword: async (email) => {
+    await sendPasswordResetEmail(auth, email);
   },
 }));
 

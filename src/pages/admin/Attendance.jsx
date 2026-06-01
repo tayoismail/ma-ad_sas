@@ -33,6 +33,7 @@ export default function AttendancePage() {
   const [attendanceMap, setAttendanceMap] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => { loadSettings(); loadClasses(); loadStudents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,10 +48,14 @@ export default function AttendancePage() {
   }, [settings]);
 
   const loadAttendance = useCallback(async () => {
-    const records = await getRecordsForClass(filters.className, filters.session, filters.semester, selectedDate);
-    const map = {};
-    records.forEach((r) => { map[r.studentId] = r.status; });
-    setAttendanceMap(map);
+    try {
+      const records = await getRecordsForClass(filters.className, filters.session, filters.semester, selectedDate);
+      const map = {};
+      records.forEach((r) => { map[r.studentId] = r.status; });
+      setAttendanceMap(map);
+    } catch {
+      setAttendanceMap({});
+    }
   }, [filters.className, filters.session, filters.semester, selectedDate, getRecordsForClass]);
 
   useEffect(() => {
@@ -66,7 +71,11 @@ export default function AttendancePage() {
   const toggleStatus = async (studentId, currentStatus) => {
     const next = currentStatus === 'present' ? 'absent' : currentStatus === 'absent' ? 'late' : 'present';
     setAttendanceMap((prev) => ({ ...prev, [studentId]: next }));
-    await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, next);
+    try {
+      await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, next);
+    } catch {
+      setAttendanceMap((prev) => ({ ...prev, [studentId]: currentStatus }));
+    }
   };
 
   const markAll = async (status) => {
@@ -76,10 +85,14 @@ export default function AttendancePage() {
       session: filters.session, semester: Number(filters.semester),
       date: selectedDate, status,
     }));
-    await markBulk(records);
-    const map = {};
-    records.forEach((r) => { map[r.studentId] = r.status; });
-    setAttendanceMap(map);
+    try {
+      await markBulk(records);
+      const map = {};
+      records.forEach((r) => { map[r.studentId] = r.status; });
+      setAttendanceMap(map);
+    } catch {
+      setError('Failed to save attendance');
+    }
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -124,6 +137,11 @@ export default function AttendancePage() {
         </header>
 
         <main className="p-4 lg:p-8 space-y-6">
+          {error && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm animate-fade-in">
+              <AlertCircle className="w-4 h-4" /> {error}
+            </div>
+          )}
           {saved && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
               <CheckCircle2 className="w-4 h-4" /> Attendance saved
@@ -136,8 +154,8 @@ export default function AttendancePage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2"><CalendarDays className="w-5 h-5 text-amber-500" /><h3 className="font-semibold text-gray-900">Calendar</h3></div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => setToday(new Date(year, month - 1, 1))} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"><ChevronLeft className="w-4 h-4" /></button>
-                    <button onClick={() => setToday(new Date(year, month + 1, 1))} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"><ChevronRight className="w-4 h-4" /></button>
+                    <button onClick={() => { const d = new Date(year, month - 1, 1); setToday(d); setSelectedDate(d.toISOString().split('T')[0]); }} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"><ChevronLeft className="w-4 h-4" /></button>
+                    <button onClick={() => { const d = new Date(year, month + 1, 1); setToday(d); setSelectedDate(d.toISOString().split('T')[0]); }} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"><ChevronRight className="w-4 h-4" /></button>
                   </div>
                 </div>
                 <p className="text-center font-medium text-sm text-gray-700 mb-3">{MONTHS[month]} {year}</p>

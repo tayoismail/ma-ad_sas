@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 
-export default function getThemeStore() {
+function getStoredTheme() {
   const stored = typeof window !== 'undefined' ? localStorage.getItem('maad_theme') : 'light';
   return stored === 'dark' ? 'dark' : 'light';
 }
 
 const useThemeStore = create((set, get) => ({
-  theme: getThemeStore(),
+  theme: getStoredTheme(),
 
   toggleTheme: () => {
     const next = get().theme === 'light' ? 'dark' : 'light';
@@ -16,7 +16,7 @@ const useThemeStore = create((set, get) => ({
   },
 
   initTheme: () => {
-    const theme = getThemeStore();
+    const theme = getStoredTheme();
     document.documentElement.classList.toggle('dark', theme === 'dark');
     set({ theme });
   },

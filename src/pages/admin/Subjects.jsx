@@ -24,8 +24,9 @@ export default function SubjectsPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
-    name: '', arabicName: '', className: classes[0]?.name || 'Class 1', passingMark: 50,
+    name: '', arabicName: '', className: '', passingMark: 50,
   });
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function SubjectsPage() {
   }, []);
 
   const resetForm = () => {
-    setForm({ name: '', arabicName: '', className: classes[0]?.name || 'Class 1', passingMark: 50 });
+    setForm({ name: '', arabicName: '', className: classes[0]?.name || '', passingMark: 50 });
     setEditingId(null);
     setShowForm(false);
   };
@@ -49,17 +50,25 @@ export default function SubjectsPage() {
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    if (editingId) {
-      await updateSubject(editingId, form);
-    } else {
-      await addSubject(form);
+    try {
+      if (editingId) {
+        await updateSubject(editingId, form);
+      } else {
+        await addSubject(form);
+      }
+      resetForm();
+    } catch (err) {
+      setError(err.message || 'Failed to save subject');
     }
     setSaving(false);
-    resetForm();
   };
 
   const handleDelete = async (id) => {
-    await deleteSubject(id);
+    try {
+      await deleteSubject(id);
+    } catch (err) {
+      setError(err.message || 'Failed to delete subject');
+    }
     setDeleteConfirm(null);
   };
 
@@ -106,6 +115,11 @@ export default function SubjectsPage() {
               <Plus className="w-4 h-4 mr-2" /> Add Subject
             </Button>
           </div>
+          {error && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm animate-fade-in">
+              <AlertCircle className="w-4 h-4" /> {error}
+            </div>
+          )}
 
           {showForm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && resetForm()}>

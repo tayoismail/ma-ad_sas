@@ -1,9 +1,23 @@
 import { create } from 'zustand';
-import db from '../db/database';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { calculateGrade, calculateTotal } from '../lib/grading';
 
 async function getAttendancePct(studentId, session, semester) {
-  const records = await db.attendance.where({ studentId, session, semester }).toArray();
+  const snapshot = await getDocs(
+    query(collection(db, 'attendance'), where('studentId', '==', studentId), where('session', '==', session), where('semester', '==', semester))
+  );
+  const records = snapshot.docs.map((d) => d.data());
   if (records.length === 0) return null;
   const present = records.filter((r) => r.status === 'present').length;
   return Math.round((present / records.length) * 10000) / 100;
@@ -16,11 +30,20 @@ const usePromotionStore = create((set, get) => ({
 
   calculateCumulative: async (session) => {
     set({ loading: true });
-    const students = await db.students.toArray();
-    const results = await db.results.where('session').equals(session).toArray();
-    const settings = await db.settings.get('school_settings');
+
+    const studentsSnapshot = await getDocs(collection(db, 'students'));
+    const students = studentsSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    const resultsSnapshot = await getDocs(query(collection(db, 'results'), where('session', '==', session)));
+    const results = resultsSnapshot.docs.map((d) => d.data());
+
+    const settingsSnap = await getDoc(doc(db, 'settings', 'school_settings'));
+    const settings = settingsSnap.exists() ? settingsSnap.data() : null;
     const scale = settings?.gradingScale;
     const useAttendance = settings?.useAttendanceUpgrade;
+
+    const classesSnapshot = await getDocs(query(collection(db, 'classes'), orderBy('order')));
+    const classesList = classesSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
     const data = [];
 
@@ -58,7 +81,6 @@ const usePromotionStore = create((set, get) => ({
       }
 
       const shouldPromote = cumulative !== null && cumulative >= 50;
-      const classesList = await db.classes.orderBy('order').toArray();
       const currentClass = classesList.find((c) => c.name === student.className);
       const nextClass = currentClass ? (currentClass.promotionTo || student.className) : student.className;
 
@@ -76,51 +98,57 @@ const usePromotionStore = create((set, get) => ({
       });
     }
 
-    // Save cumulative averages to DB
-    await db.cumulativeAverages.where('session').equals(session).delete();
-    for (const d of data) {
-      await db.cumulativeAverages.add({ ...d, session });
-    }
-
     set({ cumulativeData: data, loading: false });
     return data;
   },
 
   loadPromotions: async (session) => {
-    const promotions = await db.promotions.where('session').equals(session).toArray();
-    const cumulatives = await db.cumulativeAverages.where('session').equals(session).toArray();
-    set({ promotions, cumulativeData: cumulatives });
+    const promoSnapshot = await getDocs(query(collection(db, 'promotions'), where('session', '==', session)));
+    const promotions = promoSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    set({ promotions });
   },
 
   confirmPromotion: async (studentId, session) => {
-    const existing = await db.promotions.where({ studentId, session }).first();
+    const promoSnapshot = await getDocs(query(collection(db, 'promotions'), where('studentId', '==', studentId), where('session', '==', session)));
+    const existing = promoSnapshot.docs[0];
+
     if (existing) {
-      await db.promotions.update(existing.id, { status: 'confirmed' });
+      await updateDoc(doc(db, 'promotions', existing.id), { status: 'confirmed' });
     } else {
-      await db.promotions.add({ studentId, session, status: 'confirmed' });
+      await addDoc(collection(db, 'promotions'), { studentId, session, status: 'confirmed' });
     }
-    // Update student's class
-    const cum = await db.cumulativeAverages.where({ studentId, session }).first();
+
+    const { cumulativeData } = get();
+    const cum = cumulativeData.find((d) => d.studentId === studentId);
     if (cum) {
-      await db.students.where('studentId').equals(studentId).modify({ className: cum.promoteTo });
+      const studentSnap = await getDocs(query(collection(db, 'students'), where('studentId', '==', studentId)));
+      for (const s of studentSnap.docs) {
+        await updateDoc(doc(db, 'students', s.id), { className: cum.promoteTo });
+      }
     }
-    const all = await db.promotions.where('session').equals(session).toArray();
-    set({ promotions: all });
+
+    const all = await getDocs(query(collection(db, 'promotions'), where('session', '==', session)));
+    set({ promotions: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
 
   confirmAll: async (session) => {
     const { cumulativeData } = get();
     for (const d of cumulativeData) {
-      const existing = await db.promotions.where({ studentId: d.studentId, session }).first();
-      if (!existing) {
-        await db.promotions.add({ studentId: d.studentId, session, status: 'confirmed' });
+      const promoSnapshot = await getDocs(query(collection(db, 'promotions'), where('studentId', '==', d.studentId), where('session', '==', session)));
+      const existing = promoSnapshot.docs[0];
+      if (existing) {
+        await updateDoc(doc(db, 'promotions', existing.id), { status: 'confirmed' });
       } else {
-        await db.promotions.update(existing.id, { status: 'confirmed' });
+        await addDoc(collection(db, 'promotions'), { studentId: d.studentId, session, status: 'confirmed' });
       }
-      await db.students.where('studentId').equals(d.studentId).modify({ className: d.promoteTo });
+
+      const studentSnap = await getDocs(query(collection(db, 'students'), where('studentId', '==', d.studentId)));
+      for (const s of studentSnap.docs) {
+        await updateDoc(doc(db, 'students', s.id), { className: d.promoteTo });
+      }
     }
-    const all = await db.promotions.where('session').equals(session).toArray();
-    set({ promotions: all });
+    const all = await getDocs(query(collection(db, 'promotions'), where('session', '==', session)));
+    set({ promotions: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
 }));
 

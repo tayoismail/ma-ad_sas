@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import db from '../db/database';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import useAttendanceStore from './attendanceStore';
 
 const useParentStore = create((set) => ({
@@ -10,7 +16,8 @@ const useParentStore = create((set) => ({
 
   loadChildren: async (email) => {
     set({ loading: true });
-    const children = await db.students.where('parentEmail').equals(email).toArray();
+    const snapshot = await getDocs(query(collection(db, 'students'), where('parentEmail', '==', email)));
+    const children = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     set({ children, loading: false });
     return children;
   },
@@ -18,10 +25,8 @@ const useParentStore = create((set) => ({
   loadChildrenResults: async (children, session) => {
     const ids = children.map((c) => c.studentId);
     if (ids.length === 0) { set({ childrenResults: [] }); return []; }
-    const results = await db.results
-      .where('session')
-      .equals(session)
-      .toArray();
+    const snapshot = await getDocs(query(collection(db, 'results'), where('session', '==', session)));
+    const results = snapshot.docs.map((d) => d.data());
     const filtered = results.filter((r) => ids.includes(r.studentId));
     set({ childrenResults: filtered });
     return filtered;

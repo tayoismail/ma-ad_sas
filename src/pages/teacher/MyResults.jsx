@@ -81,7 +81,7 @@ export default function TeacherMyResults() {
       const semester = settings.currentSemester;
       return {
         studentId: s.studentId, className: filters.className,
-        subjectId: Number(filters.subjectId), subjectName: filteredSubjects.find((sub) => sub.id === Number(filters.subjectId))?.name || '',
+        subjectId: filters.subjectId, subjectName: filteredSubjects.find((sub) => String(sub.id) === String(filters.subjectId))?.name || '',
         session, semester: Number(semester), examScore: exam, testScore: test, total,
         grade: calculateGrade(total, settings?.gradingScale),
         enteredBy: user?.id, enteredAt: new Date().toISOString(),

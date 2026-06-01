@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Save, School,
   Calendar, Layers, Loader2, CheckCircle2,
-  Bell, Menu,
+  AlertCircle, Bell, Menu,
   Lock, Unlock, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
     schoolName: '',
     address: '',
@@ -63,7 +64,28 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await updateSettings(form);
+    setError('');
+    const scale = form.gradingScale;
+    for (let i = 0; i < scale.length; i++) {
+      if (scale[i].min > scale[i].max) {
+        setError(`Grade ${scale[i].grade}: min cannot be greater than max`);
+        setSaving(false); return;
+      }
+      if (i > 0 && scale[i].min !== scale[i - 1].max + 1) {
+        setError(`Grading scale has a gap between ${scale[i - 1].grade} (max ${scale[i - 1].max}) and ${scale[i].grade} (min ${scale[i].min})`);
+        setSaving(false); return;
+      }
+    }
+    if (scale.length > 0 && (scale[0].min !== 0 || scale[scale.length - 1].max !== 100)) {
+      setError('Grading scale must cover the full range 0-100');
+      setSaving(false); return;
+    }
+    try {
+      await updateSettings(form);
+    } catch {
+      setError('Failed to save settings');
+      setSaving(false); return;
+    }
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -71,10 +93,14 @@ export default function SettingsPage() {
 
   const handleFinalize = async (semester) => {
     setFinalizing(true);
-    const finalized = { ...form.semestersFinalized, [`${form.currentSession}_sem${semester}`]: true };
-    const updated = { ...form, semestersFinalized: finalized };
-    await updateSettings(updated);
-    setForm(updated);
+    try {
+      const finalized = { ...form.semestersFinalized, [`${form.currentSession}_sem${semester}`]: true };
+      const updated = { ...form, semestersFinalized: finalized };
+      await updateSettings(updated);
+      setForm(updated);
+    } catch {
+      setError('Failed to finalize semester');
+    }
     setFinalizing(false);
     setFinalizeConfirm(null);
     setSaved(true);
@@ -128,6 +154,12 @@ export default function SettingsPage() {
         </header>
 
         <main className="p-4 lg:p-8 space-y-6 max-w-4xl">
+          {error && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm animate-fade-in">
+              <AlertCircle className="w-4 h-4" />
+              {error}
+            </div>
+          )}
           {saved && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
               <CheckCircle2 className="w-4 h-4" />

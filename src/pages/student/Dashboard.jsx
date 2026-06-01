@@ -16,7 +16,7 @@ export default function StudentDashboard() {
   const { theme, toggleTheme } = useThemeStore();
   const { students, loadStudents, loading: studentsLoading } = useStudentsStore();
   const { results, loadResults, loading: resultsLoading } = useResultsStore();
-  const { settings, loadSettings, loading: settingsLoading } = useSettingsStore();
+  const { settings, loadSettings } = useSettingsStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function StudentDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const profile = students.find((s) => s.parentEmail === user?.email || s.studentId === user?.email?.split('@')[0] || s.name === user?.name);
+  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0] || s.parentEmail === user?.email || s.name === user?.name);
   const myResults = results.filter((r) => r.studentId === profile?.studentId);
   const sem1Results = myResults.filter((r) => r.semester === 1);
   const sem2Results = myResults.filter((r) => r.semester === 2);
@@ -75,7 +75,7 @@ export default function StudentDashboard() {
       </header>
 
       <main className="p-4 lg:p-8 space-y-8 max-w-7xl mx-auto">
-        {(studentsLoading || resultsLoading || settingsLoading) && (
+        {(studentsLoading || resultsLoading) && (
           <div className="flex items-center justify-center py-16">
             <div className="flex flex-col items-center gap-3">
               <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -83,7 +83,7 @@ export default function StudentDashboard() {
             </div>
           </div>
         )}
-        {!studentsLoading && (
+        {!studentsLoading && !resultsLoading && (
         <><div className="animate-fade-in">
           <h2 className="text-xl font-semibold text-card-foreground mb-1">Welcome, {user?.name || 'Student'}</h2>
           <p className="text-sm text-muted-foreground">Session: {settings?.currentSession || '--'}</p>

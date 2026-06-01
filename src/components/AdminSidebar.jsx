@@ -38,7 +38,10 @@ export default function AdminSidebar({ activePath, sidebarOpen, setSidebarOpen, 
 
   const isActive = (link) => {
     const path = link.path || link.adminPath;
-    return activePath === path;
+    if (!path) return false;
+    if (activePath === path) return true;
+    if (path !== '/admin/dashboard' && path !== '/teacher/dashboard' && activePath.startsWith(path)) return true;
+    return false;
   };
 
   return (

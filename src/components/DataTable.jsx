@@ -9,12 +9,19 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
   const [page, setPage] = useState(0);
 
   const sorted = useMemo(() => {
-    if (!sortKey) return data;
-    return [...data].sort((a, b) => {
-      const aVal = a[sortKey] ?? '';
-      const bVal = b[sortKey] ?? '';
-      const cmp = String(aVal).localeCompare(String(bVal));
-      return sortDir === 'asc' ? cmp : -cmp;
+    const safeData = data || [];
+    if (!sortKey) return safeData;
+    return [...safeData].sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+      const aNum = Number(aVal);
+      const bNum = Number(bVal);
+      if (!isNaN(aNum) && !isNaN(bNum) && aVal !== '' && bVal !== '') {
+        return sortDir === 'asc' ? aNum - bNum : bNum - aNum;
+      }
+      const aStr = String(aVal ?? '');
+      const bStr = String(bVal ?? '');
+      return sortDir === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
     });
   }, [data, sortKey, sortDir]);
 
@@ -91,17 +98,22 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button
-                key={i}
-                variant={page === i ? 'default' : 'ghost'}
-                size="icon"
-                onClick={() => setPage(i)}
-                className="h-8 w-8 text-xs"
-              >
-                {i + 1}
-              </Button>
-            ))}
+            {(() => {
+              const pages = [];
+              const maxVisible = 7;
+              let start = Math.max(0, page - 3);
+              let end = Math.min(totalPages, start + maxVisible);
+              if (end - start < maxVisible) start = Math.max(0, end - maxVisible);
+              if (start > 0) pages.push(<span key="start" className="text-xs text-gray-400 px-1">...</span>);
+              for (let i = start; i < end; i++) {
+                pages.push(
+                  <Button key={i} variant={page === i ? 'default' : 'ghost'} size="icon"
+                    onClick={() => setPage(i)} className="h-8 w-8 text-xs">{i + 1}</Button>
+                );
+              }
+              if (end < totalPages) pages.push(<span key="end" className="text-xs text-gray-400 px-1">...</span>);
+              return pages;
+            })()}
             <Button
               variant="ghost"
               size="icon"

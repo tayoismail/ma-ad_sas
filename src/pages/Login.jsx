@@ -22,6 +22,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email, password, rememberMe);
+      if (!user || !user.role) { setError('Login failed: invalid response'); return; }
       navigate(`/${user.role}/dashboard`);
     } catch (err) {
       setError(err.message);
@@ -126,19 +127,7 @@ export default function Login() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-white/5">
-            <p className="text-center text-white/30 text-xs mb-2">Demo Accounts</p>
-            <div className="space-y-1">
-              {[
-                { role: 'Admin', email: 'admin@maad.edu', pass: 'Admin123' },
-                { role: 'Teacher', email: 'teacher@maad.edu', pass: 'Teacher123' },
-                { role: 'Student', email: 'student@maad.edu', pass: 'Student123' },
-                { role: 'Parent', email: 'parent@maad.edu', pass: 'Parent123' },
-              ].map((a) => (
-                <p key={a.role} className="text-center text-white/40 text-[11px] font-mono">
-                  {a.role}: {a.email} / {a.pass}
-                </p>
-              ))}
-            </div>
+            <p className="text-center text-white/30 text-xs">Assessment System v2.0</p>
           </div>
         </Card>
       </div>

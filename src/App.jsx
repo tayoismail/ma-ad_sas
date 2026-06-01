@@ -32,12 +32,11 @@ import ParentChildrenResults from './pages/parent/ChildrenResults';
 import ParentChildrenAttendance from './pages/parent/ChildrenAttendance';
 
 export default function App() {
-  const { init, seedAccounts, isLoading, isAuthenticated, updateLastActivity, checkSession, logout } = useAuthStore();
+  const { init, isLoading, isAuthenticated, updateLastActivity, checkSession, logout } = useAuthStore();
   const { initTheme } = useThemeStore();
 
   useEffect(() => {
     initTheme();
-    seedAccounts();
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

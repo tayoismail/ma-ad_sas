@@ -1,5 +1,15 @@
 import { create } from 'zustand';
-import db from '../db/database';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const useAttendanceStore = create((set) => ({
   records: [],
@@ -7,69 +17,81 @@ const useAttendanceStore = create((set) => ({
 
   loadRecords: async (filters = {}) => {
     set({ loading: true });
-    let collection = db.attendance.toCollection();
-    if (filters.className) collection = db.attendance.where('className').equals(filters.className);
-    if (filters.session) collection = db.attendance.where('session').equals(filters.session);
-    if (filters.semester) collection = db.attendance.where('semester').equals(Number(filters.semester));
-    if (filters.date) collection = db.attendance.where('date').equals(filters.date);
-    const records = await collection.toArray();
+    let snapshot = await getDocs(collection(db, 'attendance'));
+    let records = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    if (filters.className) records = records.filter((r) => r.className === filters.className);
+    if (filters.session) records = records.filter((r) => r.session === filters.session);
+    if (filters.semester) records = records.filter((r) => r.semester === Number(filters.semester));
+    if (filters.date) records = records.filter((r) => r.date === filters.date);
     set({ records, loading: false });
   },
 
   getRecordsForClass: async (className, session, semester, date) => {
-    return await db.attendance
-      .where({ className, session, semester: Number(semester), date })
-      .toArray();
+    const snapshot = await getDocs(collection(db, 'attendance'));
+    return snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((r) => r.className === className && r.session === session && r.semester === Number(semester) && r.date === date);
   },
 
   markAttendance: async (studentId, className, session, semester, date, status) => {
-    const existing = await db.attendance
-      .where({ studentId, className, session, semester: Number(semester), date })
-      .first();
+    const snapshot = await getDocs(collection(db, 'attendance'));
+    const existing = snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .find((r) => r.studentId === studentId && r.className === className && r.session === session && r.semester === Number(semester) && r.date === date);
+
     if (existing) {
-      await db.attendance.update(existing.id, { status });
+      await updateDoc(doc(db, 'attendance', existing.id), { status });
       return existing.id;
     }
-    return await db.attendance.add({ studentId, className, session, semester: Number(semester), date, status });
+    const docRef = await addDoc(collection(db, 'attendance'), { studentId, className, session, semester: Number(semester), date, status });
+    return docRef.id;
   },
 
   markBulk: async (records) => {
     let count = 0;
+    const allSnap = await getDocs(collection(db, 'attendance'));
+    const existingMap = {};
+    for (const d of allSnap.docs) {
+      const r = d.data();
+      const key = `${r.studentId}|${r.className}|${r.session}|${r.semester}|${r.date}`;
+      existingMap[key] = d.id;
+    }
     for (const r of records) {
       try {
-        const existing = await db.attendance
-          .where({ studentId: r.studentId, className: r.className, session: r.session, semester: Number(r.semester), date: r.date })
-          .first();
-        if (existing) {
-          await db.attendance.update(existing.id, { status: r.status });
+        const key = `${r.studentId}|${r.className}|${r.session}|${r.semester}|${r.date}`;
+        if (existingMap[key]) {
+          await updateDoc(doc(db, 'attendance', existingMap[key]), { status: r.status });
         } else {
-          await db.attendance.add(r);
+          await addDoc(collection(db, 'attendance'), r);
         }
         count++;
       } catch { /* skip individual record errors */ }
     }
-    const all = await db.attendance.toArray();
-    set({ records: all });
+    const all = await getDocs(collection(db, 'attendance'));
+    set({ records: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
     return count;
   },
 
   calculatePercentage: async (studentId, session, semester) => {
-    const all = await db.attendance
-      .where({ studentId, session, semester: Number(semester) })
-      .toArray();
-    if (all.length === 0) return null;
-    const present = all.filter((r) => r.status === 'present').length;
-    return Math.round((present / all.length) * 10000) / 100;
+    const snapshot = await getDocs(
+      query(collection(db, 'attendance'), where('studentId', '==', studentId), where('session', '==', session), where('semester', '==', Number(semester)))
+    );
+    const records = snapshot.docs.map((d) => d.data());
+    if (records.length === 0) return null;
+    const present = records.filter((r) => r.status === 'present').length;
+    return Math.round((present / records.length) * 10000) / 100;
   },
 
   getAttendanceByStudent: async (studentId) => {
-    return await db.attendance.where('studentId').equals(studentId).toArray();
+    const snapshot = await getDocs(query(collection(db, 'attendance'), where('studentId', '==', studentId)));
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
   calculatePercentageBulk: async (studentIds, session, semester) => {
-    const all = await db.attendance
-      .where({ session, semester: Number(semester) })
-      .toArray();
+    const snapshot = await getDocs(
+      query(collection(db, 'attendance'), where('session', '==', session), where('semester', '==', Number(semester)))
+    );
+    const all = snapshot.docs.map((d) => d.data());
     const map = {};
     for (const sid of studentIds) {
       const studentRecords = all.filter((r) => r.studentId === sid);

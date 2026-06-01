@@ -7,7 +7,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      <video autoPlay muted loop playsInline className="fixed inset-0 w-full h-full object-cover">
+      <video autoPlay muted loop playsInline className="fixed inset-0 w-full h-full object-cover" poster="">
         <source src="/ma%27ad%20mosque.mp4" type="video/mp4" />
       </video>
       <div className="gradient-secondary fixed inset-0 opacity-95" />
@@ -43,7 +43,7 @@ export default function Landing() {
             <Sparkles className="w-3 h-3" /> Islamic Educational Institution
           </div>
 
-          <p className="text-2xl sm:text-3xl font-arabic text-white/80 mb-4" dir="rtl">
+          <p className="text-2xl sm:text-3xl text-white/80 mb-4" dir="rtl">
             بسم الله الرحمن الرحيم
           </p>
 

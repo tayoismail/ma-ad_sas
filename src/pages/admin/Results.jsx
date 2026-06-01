@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Save, Upload, Award,
@@ -46,6 +46,7 @@ export default function ResultsPage() {
   const [uploading, setUploading] = useState(false);
   const [useTest, setUseTest] = useState(false);
   const [useAttendance, setUseAttendance] = useState(false);
+  const latestFilterRef = useRef('');
 
   useEffect(() => {
     loadSettings();
@@ -76,7 +77,10 @@ export default function ResultsPage() {
 
   const handleLoadResults = async () => {
     if (!filters.className || !filters.subjectId) return;
+    const token = `${filters.className}_${filters.subjectId}_${filters.session}_${filters.semester}`;
+    latestFilterRef.current = token;
     const results = await getResultsForClass(filters.className, filters.session, filters.semester, filters.subjectId);
+    if (latestFilterRef.current !== token) return;
     setExistingResults(results);
     const map = {};
     results.forEach((r) => {
@@ -90,9 +94,7 @@ export default function ResultsPage() {
   };
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect */
     if (filters.className && filters.subjectId) handleLoadResults();
-    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.className, filters.subjectId]);
 
@@ -109,13 +111,14 @@ export default function ResultsPage() {
       const s = scores[student.studentId] || {};
       const exam = Number(s.examScore) || 0;
       const test = useTest ? (Number(s.testScore) || 0) : 0;
-      if (exam > 100) { setError('Exam score cannot exceed 100'); setSaving(false); return; }
-      if (test > 40) { setError('Test score cannot exceed 40'); setSaving(false); return; }
-      if (useAttendance && (Number(s.attendance) || 0) > 100) { setError('Attendance cannot exceed 100%'); setSaving(false); return; }
+      if (exam > 100) { setError('Exam score cannot exceed 100'); return; }
+      if (test > 40) { setError('Test score cannot exceed 40'); return; }
+      if (useAttendance && (Number(s.attendance) || 0) > 100) { setError('Attendance cannot exceed 100%'); return; }
     }
     setSaving(true);
-    const subj = subjects.find((s) => s.id === Number(filters.subjectId));
+    const subj = subjects.find((s) => String(s.id) === String(filters.subjectId));
     const scale = settings?.gradingScale;
+    try {
     for (const student of classStudents) {
       const s = scores[student.studentId] || {};
       const examScore = Number(s.examScore) || 0;
@@ -125,7 +128,7 @@ export default function ResultsPage() {
       await saveResult({
         studentId: student.studentId,
         studentName: student.name,
-        subjectId: Number(filters.subjectId),
+        subjectId: filters.subjectId,
         subjectName: subj?.name || '',
         className: filters.className,
         session: filters.session,
@@ -136,6 +139,11 @@ export default function ResultsPage() {
         total,
         ...gradeInfo,
       });
+    }
+    } catch (err) {
+      setError(err.message || 'Failed to save results');
+      setSaving(false);
+      return;
     }
     setSaving(false);
     setSaved(true);
@@ -366,7 +374,7 @@ export default function ResultsPage() {
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5 text-primary" />
                   <h3 className="font-semibold text-gray-900">
-                    {filters.className} — {subjects.find((s) => s.id === Number(filters.subjectId))?.name}
+                    {filters.className} — {subjects.find((s) => String(s.id) === String(filters.subjectId))?.name}
                   </h3>
                   <span className="text-xs text-gray-400">{semesterLabel(filters.semester)} · {filters.session}</span>
                 </div>

@@ -6,7 +6,8 @@ import {
 import useAuthStore from '../../store/authStore';
 import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
-import db from '../../db/database';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -42,17 +43,16 @@ export default function StudentForm() {
   }, []);
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect */
-    if (classes.length > 0 && !form.className) {
+    if (classes.length > 0 && !form.className && !isEdit) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm((f) => ({ ...f, className: classes[0].name }));
     }
-    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classes]);
 
   useEffect(() => {
     if (isEdit) {
-      getStudent(Number(id)).then((student) => {
+      getStudent(id).then((student) => {
         if (student) {
           setForm({
             studentId: student.studentId || '',
@@ -76,17 +76,29 @@ export default function StudentForm() {
     setFormError('');
     if (!form.name.trim()) { setFormError('Student name is required'); return; }
     if (!form.className) { setFormError('Please select a class'); return; }
+    if (form.parentEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.parentEmail)) {
+      setFormError('Please enter a valid parent email address'); return;
+    }
+    if (form.parentPhone && !/^[\d\s\-+()]{6,20}$/.test(form.parentPhone)) {
+      setFormError('Please enter a valid phone number'); return;
+    }
 
-    const existing = await db.students.where('studentId').equals(form.studentId).first();
-    if (existing && (!isEdit || existing.id !== Number(id))) {
-      setFormError('Student ID already exists');
+    try {
+      const snap = await getDocs(query(collection(db, 'students'), where('studentId', '==', form.studentId)));
+      const existing = snap.docs[0];
+      if (existing && (!isEdit || existing.id !== id)) {
+        setFormError('Student ID already exists');
+        return;
+      }
+    } catch {
+      setFormError('Failed to validate student ID');
       return;
     }
 
     setSaving(true);
     try {
       if (isEdit) {
-        await updateStudent(Number(id), form);
+        await updateStudent(id, form);
       } else {
         await addStudent(form);
       }

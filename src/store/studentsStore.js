@@ -1,53 +1,80 @@
 import { create } from 'zustand';
-import db from '../db/database';
+import {
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const useStudentsStore = create((set) => ({
   students: [],
   loading: true,
 
   loadStudents: async () => {
-    const students = await db.students.toArray();
+    const snapshot = await getDocs(collection(db, 'students'));
+    const students = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     set({ students, loading: false });
   },
 
   getStudent: async (id) => {
-    return await db.students.get(id);
+    const snap = await getDoc(doc(db, 'students', id));
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() };
   },
 
   addStudent: async (data) => {
-    const id = await db.students.add({
+    const docRef = await addDoc(collection(db, 'students'), {
       ...data,
       createdAt: new Date().toISOString(),
     });
-    const all = await db.students.toArray();
-    set({ students: all });
-    return id;
+    const all = await getDocs(collection(db, 'students'));
+    set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    return docRef.id;
   },
 
   updateStudent: async (id, data) => {
-    await db.students.update(id, data);
-    const all = await db.students.toArray();
-    set({ students: all });
+    const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
+    await updateDoc(doc(db, 'students', id), clean);
+    const all = await getDocs(collection(db, 'students'));
+    set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
 
   deleteStudent: async (id) => {
-    await db.students.delete(id);
-    const all = await db.students.toArray();
-    set({ students: all });
+    const studentSnap = await getDoc(doc(db, 'students', id));
+    if (studentSnap.exists()) {
+      const student = studentSnap.data();
+      const resultsSnap = await getDocs(query(collection(db, 'results'), where('studentId', '==', student.studentId)));
+      for (const r of resultsSnap.docs) await deleteDoc(r.ref);
+
+      const attendanceSnap = await getDocs(query(collection(db, 'attendance'), where('studentId', '==', student.studentId)));
+      for (const r of attendanceSnap.docs) await deleteDoc(r.ref);
+
+      const promoSnap = await getDocs(query(collection(db, 'promotions'), where('studentId', '==', student.studentId)));
+      for (const r of promoSnap.docs) await deleteDoc(r.ref);
+    }
+    await deleteDoc(doc(db, 'students', id));
+    const all = await getDocs(collection(db, 'students'));
+    set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
 
   bulkAddStudents: async (records) => {
     let success = 0;
     let errors = 0;
-    const existing = await db.students.toArray();
-    const existingIds = new Set(existing.map((s) => s.studentId).filter(Boolean));
+    const existingSnap = await getDocs(collection(db, 'students'));
+    const existingIds = new Set(existingSnap.docs.map((d) => d.data().studentId).filter(Boolean));
     for (const record of records) {
       try {
         if (record.studentId && existingIds.has(record.studentId)) {
           errors++;
           continue;
         }
-        await db.students.add({
+        await addDoc(collection(db, 'students'), {
           ...record,
           createdAt: new Date().toISOString(),
         });
@@ -57,8 +84,8 @@ const useStudentsStore = create((set) => ({
         errors++;
       }
     }
-    const all = await db.students.toArray();
-    set({ students: all });
+    const all = await getDocs(collection(db, 'students'));
+    set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
     return { success, errors };
   },
 }));

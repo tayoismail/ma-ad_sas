@@ -1,72 +1,85 @@
 import { create } from 'zustand';
-import db from '../db/database';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const useResultsStore = create((set) => ({
   results: [],
   loading: true,
 
   loadResults: async (filters = {}) => {
-    let collection = db.results.toCollection();
-    if (filters.className) collection = db.results.where('className').equals(filters.className);
-    if (filters.session) collection = db.results.where('session').equals(filters.session);
-    if (filters.semester) collection = db.results.where('semester').equals(Number(filters.semester));
-    const results = await collection.toArray();
+    let snapshot = await getDocs(collection(db, 'results'));
+    let results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    if (filters.className) results = results.filter((r) => r.className === filters.className);
+    if (filters.session) results = results.filter((r) => r.session === filters.session);
+    if (filters.semester) results = results.filter((r) => r.semester === Number(filters.semester));
     set({ results, loading: false });
   },
 
   getResultsForClass: async (className, session, semester, subjectId) => {
-    const all = await db.results
-      .where({ className, session, semester: Number(semester), subjectId: Number(subjectId) })
-      .toArray();
-    return all;
+    const snapshot = await getDocs(collection(db, 'results'));
+    return snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((r) => r.className === className && r.session === session && r.semester === Number(semester) && String(r.subjectId) === String(subjectId));
   },
 
   saveResult: async (data) => {
-    const existing = await db.results
-      .where({
-        studentId: data.studentId,
-        subjectId: Number(data.subjectId),
-        session: data.session,
-        semester: Number(data.semester),
-      })
-      .first();
+    const snapshot = await getDocs(collection(db, 'results'));
+    const existing = snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .find((r) => r.studentId === data.studentId && String(r.subjectId) === String(data.subjectId) && r.session === data.session && r.semester === Number(data.semester));
 
     if (existing) {
-      await db.results.update(existing.id, data);
+      await updateDoc(doc(db, 'results', existing.id), data);
       return existing.id;
     }
-    return await db.results.add(data);
+    const docRef = await addDoc(collection(db, 'results'), data);
+    return docRef.id;
   },
 
   saveResults: async (records) => {
     let success = 0;
+    const allSnap = await getDocs(collection(db, 'results'));
+    const existingMap = {};
+    for (const d of allSnap.docs) {
+      const r = d.data();
+      const key = `${r.studentId}|${r.subjectId}|${r.session}|${r.semester}`;
+      existingMap[key] = d.id;
+    }
     for (const r of records) {
       try {
-        const existing = await db.results
-          .where({ studentId: r.studentId, subjectId: Number(r.subjectId), session: r.session, semester: Number(r.semester) })
-          .first();
-        if (existing) {
-          await db.results.update(existing.id, r);
+        const key = `${r.studentId}|${r.subjectId}|${r.session}|${r.semester}`;
+        if (existingMap[key]) {
+          await updateDoc(doc(db, 'results', existingMap[key]), r);
         } else {
-          await db.results.add(r);
+          await addDoc(collection(db, 'results'), r);
         }
         success++;
       } catch { /* skip individual record errors */ }
     }
-    const all = await db.results.toArray();
-    set({ results: all });
+    const all = await getDocs(collection(db, 'results'));
+    set({ results: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
     return success;
   },
 
   deleteResult: async (id) => {
-    await db.results.delete(id);
-    const all = await db.results.toArray();
-    set({ results: all });
+    await deleteDoc(doc(db, 'results', id));
+    const all = await getDocs(collection(db, 'results'));
+    set({ results: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
 
   loadResultsByStudent: async (studentId) => {
     set({ loading: true });
-    const data = await db.results.where('studentId').equals(studentId).toArray();
+    const snapshot = await getDocs(query(collection(db, 'results'), where('studentId', '==', studentId)));
+    const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     set({ results: data, loading: false });
     return data;
   },

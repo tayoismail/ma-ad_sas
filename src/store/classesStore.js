@@ -1,32 +1,44 @@
 import { create } from 'zustand';
-import db from '../db/database';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const useClassesStore = create((set) => ({
   classes: [],
   loading: true,
 
   loadClasses: async () => {
-    const classes = await db.classes.orderBy('order').toArray();
+    const snapshot = await getDocs(query(collection(db, 'classes'), orderBy('order')));
+    const classes = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     set({ classes, loading: false });
   },
 
   addClass: async (cls) => {
-    const id = await db.classes.add(cls);
-    const all = await db.classes.orderBy('order').toArray();
-    set({ classes: all });
-    return id;
+    const docRef = await addDoc(collection(db, 'classes'), cls);
+    const all = await getDocs(query(collection(db, 'classes'), orderBy('order')));
+    set({ classes: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    return docRef.id;
   },
 
   updateClass: async (id, data) => {
-    await db.classes.update(id, data);
-    const all = await db.classes.orderBy('order').toArray();
-    set({ classes: all });
+    const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
+    await updateDoc(doc(db, 'classes', id), clean);
+    const all = await getDocs(query(collection(db, 'classes'), orderBy('order')));
+    set({ classes: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
 
   deleteClass: async (id) => {
-    await db.classes.delete(id);
-    const all = await db.classes.orderBy('order').toArray();
-    set({ classes: all });
+    await deleteDoc(doc(db, 'classes', id));
+    const all = await getDocs(query(collection(db, 'classes'), orderBy('order')));
+    set({ classes: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
 }));
 

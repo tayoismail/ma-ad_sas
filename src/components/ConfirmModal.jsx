@@ -22,7 +22,7 @@ export default function ConfirmModal({ open, title, message, confirmLabel = 'Con
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && onCancel?.()}>
       <Card className="w-full max-w-sm p-6 bg-card shadow-2xl animate-fade-in">
         <div className="flex items-start justify-between mb-4">
-          <div className={`w-12 h-12 rounded-2xl ${icons[variant]?.color} flex items-center justify-center`}>
+          <div className={`w-12 h-12 rounded-2xl ${(icons[variant]?.color) || 'bg-red-500/10 text-red-500'} flex items-center justify-center`}>
             <Icon className="w-6 h-6" />
           </div>
           <button onClick={onCancel} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-4 h-4" /></button>

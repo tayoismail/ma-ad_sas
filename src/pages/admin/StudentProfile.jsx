@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, User, Mail, Phone, Calendar, School,
-  Pencil, Menu,
-  Hash, FileText
+  Pencil, Menu, Hash, FileText, AlertCircle
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -19,16 +18,38 @@ export default function StudentProfile() {
   const { getStudent } = useStudentsStore();
   const [student, setStudent] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getStudent(Number(id)).then(setStudent);
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
+    setError(null);
+    getStudent(id)
+      .then((s) => { if (!cancelled) { setStudent(s); setLoading(false); if (!s) setError('Student not found'); } })
+      .catch((err) => { if (!cancelled) { setError(err.message || 'Failed to load student'); setLoading(false); } });
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (!student) {
+  if (loading) {
     return (
       <div className="min-h-screen gradient-secondary flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !student) {
+    return (
+      <div className="min-h-screen bg-slate-300 flex items-center justify-center">
+        <Card className="p-8 text-center max-w-md">
+          <AlertCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Student Not Found</h2>
+          <p className="text-sm text-gray-500 mb-6">{error || 'The student you are looking for does not exist.'}</p>
+          <Button onClick={() => navigate('/admin/students')}>Go to Students List</Button>
+        </Card>
       </div>
     );
   }
@@ -62,7 +83,7 @@ export default function StudentProfile() {
               <h1 className="text-lg font-semibold text-card-foreground">Student Profile</h1>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={() => navigate(`/admin/transcript/${id}`)} className="mr-2">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/transcript/${id}`)} className="mr-2">
                 <FileText className="w-4 h-4 mr-1" /> View Transcript
               </Button>
               <Button variant="outline" size="sm" onClick={() => navigate(`/admin/students/${id}/edit`)}>

@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import db from '../db/database';
+import {
+  doc,
+  getDoc,
+  setDoc,
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 const defaultSettings = {
   schoolName: "MA'AD AHLIL AATHAR",
@@ -24,17 +29,19 @@ const useSettingsStore = create((set) => ({
   loading: true,
 
   loadSettings: async () => {
-    let settings = await db.settings.get('school_settings');
-    if (!settings) {
-      await db.settings.put({ key: 'school_settings', ...defaultSettings });
-      settings = { key: 'school_settings', ...defaultSettings };
+    const snap = await getDoc(doc(db, 'settings', 'school_settings'));
+    if (snap.exists()) {
+      set({ settings: { id: snap.id, ...snap.data() }, loading: false });
+    } else {
+      await setDoc(doc(db, 'settings', 'school_settings'), defaultSettings);
+      set({ settings: { id: 'school_settings', ...defaultSettings }, loading: false });
     }
-    set({ settings, loading: false });
   },
 
   updateSettings: async (data) => {
-    await db.settings.put({ key: 'school_settings', ...data });
-    set({ settings: data });
+    await setDoc(doc(db, 'settings', 'school_settings'), data, { merge: true });
+    const snap = await getDoc(doc(db, 'settings', 'school_settings'));
+    set({ settings: { id: snap.id, ...snap.data() } });
   },
 }));
 

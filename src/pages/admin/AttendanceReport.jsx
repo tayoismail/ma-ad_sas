@@ -52,7 +52,7 @@ export default function AttendanceReportPage() {
       attendance: pcts[s.studentId],
     })).sort((a, b) => (b.attendance || 0) - (a.attendance || 0));
 
-    const valid = data.filter((d) => d.attendance !== null);
+    const valid = data.filter((d) => d.attendance !== null && d.attendance !== undefined);
     const avg = valid.length ? Math.round(valid.reduce((s, d) => s + d.attendance, 0) / valid.length * 100) / 100 : 0;
 
     setSummary({
