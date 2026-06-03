@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Download, Printer, Menu,
-  Search, FileText, Users, GraduationCap
+  Search, FileText, Users, GraduationCap, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
 import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -19,6 +20,7 @@ import AdminSidebar from '../../components/AdminSidebar';
 export default function ReportsPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { settings, loadSettings } = useSettingsStore();
   const { classes, loadClasses } = useClassesStore();
   const { students, loadStudents } = useStudentsStore();
@@ -146,11 +148,14 @@ export default function ReportsPage() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
               <button onClick={() => navigate('/admin/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
               <h1 className="text-lg font-semibold text-card-foreground">Reports</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               {activeTab === 'class' && classGenerated && (
                 <div className="flex gap-2 max-sm:hidden">
                   <Button size="sm" variant="outline" onClick={() => handlePrint(classReportRef)}><Printer className="w-4 h-4 mr-1" /> Print</Button>

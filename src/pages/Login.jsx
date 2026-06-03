@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Eye, EyeOff, Loader2, GraduationCap } from 'lucide-react';
+import { BookOpen, Eye, EyeOff, Loader2, GraduationCap, ArrowLeft } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -40,7 +40,8 @@ export default function Login() {
         <div className="absolute top-[30%] right-[20%] w-[30%] h-[30%] rounded-full bg-cyan-500/5 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <button onClick={() => navigate('/')} className="absolute top-4 left-3 sm:top-8 sm:left-8 flex items-center gap-3 z-10 hover:opacity-80 transition-opacity">
+      <button onClick={() => navigate('/')} className="absolute top-4 left-3 sm:top-8 sm:left-8 z-10 p-2 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 hover:opacity-80 transition-opacity"><ArrowLeft className="w-4 h-4 text-white" /></button>
+      <button onClick={() => navigate('/')} className="absolute top-4 left-16 sm:top-8 sm:left-20 flex items-center gap-3 z-10 hover:opacity-80 transition-opacity">
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
           <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </div>

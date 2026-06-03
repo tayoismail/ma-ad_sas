@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Menu, Eye, FileText, GraduationCap } from 'lucide-react';
+import { Search, Menu, Eye, FileText, GraduationCap, ArrowLeft, Moon, Sun } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useSubjectsStore from '../../store/subjectsStore';
@@ -14,6 +15,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 export default function TeacherMyStudents() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses } = useClassesStore();
   const { students, loadStudents, loading } = useStudentsStore();
   const { subjects, loadSubjects } = useSubjectsStore();
@@ -91,10 +93,14 @@ export default function TeacherMyStudents() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => navigate('/teacher/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
               <h1 className="text-lg font-semibold text-card-foreground">My Students</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <p className="text-sm font-medium text-card-foreground hidden sm:block">{user?.name || 'Teacher'}</p>
                 <Avatar className="ring-2 ring-primary/20"><AvatarFallback className="bg-primary/10 text-primary">{(user?.name || 'T').charAt(0).toUpperCase()}</AvatarFallback></Avatar>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Award, BookOpen, Download, Moon, LogOut } from 'lucide-react';
+import { Award, BookOpen, Download, Moon, LogOut, ArrowLeft } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -56,6 +56,7 @@ export default function StudentMyResults() {
       <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/student/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
             <button onClick={() => navigate('/student/dashboard')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-purple-500/20"><BookOpen className="w-4 h-4 text-white" /></div>
               <h1 className="text-lg font-semibold text-card-foreground">My Results</h1>

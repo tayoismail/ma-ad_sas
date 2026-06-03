@@ -45,6 +45,15 @@
   }
 }
 
+@layer utilities {
+  .mobile-container {
+    @apply w-full max-w-full overflow-x-hidden;
+  }
+  .mobile-table-wrap {
+    @apply overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -52,6 +61,20 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+  }
+  input, select, textarea, button {
+    max-width: 100%;
+  }
+  table {
+    width: 100%;
   }
 }
 

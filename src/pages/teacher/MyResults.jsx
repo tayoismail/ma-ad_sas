@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, Award, Menu, Loader2, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Save, Award, Menu, Loader2, CheckCircle2, AlertCircle, BookOpen, ArrowLeft, Moon, Sun } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
 import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -14,7 +16,9 @@ import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 export default function TeacherMyResults() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses } = useClassesStore();
   const { subjects, loadSubjects } = useSubjectsStore();
   const { students, loadStudents } = useStudentsStore();
@@ -51,25 +55,24 @@ export default function TeacherMyResults() {
   );
   const classStudents = students.filter((s) => s.className === filters.className);
 
-  const handleLoadResults = async () => {
+  useEffect(() => {
     if (!filters.className || !filters.subjectId) return;
     const token = `${filters.className}_${filters.subjectId}_${filters.session}_${filters.semester}`;
     latestFilterRef.current = token;
-    try {
-      const results = await getResultsForClass(filters.className, filters.session, filters.semester, filters.subjectId);
-      if (latestFilterRef.current !== token) return;
-      const map = {};
-      for (const r of results) {
-        map[r.studentId] = { examScore: r.examScore || 0, testScore: r.testScore || 0, attendance: r.attendance ?? '' };
+    const load = async () => {
+      try {
+        const results = await getResultsForClass(filters.className, filters.session, filters.semester, filters.subjectId);
+        if (latestFilterRef.current !== token) return;
+        const map = {};
+        for (const r of results) {
+          map[r.studentId] = { examScore: r.examScore || 0, testScore: r.testScore || 0, attendance: r.attendance ?? '' };
+        }
+        setScores(map);
+      } catch {
+        setError('Failed to load results');
       }
-      setScores(map);
-    } catch {
-      setError('Failed to load results');
-    }
-  };
-
-  useEffect(() => {
-    if (filters.className && filters.subjectId) handleLoadResults();
+    };
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.className, filters.subjectId]);
 
@@ -110,10 +113,14 @@ export default function TeacherMyResults() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => navigate('/teacher/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
               <h1 className="text-lg font-semibold text-card-foreground">My Results</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <p className="text-sm font-medium text-card-foreground hidden sm:block">{user?.name || 'Teacher'}</p>
                 <Avatar className="ring-2 ring-primary/20"><AvatarFallback className="bg-primary/10 text-primary">{(user?.name || 'T').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
@@ -161,7 +168,7 @@ export default function TeacherMyResults() {
                 </Card>
               ) : (
                 <Card className="overflow-hidden border-border">
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50">
                         <tr>
@@ -194,20 +201,20 @@ export default function TeacherMyResults() {
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-center">
-                                <input type="number" min="0" max="100" value={exam}
-                                  onChange={(e) => updateScore(s.studentId, 'examScore', e.target.value)}
-                                  className="w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <input type="number" min="0" max="100" value={test}
-                                  onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
-                                  className="w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
-                              </td>
-                              {useAttendance && (
-                                <td className="px-4 py-3 text-center">
-                                  <input type="number" min="0" max="100" value={scores[s.studentId]?.attendance ?? ''}
-                                    onChange={(e) => updateScore(s.studentId, 'attendance', e.target.value)}
-                                    className="w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                  <input type="number" min="0" max="100" value={exam}
+                                   onChange={(e) => updateScore(s.studentId, 'examScore', e.target.value)}
+                                   className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                               </td>
+                               <td className="px-4 py-3 text-center">
+                                 <input type="number" min="0" max="100" value={test}
+                                   onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
+                                   className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                               </td>
+                               {useAttendance && (
+                                 <td className="px-4 py-3 text-center">
+                                   <input type="number" min="0" max="100" value={scores[s.studentId]?.attendance ?? ''}
+                                     onChange={(e) => updateScore(s.studentId, 'attendance', e.target.value)}
+                                     className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                                 </td>
                               )}
                               <td className="px-4 py-3 text-center font-semibold text-card-foreground">{total}</td>

@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, School,
   Menu, Pencil, Trash2, X, Check,
-  Loader2, BookMarked, AlertCircle
+  Loader2, BookMarked, AlertCircle, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import useSubjectsStore from '../../store/subjectsStore';
@@ -17,6 +18,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 export default function SubjectsPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses } = useClassesStore();
   const { subjects, loadSubjects, addSubject, updateSubject, deleteSubject } = useSubjectsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -90,11 +92,14 @@ export default function SubjectsPage() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
               <button onClick={() => navigate('/admin/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
               <h1 className="text-lg font-semibold text-card-foreground">Subjects</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <p className="text-sm font-medium text-card-foreground hidden sm:block">{user?.name || 'Admin'}</p>
                 <Avatar className="ring-2 ring-primary/20">

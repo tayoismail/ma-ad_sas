@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Award, LogOut, ClipboardList, School, TrendingUp, Moon, Sun, AlertCircle, CalendarDays } from 'lucide-react';
+import { BookOpen, Users, Award, LogOut, ClipboardList, School, TrendingUp, Moon, Sun, AlertCircle, CalendarDays, ArrowLeft, Menu } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
@@ -12,10 +12,12 @@ import { semesterLabel } from '../../lib/utils';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import AdminSidebar from '../../components/AdminSidebar';
 
 export default function TeacherDashboard() {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { classes, loadClasses, loading: classesLoading } = useClassesStore();
   const { subjects, loadSubjects, loading: subjectsLoading } = useSubjectsStore();
   const { students, loadStudents, loading: studentsLoading } = useStudentsStore();
@@ -51,13 +53,14 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-300">
+      <AdminSidebar activePath="/teacher/dashboard" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div className="lg:pl-72">
       <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-purple-500/20"><BookOpen className="w-4 h-4 text-white" /></div>
-              <h1 className="text-lg font-semibold text-card-foreground">Teacher Dashboard</h1>
-            </button>
+            <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+            <button onClick={() => navigate('/')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground hidden lg:flex"><ArrowLeft className="w-5 h-5" /></button>
+            <h1 className="text-lg font-semibold text-card-foreground">Teacher Dashboard</h1>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-accent text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
@@ -146,6 +149,7 @@ export default function TeacherDashboard() {
         </div>
         </>) : null}
       </main>
+      </div>
     </div>
   );
 }

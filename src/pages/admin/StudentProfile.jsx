@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, User, Mail, Phone, Calendar, School,
-  Pencil, Menu, Hash, FileText, AlertCircle
+  Pencil, Menu, Hash, FileText, AlertCircle, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useStudentsStore from '../../store/studentsStore';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -15,6 +16,7 @@ export default function StudentProfile() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { getStudent } = useStudentsStore();
   const [student, setStudent] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,7 +76,7 @@ export default function StudentProfile() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
                 <Menu className="w-5 h-5" />
               </button>
               <button onClick={() => navigate('/admin/students')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
@@ -83,6 +85,9 @@ export default function StudentProfile() {
               <h1 className="text-lg font-semibold text-card-foreground">Student Profile</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <Button variant="outline" size="sm" onClick={() => navigate(`/transcript/${id}`)} className="mr-2">
                 <FileText className="w-4 h-4 mr-1" /> View Transcript
               </Button>

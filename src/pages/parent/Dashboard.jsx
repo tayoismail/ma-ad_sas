@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Users, Award, LogOut,
   GraduationCap, School, Hash,
-  Download, Moon, Sun, BarChart3, CalendarDays
+  Download, Moon, Sun, BarChart3, CalendarDays, ArrowLeft
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -53,6 +53,7 @@ export default function ParentDashboard() {
       <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
             <button onClick={() => navigate('/')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-purple-500/20"><BookOpen className="w-4 h-4 text-white" /></div>
               <h1 className="text-lg font-semibold text-card-foreground">Parent Portal</h1>

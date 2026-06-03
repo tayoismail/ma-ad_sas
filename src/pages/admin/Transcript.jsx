@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Download, BookOpen, School, Calendar, Award,
-  FileText, GraduationCap, CheckCircle, AlertCircle
+  FileText, GraduationCap, CheckCircle, AlertCircle, Moon, Sun
 } from 'lucide-react';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
+import { useThemeStore } from '../../store/themeStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import { semesterLabel } from '../../lib/utils';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -46,6 +47,7 @@ function statColor(val) {
 export default function TranscriptPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { theme, toggleTheme } = useThemeStore();
   const { getStudent } = useStudentsStore();
   const { loadResultsByStudent } = useResultsStore();
   const { settings, loadSettings } = useSettingsStore();
@@ -170,6 +172,9 @@ export default function TranscriptPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <Button size="sm" onClick={downloadPDF} disabled={pdfLoading} className="gradient-accent text-white border-0">
               {pdfLoading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1" /> : <Download className="w-4 h-4 mr-1" />}
               {pdfLoading ? 'Generating...' : 'Download PDF'}
@@ -263,6 +268,7 @@ export default function TranscriptPage() {
                 </div>
 
                 <div className="p-6">
+                  <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                   <table className="w-full text-sm border-collapse mb-3">
                     <thead>
                       <tr className="bg-gray-50 border-y border-gray-200">
@@ -315,6 +321,7 @@ export default function TranscriptPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
 
                   <div className="flex flex-wrap gap-3 text-xs">
                     <div className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100">

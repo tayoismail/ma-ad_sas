@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, XCircle, AlertCircle, ChevronLeft, ChevronRight, Menu, CalendarDays, School } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, XCircle, AlertCircle, ChevronLeft, ChevronRight, Menu, CalendarDays, School, ArrowLeft, Moon, Sun } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useAttendanceStore from '../../store/attendanceStore';
@@ -15,7 +17,9 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 export default function TeacherMyAttendance() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses } = useClassesStore();
   const { students, loadStudents } = useStudentsStore();
   const { subjects, loadSubjects } = useSubjectsStore();
@@ -113,10 +117,14 @@ export default function TeacherMyAttendance() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => navigate('/teacher/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
               <h1 className="text-lg font-semibold text-card-foreground">My Attendance</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <p className="text-sm font-medium text-card-foreground hidden sm:block">{user?.name || 'Teacher'}</p>
                 <Avatar className="ring-2 ring-primary/20"><AvatarFallback className="bg-primary/10 text-primary">{(user?.name || 'T').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
@@ -145,9 +153,9 @@ export default function TeacherMyAttendance() {
               </div>
               {filters.className && (
                 <>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <CalendarDays className="w-5 h-5 text-primary" />
+                      <CalendarDays className="w-5 h-5 text-primary shrink-0" />
                       <span className="text-sm font-medium text-card-foreground">{dateStr}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -156,8 +164,8 @@ export default function TeacherMyAttendance() {
                       <Button variant="outline" size="sm" onClick={() => changeDate(1)}><ChevronRight className="w-4 h-4" /></Button>
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="outline" size="sm" onClick={() => markAll('present')} disabled={saving} className="text-emerald-600 border-emerald-200 hover:bg-emerald-50">All Present</Button>
-                      <Button variant="outline" size="sm" onClick={() => markAll('absent')} disabled={saving} className="text-red-600 border-red-200 hover:bg-red-50">All Absent</Button>
+                      <Button variant="outline" size="sm" onClick={() => markAll('present')} disabled={saving} className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 text-xs sm:text-sm">All Present</Button>
+                      <Button variant="outline" size="sm" onClick={() => markAll('absent')} disabled={saving} className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm">All Absent</Button>
                     </div>
                   </div>
                   <Card className="overflow-hidden border-border">

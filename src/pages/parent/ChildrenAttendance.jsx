@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CalendarDays, School, Hash, Moon, LogOut, CheckCircle2, XCircle, AlertCircle, Users, GraduationCap } from 'lucide-react';
+import { BookOpen, CalendarDays, School, Hash, Moon, LogOut, CheckCircle2, XCircle, AlertCircle, Users, GraduationCap, ArrowLeft } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
@@ -65,6 +65,7 @@ export default function ParentChildrenAttendance() {
       <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/parent/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
             <button onClick={() => navigate('/parent/dashboard')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-purple-500/20"><BookOpen className="w-4 h-4 text-white" /></div>
               <h1 className="text-lg font-semibold text-card-foreground">Children Attendance</h1>

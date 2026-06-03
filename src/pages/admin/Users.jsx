@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu
+  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import useSubjectsStore from '../../store/subjectsStore';
 import DataTable from '../../components/DataTable';
@@ -15,6 +16,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 export default function UsersPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { subjects, loadSubjects } = useSubjectsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
@@ -145,11 +147,14 @@ export default function UsersPage() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"><Menu className="w-5 h-5" /></button>
               <button onClick={() => navigate('/admin/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"><ArrowLeft className="w-5 h-5" /></button>
               <h1 className="text-lg font-semibold text-gray-900">User Management</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-gray-600 transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <Button onClick={() => { resetForm(); setShowForm(true); }} className="gradient-accent text-white border-0 shadow-lg shadow-purple-500/20">
                 <Plus className="w-4 h-4 mr-2" /> Add User
               </Button>

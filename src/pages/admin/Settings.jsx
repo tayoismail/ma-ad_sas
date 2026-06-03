@@ -125,7 +125,7 @@ export default function SettingsPage() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
                 <Menu className="w-5 h-5" />
               </button>
               <button onClick={() => navigate('/admin/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
@@ -270,7 +270,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-gray-400">Once finalized, no more edits can be made to results for that semester.</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {[1, 2].map((sem) => {
                 const finalized = isSemesterFinalized(sem);
                 return (
@@ -322,63 +322,67 @@ export default function SettingsPage() {
               </div>
               <h2 className="text-lg font-semibold text-gray-900">Grading Scale</h2>
             </div>
-            <div className="space-y-3">
-              {form.gradingScale.map((grade, i) => (
-                <div key={i} className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-white/50 border border-white/20">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm"
-                    style={{
-                      background: grade.grade === 'A' ? 'linear-gradient(135deg, #22c55e20, #16a34a20)' :
-                                  grade.grade === 'B' ? 'linear-gradient(135deg, #3b82f620, #2563eb20)' :
-                                  grade.grade === 'C' ? 'linear-gradient(135deg, #eab30820, #ca8a0420)' :
-                                  grade.grade === 'D' ? 'linear-gradient(135deg, #f9731620, #ea580c20)' :
-                                  'linear-gradient(135deg, #ef444420, #dc262620)',
-                      color: grade.grade === 'A' ? '#16a34a' :
-                             grade.grade === 'B' ? '#2563eb' :
-                             grade.grade === 'C' ? '#ca8a04' :
-                             grade.grade === 'D' ? '#ea580c' : '#dc2626',
-                    }}
-                  >
-                    {grade.grade}
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Input
-                      type="number"
-                      value={grade.min}
-                      onChange={(e) => updateGrade(i, 'min', Number(e.target.value))}
-                      className="w-16 h-9 text-center bg-white/80"
-                    />
-                    <span className="text-gray-400">-</span>
-                    <Input
-                      type="number"
-                      value={grade.max}
-                      onChange={(e) => updateGrade(i, 'max', Number(e.target.value))}
-                      className="w-16 h-9 text-center bg-white/80"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[120px]">
-                    <Input
-                      value={grade.remarkEn}
-                      onChange={(e) => updateGrade(i, 'remarkEn', e.target.value)}
-                      className="h-9 bg-white/80 text-sm"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[80px] text-right">
-                    <Input
-                      value={grade.remarkAr}
-                      onChange={(e) => updateGrade(i, 'remarkAr', e.target.value)}
-                      className="h-9 bg-white/80 text-sm text-right"
-                      dir="rtl"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+              <div className="space-y-3">
+               {form.gradingScale.map((grade, i) => (
+                 <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-white/50 border border-white/20">
+                   <div className="flex items-center gap-2 w-full sm:w-auto">
+                     <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
+                       style={{
+                         background: grade.grade === 'A' ? 'linear-gradient(135deg, #22c55e20, #16a34a20)' :
+                                     grade.grade === 'B' ? 'linear-gradient(135deg, #3b82f620, #2563eb20)' :
+                                     grade.grade === 'C' ? 'linear-gradient(135deg, #eab30820, #ca8a0420)' :
+                                     grade.grade === 'D' ? 'linear-gradient(135deg, #f9731620, #ea580c20)' :
+                                     'linear-gradient(135deg, #ef444420, #dc262620)',
+                         color: grade.grade === 'A' ? '#16a34a' :
+                                grade.grade === 'B' ? '#2563eb' :
+                                grade.grade === 'C' ? '#ca8a04' :
+                                grade.grade === 'D' ? '#ea580c' : '#dc2626',
+                       }}
+                     >
+                       {grade.grade}
+                     </div>
+                     <div className="flex items-center gap-1 text-sm">
+                       <Input
+                         type="number"
+                         value={grade.min}
+                         onChange={(e) => updateGrade(i, 'min', Number(e.target.value))}
+                         className="w-16 h-9 text-center bg-white/80"
+                       />
+                       <span className="text-gray-400">-</span>
+                       <Input
+                         type="number"
+                         value={grade.max}
+                         onChange={(e) => updateGrade(i, 'max', Number(e.target.value))}
+                         className="w-16 h-9 text-center bg-white/80"
+                       />
+                     </div>
+                   </div>
+                   <div className="flex w-full sm:flex-1 gap-2">
+                     <div className="flex-1 min-w-0">
+                       <Input
+                         value={grade.remarkEn}
+                         onChange={(e) => updateGrade(i, 'remarkEn', e.target.value)}
+                         className="h-9 bg-white/80 text-sm"
+                       />
+                     </div>
+                     <div className="flex-1 min-w-0 text-right">
+                       <Input
+                         value={grade.remarkAr}
+                         onChange={(e) => updateGrade(i, 'remarkAr', e.target.value)}
+                         className="h-9 bg-white/80 text-sm text-right"
+                         dir="rtl"
+                       />
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </div>
           </Card>
 
           {/* Save */}
-          <div className="flex justify-end gap-3 pb-8">
-            <Button variant="outline" onClick={() => navigate('/admin/dashboard')}>Cancel</Button>
-            <Button className="gradient-accent text-white border-0 min-w-[140px]" onClick={handleSave} disabled={saving}>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pb-8">
+            <Button variant="outline" onClick={() => navigate('/admin/dashboard')} className="w-full sm:w-auto">Cancel</Button>
+            <Button className="gradient-accent text-white border-0 w-full sm:w-auto sm:min-w-[140px]" onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {saving ? 'Saving...' : 'Save Settings'}
             </Button>

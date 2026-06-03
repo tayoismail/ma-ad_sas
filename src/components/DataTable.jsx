@@ -40,7 +40,7 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
 
   return (
     <div>
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

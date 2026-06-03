@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Save, User, Menu, Loader2, CheckCircle2, AlertCircle
+  ArrowLeft, Save, User, Menu, Loader2, CheckCircle2, AlertCircle, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -19,6 +20,7 @@ export default function StudentForm() {
   const { id } = useParams();
   const isEdit = !!id;
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses } = useClassesStore();
   const { addStudent, updateStudent, getStudent } = useStudentsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -123,7 +125,7 @@ export default function StudentForm() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
                 <Menu className="w-5 h-5" />
               </button>
               <button onClick={() => navigate('/admin/students')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
@@ -132,6 +134,9 @@ export default function StudentForm() {
               <h1 className="text-lg font-semibold text-card-foreground">{isEdit ? 'Edit Student' : 'Register Student'}</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <p className="text-sm font-medium text-card-foreground hidden sm:block">{user?.name || 'Admin'}</p>
                 <Avatar className="ring-2 ring-primary/20">

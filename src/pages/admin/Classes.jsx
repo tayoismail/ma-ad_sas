@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, School, Users, Menu, Bell, AlertCircle,
   Pencil, Trash2, ArrowRight,
-  X, Check, Loader2
+  X, Check, Loader2, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
@@ -29,6 +30,7 @@ const classColors = [
 export default function ClassesPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses, addClass, updateClass, deleteClass } = useClassesStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -103,7 +105,7 @@ export default function ClassesPage() {
         <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
                 <Menu className="w-5 h-5" />
               </button>
               <button onClick={() => navigate('/admin/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
@@ -112,6 +114,9 @@ export default function ClassesPage() {
               <h1 className="text-lg font-semibold text-card-foreground">Class Management</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <button className="relative p-2 rounded-xl hover:bg-gray-100 text-muted-foreground">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />

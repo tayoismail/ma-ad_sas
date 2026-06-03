@@ -142,7 +142,8 @@ const useAuthStore = create((set, get) => ({
   },
 
   updateUser: async (id, data) => {
-    const { password, ...profile } = data;
+    const { password: _password, ...profile } = data;
+    void _password;
     if (Object.keys(profile).length > 0) {
       await updateDoc(doc(db, 'users', id), profile);
     }

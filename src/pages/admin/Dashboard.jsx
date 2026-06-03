@@ -145,7 +145,7 @@ export default function AdminDashboard() {
         <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-accent text-muted-foreground"><Menu className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-accent text-muted-foreground"><Menu className="w-5 h-5" /></button>
               <h1 className="text-lg font-semibold text-card-foreground">Dashboard</h1>
             </div>
             <div className="flex items-center gap-3">
