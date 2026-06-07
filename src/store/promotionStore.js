@@ -41,9 +41,18 @@ const usePromotionStore = create((set, get) => ({
     const settings = settingsSnap.exists() ? settingsSnap.data() : null;
     const scale = settings?.gradingScale;
     const useAttendance = settings?.useAttendanceUpgrade;
+    const attendanceThreshold = settings?.attendanceThreshold ?? 90;
+    const attendanceBonus = settings?.attendanceBonus ?? 2;
 
     const classesSnapshot = await getDocs(query(collection(db, 'classes'), orderBy('order')));
     const classesList = classesSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    const subjectsSnapshot = await getDocs(collection(db, 'subjects'));
+    const allSubjects = subjectsSnapshot.docs.map((d) => d.data());
+    const classSubjectCount = {};
+    for (const s of allSubjects) {
+      classSubjectCount[s.className] = (classSubjectCount[s.className] || 0) + 1;
+    }
 
     const data = [];
 
@@ -51,6 +60,7 @@ const usePromotionStore = create((set, get) => ({
       const studentResults = results.filter((r) => r.studentId === student.studentId);
       const sem1 = studentResults.filter((r) => r.semester === 1);
       const sem2 = studentResults.filter((r) => r.semester === 2);
+      const totalSubjects = classSubjectCount[student.className] || 0;
 
       const calcSem = async (semResults, semester) => {
         if (semResults.length === 0) return { avg: null, total: 0, count: 0 };
@@ -59,13 +69,14 @@ const usePromotionStore = create((set, get) => ({
           let score = calculateTotal(r.examScore, r.testScore || 0);
           if (useAttendance) {
             const attPct = await getAttendancePct(student.studentId, session, semester);
-            if (attPct !== null && attPct >= 90) {
-              score = Math.min(100, score + 2);
+            if (attPct !== null && attPct >= attendanceThreshold) {
+              score = Math.min(100, score + attendanceBonus);
             }
           }
           total += score;
         }
-        return { avg: Math.round((total / semResults.length) * 100) / 100, total, count: semResults.length };
+        const denom = totalSubjects || semResults.length;
+        return { avg: Math.round((total / denom) * 100) / 100, total, count: denom };
       };
 
       const sem1Calc = sem1.length > 0 ? await calcSem(sem1, 1) : { avg: null, total: 0, count: 0 };

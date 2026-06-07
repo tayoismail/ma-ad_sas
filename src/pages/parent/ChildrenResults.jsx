@@ -4,6 +4,7 @@ import { BookOpen, Award, School, Hash, Download, Moon, LogOut, GraduationCap, U
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
+import useSubjectsStore from '../../store/subjectsStore';
 import useParentStore from '../../store/parentStore';
 
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -14,12 +15,13 @@ export default function ParentChildrenResults() {
   const { user, logout } = useAuthStore();
   const { toggleTheme } = useThemeStore();
   const { settings, loadSettings } = useSettingsStore();
+  const { subjects, loadSubjects } = useSubjectsStore();
   const { children, childrenResults, loading, loadChildren, loadChildrenResults, getChildCumulative } = useParentStore();
   const navigate = useNavigate();
 
   const [selectedSession, setSelectedSession] = useState('');
 
-  useEffect(() => { loadSettings();
+  useEffect(() => { loadSettings(); loadSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -102,9 +104,12 @@ export default function ParentChildrenResults() {
               const childResults = childrenResults.filter((r) => r.studentId === child.studentId);
               const sem1Results = childResults.filter((r) => r.semester === 1);
               const sem2Results = childResults.filter((r) => r.semester === 2);
-              const sem1Avg = sem1Results.length ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / sem1Results.length) * 100) / 100 : null;
-              const sem2Avg = sem2Results.length ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / sem2Results.length) * 100) / 100 : null;
-              const cumulative = getChildCumulative(child.studentId, childrenResults);
+              const totalSubjects = subjects.filter((s) => s.className === child.className).length;
+              const sem1Denom = totalSubjects || sem1Results.length;
+              const sem2Denom = totalSubjects || sem2Results.length;
+              const sem1Avg = sem1Results.length ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / sem1Denom) * 100) / 100 : null;
+              const sem2Avg = sem2Results.length ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / sem2Denom) * 100) / 100 : null;
+              const cumulative = getChildCumulative(child.studentId, childrenResults, totalSubjects);
 
               return (
                 <Card key={child.id} className="overflow-hidden border-border">

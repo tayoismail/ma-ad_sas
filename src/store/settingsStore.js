@@ -14,6 +14,8 @@ const defaultSettings = {
   currentSession: '2024/2025',
   currentSemester: 1,
   useAttendanceUpgrade: false,
+  attendanceThreshold: 90,
+  attendanceBonus: 2,
   semestersFinalized: {},
   gradingScale: [
     { min: 75, max: 100, grade: 'A', remarkEn: 'Excellent', remarkAr: 'ممتاز' },

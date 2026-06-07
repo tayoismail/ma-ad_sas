@@ -8,6 +8,7 @@ import {
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
+import useSubjectsStore from '../../store/subjectsStore';
 import { semesterLabel } from '../../lib/utils';
 import useParentStore from '../../store/parentStore';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -18,11 +19,13 @@ export default function ParentDashboard() {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { settings, loadSettings } = useSettingsStore();
+  const { subjects, loadSubjects } = useSubjectsStore();
   const { children, childrenResults, childrenAttendance, loading, loadChildren, loadChildrenResults, loadChildrenAttendance, getChildCumulative } = useParentStore();
   const navigate = useNavigate();
 
   useEffect(() => {
     loadSettings();
+    loadSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -40,6 +43,8 @@ export default function ParentDashboard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, settings]);
+
+  const attThreshold = settings?.attendanceThreshold ?? 90;
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -105,9 +110,10 @@ export default function ParentDashboard() {
                 const childResults = childrenResults.filter((r) => r.studentId === child.studentId);
                 const sem1Results = childResults.filter((r) => r.semester === 1);
                 const sem2Results = childResults.filter((r) => r.semester === 2);
-                const sem1Avg = sem1Results.length ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / sem1Results.length) * 100) / 100 : null;
-                const sem2Avg = sem2Results.length ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / sem2Results.length) * 100) / 100 : null;
-                const cumulative = getChildCumulative(child.studentId, childrenResults);
+                const totalSubjects = subjects.filter((s) => s.className === child.className).length;
+                const sem1Avg = totalSubjects ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / totalSubjects) * 100) / 100 : null;
+                const sem2Avg = totalSubjects ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / totalSubjects) * 100) / 100 : null;
+                const cumulative = getChildCumulative(child.studentId, childrenResults, totalSubjects);
                 const attPct = childrenAttendance[child.studentId];
 
                 return (
@@ -147,7 +153,7 @@ export default function ParentDashboard() {
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground">Attendance</p>
-                        <p className={`text-xl font-bold ${attPct !== null && attPct >= 90 ? 'text-emerald-600' : attPct !== null ? 'text-amber-600' : 'text-muted-foreground/40'}`}>{attPct !== null ? `${attPct}%` : '--'}</p>
+                        <p className={`text-xl font-bold ${attPct !== null && attPct >= attThreshold ? 'text-emerald-600' : attPct !== null ? 'text-amber-600' : 'text-muted-foreground/40'}`}>{attPct !== null ? `${attPct}%` : '--'}</p>
                       </div>
                     </div>
 

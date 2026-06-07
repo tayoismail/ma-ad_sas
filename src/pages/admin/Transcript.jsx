@@ -9,16 +9,18 @@ import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
 import { useThemeStore } from '../../store/themeStore';
 import useAttendanceStore from '../../store/attendanceStore';
+import useSubjectsStore from '../../store/subjectsStore';
 import { semesterLabel } from '../../lib/utils';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 
-function calcAvg(results) {
+function calcAvg(results, totalSubjects) {
   if (!results || results.length === 0) return null;
   const total = results.reduce((s, r) => s + (r.total || 0), 0);
-  return Math.round((total / results.length) * 100) / 100;
+  const denom = totalSubjects || results.length;
+  return Math.round((total / denom) * 100) / 100;
 }
 
 function sortSessions(a, b) {
@@ -51,6 +53,7 @@ export default function TranscriptPage() {
   const { getStudent } = useStudentsStore();
   const { loadResultsByStudent } = useResultsStore();
   const { settings, loadSettings } = useSettingsStore();
+  const { subjects, loadSubjects } = useSubjectsStore();
   const { getAttendanceByStudent } = useAttendanceStore();
   const [student, setStudent] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -61,7 +64,7 @@ export default function TranscriptPage() {
   const [loading, setLoading] = useState(true);
   const transcriptRef = useRef(null);
 
-  useEffect(() => { loadSettings();
+  useEffect(() => { loadSettings(); loadSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -224,8 +227,10 @@ export default function TranscriptPage() {
             const sessionResults = allResults.filter((r) => r.session === session);
             const sem1 = sessionResults.filter((r) => r.semester === 1);
             const sem2 = sessionResults.filter((r) => r.semester === 2);
-            const sem1Avg = calcAvg(sem1);
-            const sem2Avg = calcAvg(sem2);
+            const className = sessionResults[0]?.className || student.className;
+            const totalSubjects = subjects.filter((s) => s.className === className).length;
+            const sem1Avg = calcAvg(sem1, totalSubjects);
+            const sem2Avg = calcAvg(sem2, totalSubjects);
             const sessCum = cumulativeRecords.find((c) => c.session === session);
             const cumAvg = sessCum?.cumulative ?? ((sem1Avg !== null && sem2Avg !== null) ? Math.round(((sem1Avg + sem2Avg) / 2) * 100) / 100 : (sem1Avg ?? sem2Avg));
             const promo = promoRecords.find((p) => p.session === session);
@@ -242,8 +247,6 @@ export default function TranscriptPage() {
               const ordered = allSubjectNames.sort();
               return ordered.map((name) => ({ name, data: subjects[name] }));
             })();
-
-            const className = sessionResults[0]?.className || student.className;
 
             return (
               <div key={session} className={sIdx > 0 ? 'border-t border-gray-200' : ''}>

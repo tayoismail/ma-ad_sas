@@ -42,11 +42,16 @@ const useParentStore = create((set) => ({
     return map;
   },
 
-  getChildCumulative: (studentId, results) => {
+  getChildCumulative: (studentId, results, totalSubjects) => {
     const my = results.filter((r) => r.studentId === studentId);
     const sem1 = my.filter((r) => r.semester === 1);
     const sem2 = my.filter((r) => r.semester === 2);
-    const avg = (arr) => arr.length ? arr.reduce((s, r) => s + (r.total || 0), 0) / arr.length : null;
+    const avg = (arr) => {
+      if (!arr.length) return null;
+      const sum = arr.reduce((s, r) => s + (r.total || 0), 0);
+      const denom = totalSubjects || arr.length;
+      return sum / denom;
+    };
     const s1 = avg(sem1);
     const s2 = avg(sem2);
     if (s1 !== null && s2 !== null) return Math.round(((s1 + s2) / 2) * 100) / 100;

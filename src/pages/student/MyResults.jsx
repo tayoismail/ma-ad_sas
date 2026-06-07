@@ -18,7 +18,7 @@ export default function StudentMyResults() {
   const { students, loadStudents } = useStudentsStore();
   const { results, loadResults } = useResultsStore();
   const { loadSettings } = useSettingsStore();
-  const { loadSubjects } = useSubjectsStore();
+  const { subjects, loadSubjects } = useSubjectsStore();
   const navigate = useNavigate();
 
   useEffect(() => { loadSettings(); loadStudents(); loadResults(); loadSubjects();
@@ -42,7 +42,11 @@ export default function StudentMyResults() {
   const sem1Results = sessionResults.filter((r) => r.semester === 1);
   const sem2Results = sessionResults.filter((r) => r.semester === 2);
 
-  const calcAvg = (arr) => arr.length ? Math.round((arr.reduce((s, r) => s + (r.total || 0), 0) / arr.length) * 100) / 100 : null;
+  const totalSubjects = subjects.filter((s) => s.className === profile?.className).length;
+  const calcAvg = (arr) => {
+    const denom = totalSubjects || arr.length;
+    return denom ? Math.round((arr.reduce((s, r) => s + (r.total || 0), 0) / denom) * 100) / 100 : null;
+  };
 
   const handleLogout = () => { logout(); navigate('/login'); };
 

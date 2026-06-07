@@ -10,6 +10,7 @@ import useSettingsStore from '../../store/settingsStore';
 import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
+import useSubjectsStore from '../../store/subjectsStore';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -25,6 +26,7 @@ export default function ReportsPage() {
   const { classes, loadClasses } = useClassesStore();
   const { students, loadStudents } = useStudentsStore();
   const { results, loadResults } = useResultsStore();
+  const { subjects, loadSubjects } = useSubjectsStore();
   const classReportRef = useRef(null);
   const studentReportRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -52,6 +54,7 @@ export default function ReportsPage() {
     loadClasses();
     loadStudents();
     loadResults();
+    loadSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -74,17 +77,20 @@ export default function ReportsPage() {
     (r) => r.className === classFilters.className && r.session === classFilters.session && r.semester === Number(classFilters.semester)
   );
   const classSubjects = [...new Set(classResults.map((r) => r.subjectName))];
+  const totalClassSubjects = subjects.filter((s) => s.className === classFilters.className).length;
 
   const studentRows = classStudents.map((s) => {
     const sResults = classResults.filter((r) => r.studentId === s.studentId);
     const subjectScores = classSubjects.map((subj) => sResults.find((r) => r.subjectName === subj));
     const total = sResults.reduce((sum, r) => sum + (r.total || 0), 0);
-    const avg = sResults.length ? Math.round((total / sResults.length) * 100) / 100 : null;
+    const denom = totalClassSubjects || sResults.length;
+    const avg = denom ? Math.round((total / denom) * 100) / 100 : null;
     return { student: s, subjectScores, total, avg };
   });
 
   // Student report card data
   const selectedStudent = students.find((s) => String(s.studentId) === String(studentFilters.studentId));
+  const totalStudentSubjects = subjects.filter((s) => s.className === selectedStudent?.className).length;
   const studentReportResults = results.filter(
     (r) => String(r.studentId) === String(studentFilters.studentId) && r.session === studentFilters.session && r.semester === Number(studentFilters.semester)
   );
@@ -428,7 +434,8 @@ export default function ReportsPage() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {(() => {
                           const total = studentReportResults.reduce((s, r) => s + (r.total || 0), 0);
-                          const avg = Math.round((total / studentReportResults.length) * 100) / 100;
+                          const denom = totalStudentSubjects || studentReportResults.length;
+                          const avg = Math.round((total / denom) * 100) / 100;
                           const g = gradeInfo(avg);
                           const calc = calculateGrade(avg, settings?.gradingScale);
                           return <>

@@ -6,6 +6,7 @@ import { useThemeStore } from '../../store/themeStore';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
+import useSubjectsStore from '../../store/subjectsStore';
 import { semesterLabel } from '../../lib/utils';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
@@ -17,12 +18,14 @@ export default function StudentDashboard() {
   const { students, loadStudents, loading: studentsLoading } = useStudentsStore();
   const { results, loadResults, loading: resultsLoading } = useResultsStore();
   const { settings, loadSettings } = useSettingsStore();
+  const { subjects, loadSubjects } = useSubjectsStore();
   const navigate = useNavigate();
 
   useEffect(() => {
     loadSettings();
     loadStudents();
     loadResults();
+    loadSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -30,8 +33,9 @@ export default function StudentDashboard() {
   const myResults = results.filter((r) => r.studentId === profile?.studentId);
   const sem1Results = myResults.filter((r) => r.semester === 1);
   const sem2Results = myResults.filter((r) => r.semester === 2);
-  const sem1Avg = sem1Results.length ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / sem1Results.length) * 100) / 100 : null;
-  const sem2Avg = sem2Results.length ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / sem2Results.length) * 100) / 100 : null;
+  const totalSubjects = subjects.filter((s) => s.className === profile?.className).length;
+  const sem1Avg = totalSubjects ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / totalSubjects) * 100) / 100 : null;
+  const sem2Avg = totalSubjects ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / totalSubjects) * 100) / 100 : null;
   const cumulative = (sem1Avg !== null && sem2Avg !== null) ? Math.round(((sem1Avg + sem2Avg) / 2) * 100) / 100 : (sem1Avg ?? sem2Avg);
 
   const stats = [

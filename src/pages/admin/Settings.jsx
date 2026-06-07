@@ -34,6 +34,8 @@ export default function SettingsPage() {
     currentSession: '',
     currentSemester: 1,
     useAttendanceUpgrade: false,
+    attendanceThreshold: 90,
+    attendanceBonus: 2,
     semestersFinalized: {},
     gradingScale: [],
   });
@@ -56,6 +58,8 @@ export default function SettingsPage() {
         currentSession: settings.currentSession || '',
         currentSemester: settings.currentSemester || 1,
         useAttendanceUpgrade: settings.useAttendanceUpgrade || false,
+        attendanceThreshold: settings.attendanceThreshold ?? 90,
+        attendanceBonus: settings.attendanceBonus ?? 2,
         semestersFinalized: settings.semestersFinalized || {},
         gradingScale: settings.gradingScale || [],
       });
@@ -244,10 +248,10 @@ export default function SettingsPage() {
               <div className="p-2.5 rounded-xl bg-emerald-500/10"><Calendar className="w-5 h-5 text-emerald-500" /></div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Attendance Upgrade</h2>
-                <p className="text-xs text-gray-400">Automatically add 2 points to final score for students with 90%+ attendance</p>
+                <p className="text-xs text-gray-400">Bonus points for students with good attendance</p>
               </div>
             </div>
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex items-center gap-3 cursor-pointer mb-4">
               <input
                 type="checkbox"
                 checked={form.useAttendanceUpgrade || false}
@@ -256,9 +260,37 @@ export default function SettingsPage() {
               />
               <div>
                 <p className="text-sm font-medium text-gray-700">Enable Attendance Upgrade</p>
-                <p className="text-xs text-gray-400">Students with ≥90% attendance get +2 points (capped at 100)</p>
+                <p className="text-xs text-gray-400">Students meeting the attendance threshold get bonus points on each subject</p>
               </div>
             </label>
+            {form.useAttendanceUpgrade && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-8">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Attendance Threshold (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={form.attendanceThreshold}
+                    onChange={(e) => setForm({ ...form, attendanceThreshold: Number(e.target.value) })}
+                    className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Minimum attendance % to qualify</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Bonus Points</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={form.attendanceBonus}
+                    onChange={(e) => setForm({ ...form, attendanceBonus: Number(e.target.value) })}
+                    className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Extra points added to each subject score (capped at 100)</p>
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Finalize Semester */}
