@@ -66,6 +66,22 @@ export default function ResultsPage() {
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [settings]);
 
+  const handleToggleUseTest = () => {
+    setUseTest((prev) => {
+      if (!prev) {
+        setScores((s) => {
+          const next = { ...s };
+          for (const id of Object.keys(next)) {
+            const exam = Number(next[id]?.examScore) || 0;
+            if (exam > 70) next[id] = { ...next[id], examScore: '70' };
+          }
+          return next;
+        });
+      }
+      return !prev;
+    });
+  };
+
   const isTeacher = user?.role === 'teacher';
   const teacherSubjectIds = isTeacher ? (user?.teacherSubjects ?? null) : null;
   const filteredSubjects = subjects.filter((s) => s.className === filters.className && (!teacherSubjectIds || teacherSubjectIds.includes(s.id)));
@@ -101,10 +117,14 @@ export default function ResultsPage() {
   }, [filters.className, filters.subjectId]);
 
   const updateScore = (studentId, field, value) => {
-    setScores((prev) => ({
-      ...prev,
-      [studentId]: { ...prev[studentId], [field]: value },
-    }));
+    if (value === '' || value === undefined) {
+      setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: '' } }));
+      return;
+    }
+    const maxMap = { examScore: useTest ? 70 : 100, testScore: 30, attendance: 100 };
+    const max = maxMap[field] ?? 100;
+    const num = Math.max(0, Math.min(max, Number(value) || 0));
+    setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: String(num) } }));
   };
 
   const handleSaveAll = async () => {
@@ -113,8 +133,9 @@ export default function ResultsPage() {
       const s = scores[student.studentId] || {};
       const exam = Number(s.examScore) || 0;
       const test = useTest ? (Number(s.testScore) || 0) : 0;
-      if (exam > 100) { setError('Exam score cannot exceed 100'); return; }
-      if (test > 40) { setError('Test score cannot exceed 40'); return; }
+      if (useTest && exam > 70) { setError('When CA is included, exam score cannot exceed 70'); return; }
+      if (!useTest && exam > 100) { setError('Exam score cannot exceed 100'); return; }
+      if (test > 30) { setError('CA score cannot exceed 30'); return; }
       if (useAttendance && (Number(s.attendance) || 0) > 100) { setError('Attendance cannot exceed 100%'); return; }
     }
     setSaving(true);
@@ -170,7 +191,7 @@ export default function ResultsPage() {
         session: r.session || r.Session || filters.session,
         semester: Number(r.semester || r.Semester || filters.semester),
         examScore: Number(r.exam_score || r.Exam_Score || 0),
-        testScore: r.test_score || r.Test_Score ? Number(r.test_score || r.Test_Score) : null,
+        testScore: r.test_score || r.Test_Score || r.ca_score || r.CA_Score ? Number(r.test_score || r.Test_Score || r.ca_score || r.CA_Score) : null,
         attendance: r.attendance || r.Attendance ? Number(r.attendance || r.Attendance) : null,
       }));
       setUploadData(mapped.filter((r) => r.studentId && (r.subjectId || r.subjectName)));
@@ -193,6 +214,12 @@ export default function ResultsPage() {
     });
     if (noSubject.length > 0) {
       setError(`${noSubject.length} record(s) have unknown subjects. Check subject_name and class.`);
+      setUploading(false);
+      return;
+    }
+    const overLimit = uploadData.filter((r) => r.examScore > 70 || r.testScore > 30);
+    if (overLimit.length > 0) {
+      setError(`${overLimit.length} record(s) have exam > 70 or CA > 30. Please correct the data.`);
       setUploading(false);
       return;
     }
@@ -228,7 +255,7 @@ export default function ResultsPage() {
   const downloadTemplate = () => {
     const wb = XLSX.utils.book_new();
     const data = [
-      { student_id: 'STU001', student_name: 'John Doe', subject_name: 'Arabic', class: 'SS1A', session: '2024/2025', semester: '1', exam_score: '75', test_score: '30', attendance: '90' },
+      { student_id: 'STU001', student_name: 'John Doe', subject_name: 'Arabic', class: 'SS1A', session: '2024/2025', semester: '1', exam_score: '70', ca_score: '30', attendance: '90' },
     ];
     const ws = XLSX.utils.json_to_sheet(data);
     XLSX.utils.book_append_sheet(wb, ws, 'Results');
@@ -303,7 +330,7 @@ export default function ResultsPage() {
                 <div className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5 text-emerald-500" /><h3 className="font-semibold text-gray-900">Mass Upload Results</h3></div>
                 <button onClick={() => { setShowMassUpload(false); setUploadData([]); }} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-4 h-4" /></button>
               </div>
-              <p className="text-sm text-gray-500 mb-4">Upload CSV/Excel with columns: student_id, student_name, subject_name, class, session, semester, exam_score, test_score, attendance</p>
+              <p className="text-sm text-gray-500 mb-4">Upload CSV/Excel with columns: student_id, student_name, subject_name, class, session, semester, exam_score, ca_score, attendance</p>
               <div className="flex items-center gap-2 mb-4">
                 <Button variant="outline" size="sm" onClick={downloadTemplate}>
                   <Download className="w-4 h-4 mr-1" /> Download Template
@@ -362,8 +389,8 @@ export default function ResultsPage() {
             </div>
             <div className="flex items-center gap-4 mt-4 pt-3 border-t border-white/10">
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input type="checkbox" checked={useTest} onChange={() => setUseTest(!useTest)} className="rounded border-gray-300" />
-                Include Test Scores (max 40)
+                <input type="checkbox" checked={useTest} onChange={handleToggleUseTest} className="rounded border-gray-300" />
+                Include CA (Continuous Assessment)
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                 <input type="checkbox" checked={useAttendance} onChange={() => setUseAttendance(!useAttendance)} className="rounded border-gray-300" />
@@ -402,8 +429,8 @@ export default function ResultsPage() {
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">#</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Student</th>
                       <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">ID</th>
-                      <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Exam (100)</th>
-                      {useTest && <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Test (40)</th>}
+                      <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Exam ({useTest ? 70 : 100})</th>
+                      {useTest && <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">CA (30)</th>}
                       {useAttendance && <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Attend %</th>}
                       <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
                       <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Grade</th>
@@ -431,14 +458,14 @@ export default function ResultsPage() {
                           </td>
                           <td className="px-4 py-3 text-center text-xs font-mono text-gray-400">{student.studentId || '--'}</td>
                           <td className="px-3 py-3">
-                            <Input type="number" min={0} max={100} value={s.examScore ?? ''}
+                            <Input type="number" min={0} max={useTest ? 70 : 100} value={s.examScore ?? ''}
                               onChange={(e) => updateScore(student.studentId, 'examScore', e.target.value)}
                               disabled={isFinalized}
                               className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
                           </td>
                           {useTest && (
                             <td className="px-3 py-3">
-                              <Input type="number" min={0} max={40} value={s.testScore ?? ''}
+                              <Input type="number" min={0} max={30} value={s.testScore ?? ''}
                                 onChange={(e) => updateScore(student.studentId, 'testScore', e.target.value)}
                                 className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
                             </td>

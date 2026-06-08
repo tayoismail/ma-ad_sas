@@ -395,7 +395,7 @@ export default function ReportsPage() {
                         <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">#</th>
                         <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Subject</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Exam Score</th>
-                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Test Score</th>
+                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">CA Score</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Total</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Grade</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Remark (الوصف)</th>

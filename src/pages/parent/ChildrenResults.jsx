@@ -163,7 +163,7 @@ export default function ParentChildrenResults() {
                               <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase">Subject</th>
                               <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground">Sem</th>
                               <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground uppercase">Exam</th>
-                              <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground uppercase">Test</th>
+                              <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground uppercase">CA</th>
                               <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground uppercase">Total</th>
                               <th className="text-center px-3 py-2 text-xs font-semibold text-muted-foreground uppercase">Grade</th>
                             </tr>

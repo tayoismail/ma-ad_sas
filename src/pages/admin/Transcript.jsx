@@ -277,11 +277,11 @@ export default function TranscriptPage() {
                       <tr className="bg-gray-50 border-y border-gray-200">
                         <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase w-1/4">Subject</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Exam</th>
-                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Test</th>
+                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">CA</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Total</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Grade</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Exam</th>
-                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Test</th>
+                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">CA</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Total</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Grade</th>
                       </tr>

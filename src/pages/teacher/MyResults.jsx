@@ -77,7 +77,13 @@ export default function TeacherMyResults() {
   }, [filters.className, filters.subjectId]);
 
   const updateScore = (studentId, field, value) => {
-    const num = Math.max(0, Math.min(100, Number(value) || 0));
+    if (value === '' || value === undefined) {
+      setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: '' } }));
+      return;
+    }
+    const maxMap = { examScore: 70, testScore: 30, attendance: 100 };
+    const max = maxMap[field] ?? 70;
+    const num = Math.max(0, Math.min(max, Number(value) || 0));
     setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: num } }));
   };
 
@@ -173,8 +179,8 @@ export default function TeacherMyResults() {
                       <thead className="bg-muted/50">
                         <tr>
                           <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Student</th>
-                          <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Exam Score</th>
-                          <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Test Score</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Exam</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">CA (30)</th>
                           {useAttendance && <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Attend %</th>}
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Total</th>
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Grade</th>
@@ -201,12 +207,12 @@ export default function TeacherMyResults() {
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-center">
-                                  <input type="number" min="0" max="100" value={exam}
+                                  <input type="number" min="0" max="70" value={exam}
                                    onChange={(e) => updateScore(s.studentId, 'examScore', e.target.value)}
                                    className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                                </td>
                                <td className="px-4 py-3 text-center">
-                                 <input type="number" min="0" max="100" value={test}
+                                 <input type="number" min="0" max="30" value={test}
                                    onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
                                    className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                                </td>

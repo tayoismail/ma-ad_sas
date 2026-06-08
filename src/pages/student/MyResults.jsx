@@ -130,7 +130,7 @@ export default function StudentMyResults() {
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Subject</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Semester</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Exam</th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Test</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">CA</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Total</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Grade</th>
                       </tr>
