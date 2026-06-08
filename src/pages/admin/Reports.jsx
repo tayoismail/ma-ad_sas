@@ -235,7 +235,7 @@ export default function ReportsPage() {
 
               <div ref={classReportRef} className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden print:shadow-none print:border-0">
                 <div className="gradient-primary p-6 text-white text-center print:bg-gray-800 print:text-black">
-                  <h1 className="text-xl font-bold">{settings?.schoolName || "MA'AD AHLIL AATHAR"}</h1>
+                  <h1 className="text-xl font-bold">{settings?.schoolNameArabic || settings?.schoolName || "MA'AD AHLIL AATHAR"}</h1>
                   <p className="text-white/70 text-xs mt-1">{settings?.address}</p>
                   <div className="w-16 h-0.5 bg-white/30 mx-auto my-3" />
                   <h2 className="text-lg font-semibold">Class Result Sheet</h2>
@@ -268,7 +268,7 @@ export default function ReportsPage() {
                         return (
                           <tr key={row.student.id} className="border-b border-gray-200 hover:bg-gray-50/50">
                             <td className="px-3 py-2.5 text-gray-500 text-xs">{i + 1}</td>
-                            <td className="px-3 py-2.5 font-semibold text-gray-900">{row.student.name}</td>
+                            <td className="px-3 py-2.5 font-semibold text-gray-900" dir="rtl">{row.student.arabicName || row.student.name}</td>
                             <td className="px-3 py-2.5 text-gray-600 text-xs font-mono">{row.student.studentId || '--'}</td>
                             {classSubjects.map((subj) => {
                               const sr = row.subjectScores[classSubjects.indexOf(subj)];
@@ -297,7 +297,7 @@ export default function ReportsPage() {
                   </table>
                 </div>
                 <div className="p-3 text-center text-xs text-gray-500 border-t border-gray-200">
-                  Generated {new Date().toLocaleDateString()} by MA'AD AHLIL AATHAR Assessment System
+                  Generated {new Date().toLocaleDateString()} by {settings?.schoolNameArabic || settings?.schoolName || "MA'AD AHLIL AATHAR"} Assessment System
                 </div>
               </div>
             </>}
@@ -366,7 +366,7 @@ export default function ReportsPage() {
                   <div className="absolute top-4 left-4 w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center border-2 border-white/20">
                     <GraduationCap className="w-7 h-7 text-white/80" />
                   </div>
-                  <h1 className="text-xl font-bold">{settings?.schoolName || "MA'AD AHLIL AATHAR"}</h1>
+                  <h1 className="text-xl font-bold">{settings?.schoolNameArabic || settings?.schoolName || "MA'AD AHLIL AATHAR"}</h1>
                   <p className="text-white/70 text-xs mt-1">{settings?.address}</p>
                   <p className="text-white/60 text-xs">{settings?.phones}</p>
                   <div className="w-16 h-0.5 bg-white/30 mx-auto my-3" />
@@ -377,9 +377,10 @@ export default function ReportsPage() {
                 {/* Student Info */}
                 {selectedStudent && (
                   <div className="p-5 border-b border-gray-100">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student Name</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.name}</p></div>
                       <div dir="rtl"><p className="text-[10px] text-gray-400 uppercase tracking-wider">الاسم</p><p className="text-base font-semibold text-gray-900">{selectedStudent.arabicName || '--'}</p></div>
+                      <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Sex</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.sex || '--'}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student ID</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.studentId}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Class</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.className}</p></div>
                     </div>

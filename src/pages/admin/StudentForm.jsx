@@ -32,6 +32,7 @@ export default function StudentForm() {
     name: '',
     arabicName: '',
     dateOfBirth: '',
+    sex: '',
     className: '',
     parentName: '',
     parentPhone: '',
@@ -61,6 +62,7 @@ export default function StudentForm() {
             name: student.name || '',
             arabicName: student.arabicName || '',
             dateOfBirth: student.dateOfBirth || '',
+            sex: student.sex || '',
             className: student.className || '',
             parentName: student.parentName || '',
             parentPhone: student.parentPhone || '',
@@ -214,6 +216,18 @@ export default function StudentForm() {
                     onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
                     className="bg-white/80"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Sex</label>
+                  <select
+                    value={form.sex}
+                    onChange={(e) => setForm({ ...form, sex: e.target.value })}
+                    className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                  >
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">

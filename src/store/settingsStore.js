@@ -8,6 +8,7 @@ import { db } from '../lib/firebase';
 
 const defaultSettings = {
   schoolName: "MA'AD AHLIL AATHAR",
+  schoolNameArabic: 'معهد أهل الأثر',
   address: 'No 3, Mosadoluwa Street, behind Osogbo Local Govt., Oke Baale, Osogbo, Osun State',
   phones: '08033719211, 08034660100, 08062837011',
   mission: "Elevating The Religion with Qur'an and Sunnah Upon the way of the Salaf",

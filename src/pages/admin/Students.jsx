@@ -83,6 +83,7 @@ export default function StudentsPage() {
         arabicName: r.arabic_name || r.Arabic_Name || '',
         studentId: r.student_id || r.Student_ID || r.id || r.ID || '',
         dateOfBirth: r.date_of_birth || r.Date_of_Birth || r.dob || r.DOB || '',
+        sex: r.sex || r.Sex || '',
         className: r.class || r.Class || r.class_name || r.Class_Name || '',
         parentName: r.parent_name || r.Parent_Name || '',
         parentPhone: r.parent_phone || r.Parent_Phone || '',
@@ -107,7 +108,7 @@ export default function StudentsPage() {
   const downloadTemplate = () => {
     const wb = XLSX.utils.book_new();
     const data = [
-      { name: 'Example', arabic_name: 'مثال', student_id: 'STU001', date_of_birth: '2010-01-15', class: 'SS1A', parent_name: 'Parent Name', parent_phone: '08012345678', parent_email: 'parent@email.com' },
+      { name: 'Example', arabic_name: 'مثال', student_id: 'STU001', date_of_birth: '2010-01-15', sex: 'Male', class: 'SS1A', parent_name: 'Parent Name', parent_phone: '08012345678', parent_email: 'parent@email.com' },
     ];
     const ws = XLSX.utils.json_to_sheet(data);
     XLSX.utils.book_append_sheet(wb, ws, 'Students');
@@ -149,6 +150,13 @@ export default function StudentsPage() {
         <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
           {row.className}
         </span>
+      ),
+    },
+    {
+      key: 'sex',
+      label: 'Sex',
+      render: (row) => (
+        <span className="text-sm text-gray-600">{row.sex || '--'}</span>
       ),
     },
     {
@@ -294,7 +302,7 @@ export default function StudentsPage() {
                 </button>
               </div>
               <p className="text-sm text-gray-500 mb-4">
-                Upload a CSV or Excel file with columns: name, arabic_name, student_id, date_of_birth, class, parent_name, parent_phone, parent_email
+                Upload a CSV or Excel file with columns: name, arabic_name, student_id, date_of_birth, sex, class, parent_name, parent_phone, parent_email
               </p>
               <div className="flex items-center gap-2 mb-4">
                 <Button variant="outline" size="sm" onClick={downloadTemplate}>
@@ -315,21 +323,23 @@ export default function StudentsPage() {
                       <thead className="bg-gray-50/50 sticky top-0">
                         <tr>
                           <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Name</th>
+                          <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Sex</th>
                           <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Class</th>
                           <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">ID</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {uploadData.slice(0, 20).map((r, i) => (
+                          {uploadData.slice(0, 20).map((r, i) => (
                           <tr key={i} className="border-t border-white/10">
                             <td className="px-3 py-2 text-gray-700">{r.name}</td>
+                            <td className="px-3 py-2 text-gray-500">{r.sex || '--'}</td>
                             <td className="px-3 py-2 text-gray-500">{r.className}</td>
                             <td className="px-3 py-2 text-gray-400 font-mono text-xs">{r.studentId}</td>
                           </tr>
                         ))}
                         {uploadData.length > 20 && (
                           <tr className="border-t border-white/10">
-                            <td colSpan={3} className="px-3 py-2 text-center text-gray-400 text-xs">
+                            <td colSpan={4} className="px-3 py-2 text-center text-gray-400 text-xs">
                               ...and {uploadData.length - 20} more
                             </td>
                           </tr>

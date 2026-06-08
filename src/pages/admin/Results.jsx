@@ -36,6 +36,7 @@ export default function ResultsPage() {
     semester: String(settings?.currentSemester || 1),
     className: '',
     subjectId: '',
+    sex: '',
   });
   const [scores, setScores] = useState({});
   const [, setExistingResults] = useState([]);
@@ -90,7 +91,7 @@ export default function ResultsPage() {
     const names = [...new Set(subjects.filter((s) => teacherSubjectIds.includes(s.id)).map((s) => s.className))];
     return classes.filter((c) => names.includes(c.name));
   }, [classes, subjects, teacherSubjectIds, isTeacher]);
-  const classStudents = students.filter((s) => s.className === filters.className);
+  const classStudents = students.filter((s) => s.className === filters.className && (!filters.sex || s.sex === filters.sex));
   const isFinalized = settings?.semestersFinalized?.[`${filters.session}_sem${filters.semester}`];
 
   const handleLoadResults = async () => {
@@ -387,7 +388,7 @@ export default function ResultsPage() {
                 </select>
               </div>
             </div>
-            <div className="flex items-center gap-4 mt-4 pt-3 border-t border-white/10">
+            <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-white/10">
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                 <input type="checkbox" checked={useTest} onChange={handleToggleUseTest} className="rounded border-gray-300" />
                 Include CA (Continuous Assessment)
@@ -396,6 +397,15 @@ export default function ResultsPage() {
                 <input type="checkbox" checked={useAttendance} onChange={() => setUseAttendance(!useAttendance)} className="rounded border-gray-300" />
                 Include Attendance %
               </label>
+              <div className="flex items-center gap-2 ml-auto">
+                <label className="text-xs font-medium text-gray-600">Sex</label>
+                <select value={filters.sex} onChange={(e) => setFilters({ ...filters, sex: e.target.value })}
+                  className="h-9 rounded-lg border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40">
+                  <option value="">All</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
             </div>
           </Card>
 
@@ -452,7 +462,10 @@ export default function ResultsPage() {
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900 text-sm">{student.name}</p>
-                                {student.arabicName && <p className="text-xs text-gray-400" dir="rtl">{student.arabicName}</p>}
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  {student.arabicName && <p className="text-xs text-gray-400" dir="rtl">{student.arabicName}</p>}
+                                  {student.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${student.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{student.sex}</span>}
+                                </div>
                               </div>
                             </div>
                           </td>

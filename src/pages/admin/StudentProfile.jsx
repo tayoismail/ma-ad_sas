@@ -59,6 +59,7 @@ export default function StudentProfile() {
   const infoCards = [
     { icon: Hash, label: 'Student ID', value: student.studentId || '--' },
     { icon: Calendar, label: 'Date of Birth', value: student.dateOfBirth || '--' },
+    { icon: User, label: 'Sex', value: student.sex || '--' },
     { icon: School, label: 'Class', value: student.className || '--' },
     { icon: Calendar, label: 'Enrolled', value: student.enrollmentDate || '--' },
     { icon: User, label: 'Parent', value: student.parentName || '--' },

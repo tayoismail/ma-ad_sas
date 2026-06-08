@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     schoolName: '',
+    schoolNameArabic: '',
     address: '',
     phones: '',
     mission: '',
@@ -53,6 +54,7 @@ export default function SettingsPage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         schoolName: settings.schoolName || '',
+        schoolNameArabic: settings.schoolNameArabic || '',
         address: settings.address || '',
         phones: settings.phones || '',
         mission: settings.mission || '',
@@ -175,6 +177,10 @@ export default function SettingsPage() {
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">School Name</label>
                 <Input value={form.schoolName} onChange={(e) => setForm({ ...form, schoolName: e.target.value })} className="bg-white/80" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">School Name (Arabic)</label>
+                <Input value={form.schoolNameArabic} onChange={(e) => setForm({ ...form, schoolNameArabic: e.target.value })} dir="rtl" className="bg-white/80 text-right" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
