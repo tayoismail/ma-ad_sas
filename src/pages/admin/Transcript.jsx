@@ -11,6 +11,7 @@ import { useThemeStore } from '../../store/themeStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import { semesterLabel } from '../../lib/utils';
+import { gradeStyle } from '../../lib/grading';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
@@ -28,22 +29,25 @@ function sortSessions(a, b) {
 }
 
 function gradeColor(grade) {
-  const map = {
-    A: 'text-emerald-700 bg-emerald-100',
-    B: 'text-blue-700 bg-blue-100',
-    C: 'text-amber-700 bg-amber-100',
-    D: 'text-orange-700 bg-orange-100',
-    F: 'text-red-700 bg-red-100',
-  };
-  return map[grade] || 'text-gray-700 bg-gray-100';
+  const s = gradeStyle(grade);
+  return `${s.text} ${s.bg}`;
 }
 
-function statColor(val) {
+function statColor(val, scale) {
   if (val === null || val === undefined) return 'text-gray-400';
-  if (val >= 75) return 'text-emerald-600';
-  if (val >= 60) return 'text-blue-600';
-  if (val >= 50) return 'text-amber-600';
-  return 'text-red-600';
+  const s = scale || [
+    { min: 0, max: 39, grade: 'F', remarkEn: 'Fail', remarkAr: 'راسب' },
+    { min: 40, max: 49, grade: 'D', remarkEn: 'Pass', remarkAr: 'مقبول' },
+    { min: 50, max: 59, grade: 'C', remarkEn: 'Good', remarkAr: 'جيد' },
+    { min: 60, max: 74, grade: 'B', remarkEn: 'Very Good', remarkAr: 'جيد جدا' },
+    { min: 75, max: 100, grade: 'A', remarkEn: 'Excellent', remarkAr: 'ممتاز' },
+  ];
+  for (const level of s) {
+    if (val >= level.min && val <= level.max) {
+      return gradeStyle(level.grade).text;
+    }
+  }
+  return 'text-gray-400';
 }
 
 export default function TranscriptPage() {
@@ -329,11 +333,11 @@ export default function TranscriptPage() {
                   <div className="flex flex-wrap gap-3 text-xs">
                     <div className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100">
                       <span className="text-blue-500 font-medium">معدل {semesterLabel(1)}: </span>
-                      <span className={`font-bold ${statColor(sem1Avg)}`}>{sem1Avg ?? '--'}</span>
+                      <span className={`font-bold ${statColor(sem1Avg, settings?.gradingScale)}`}>{sem1Avg ?? '--'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-purple-50 border border-purple-100">
                       <span className="text-purple-500 font-medium">معدل {semesterLabel(2)}: </span>
-                      <span className={`font-bold ${statColor(sem2Avg)}`}>{sem2Avg ?? '--'}</span>
+                      <span className={`font-bold ${statColor(sem2Avg, settings?.gradingScale)}`}>{sem2Avg ?? '--'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
                       <span className="text-gray-500 font-medium">Cumulative: </span>
@@ -364,7 +368,7 @@ export default function TranscriptPage() {
               </div>
               <div className="p-4 rounded-xl bg-white/80 border border-white/60">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider">Overall GPA</p>
-                <p className={`text-2xl font-bold ${statColor(overallCum)}`}>{overallCum ?? '--'}</p>
+                <p className={`text-2xl font-bold ${statColor(overallCum, settings?.gradingScale)}`}>{overallCum ?? '--'}</p>
               </div>
               <div className="p-4 rounded-xl bg-white/80 border border-white/60">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider">Current Class</p>

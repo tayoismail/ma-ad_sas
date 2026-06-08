@@ -12,7 +12,7 @@ import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import useResultsStore from '../../store/resultsStore';
-import { calculateGrade, calculateTotal } from '../../lib/grading';
+import { calculateGrade, calculateTotal, gradeStyle } from '../../lib/grading';
 import { semesterLabel } from '../../lib/utils';
 import * as XLSX from 'xlsx';
 import { Card } from '../../components/ui/card';
@@ -264,8 +264,8 @@ export default function ResultsPage() {
 
   const gradeBadge = (total) => {
     const g = calculateGrade(total, settings?.gradingScale);
-    const colors = { A: 'bg-emerald-500/10 text-emerald-600 border-emerald-200', B: 'bg-blue-500/10 text-blue-600 border-blue-200', C: 'bg-amber-500/10 text-amber-600 border-amber-200', D: 'bg-orange-500/10 text-orange-600 border-orange-200', F: 'bg-red-500/10 text-red-600 border-red-200' };
-    return <span className={`px-2 py-0.5 rounded text-xs font-medium border ${colors[g.grade] || colors.F}`}>{g.grade}</span>;
+    const s = gradeStyle(g.grade);
+    return <span className={`px-2 py-0.5 rounded text-xs font-medium border ${s.bg} ${s.text}`}>{g.grade}</span>;
   };
 
   return (

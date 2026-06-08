@@ -11,6 +11,7 @@ import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
 import { useThemeStore } from '../../store/themeStore';
 import { semesterLabel } from '../../lib/utils';
+import { gradeStyle } from '../../lib/grading';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -108,19 +109,19 @@ export default function AdminDashboard() {
   }));
 
   const gradeCounts = useMemo(() => {
-    const counts = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-    if (!results.length) return counts;
+    if (!results.length) return {};
     const scale = settings?.gradingScale || [
-      { min: 75, max: 100, grade: 'A' }, { min: 60, max: 74, grade: 'B' },
-      { min: 50, max: 59, grade: 'C' }, { min: 40, max: 49, grade: 'D' },
-      { min: 0, max: 39, grade: 'F' },
+      { min: 0, max: 39, grade: 'F' }, { min: 40, max: 49, grade: 'D' },
+      { min: 50, max: 59, grade: 'C' }, { min: 60, max: 74, grade: 'B' },
+      { min: 75, max: 100, grade: 'A' },
     ];
+    const counts = Object.fromEntries(scale.map((l) => [l.grade, 0]));
     for (const r of results) {
       const total = (Number(r.examScore) || 0) + (Number(r.testScore) || 0);
       const capped = Math.min(100, total);
       for (const level of scale) {
         if (capped >= level.min && capped <= level.max) {
-          counts[level.grade] = (counts[level.grade] || 0) + 1;
+          counts[level.grade] += 1;
           break;
         }
       }
@@ -128,13 +129,12 @@ export default function AdminDashboard() {
     return counts;
   }, [results, settings?.gradingScale]);
 
-  const gradeDistribution = [
-    { name: 'A', value: gradeCounts.A, color: '#22c55e' },
-    { name: 'B', value: gradeCounts.B, color: '#3b82f6' },
-    { name: 'C', value: gradeCounts.C, color: '#eab308' },
-    { name: 'D', value: gradeCounts.D, color: '#f97316' },
-    { name: 'F', value: gradeCounts.F, color: '#ef4444' },
-  ];
+  const gradeDistribution = useMemo(() =>
+    Object.entries(gradeCounts).map(([name, value]) => {
+      const s = gradeStyle(name);
+      return { name, value, color: s.hex };
+    }),
+  [gradeCounts]);
 
   return (
     <div className="min-h-screen bg-slate-300">

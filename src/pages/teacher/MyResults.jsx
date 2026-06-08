@@ -8,7 +8,7 @@ import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import useResultsStore from '../../store/resultsStore';
-import { calculateGrade, calculateTotal } from '../../lib/grading';
+import { calculateGrade, calculateTotal, gradeStyle } from '../../lib/grading';
 import { semesterLabel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
@@ -225,13 +225,7 @@ export default function TeacherMyResults() {
                               )}
                               <td className="px-4 py-3 text-center font-semibold text-card-foreground">{total}</td>
                               <td className="px-4 py-3 text-center">
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                  g.grade === 'A' ? 'text-emerald-600 bg-emerald-500/10' :
-                                  g.grade === 'B' ? 'text-blue-600 bg-blue-500/10' :
-                                  g.grade === 'C' ? 'text-amber-600 bg-amber-500/10' :
-                                  g.grade === 'D' ? 'text-orange-600 bg-orange-500/10' :
-                                  'text-red-600 bg-red-500/10'
-                                }`}>{g.grade}</span>
+                                {(() => { const s = gradeStyle(g.grade); return <span className={`px-2 py-0.5 rounded text-xs font-medium ${s.text} ${s.bg}`}>{g.grade}</span>; })()}
                               </td>
                             </tr>
                           );

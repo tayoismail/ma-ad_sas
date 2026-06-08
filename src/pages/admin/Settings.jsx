@@ -9,6 +9,7 @@ import {
 import useAuthStore from '../../store/authStore';
 import useSettingsStore from '../../store/settingsStore';
 import { useThemeStore } from '../../store/themeStore';
+import { validateGradingScale, gradeStyle } from '../../lib/grading';
 import ConfirmModal from '../../components/ConfirmModal';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
@@ -69,23 +70,14 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     setError('');
-    const scale = form.gradingScale;
-    for (let i = 0; i < scale.length; i++) {
-      if (scale[i].min > scale[i].max) {
-        setError(`Grade ${scale[i].grade}: min cannot be greater than max`);
-        setSaving(false); return;
-      }
-      if (i > 0 && scale[i].min !== scale[i - 1].max + 1) {
-        setError(`Grading scale has a gap between ${scale[i - 1].grade} (max ${scale[i - 1].max}) and ${scale[i].grade} (min ${scale[i].min})`);
-        setSaving(false); return;
-      }
-    }
-    if (scale.length > 0 && (scale[0].min !== 0 || scale[scale.length - 1].max !== 100)) {
-      setError('Grading scale must cover the full range 0-100');
+    const sorted = [...form.gradingScale].sort((a, b) => a.min - b.min);
+    const err = validateGradingScale(form.gradingScale);
+    if (err) {
+      setError(err);
       setSaving(false); return;
     }
     try {
-      await updateSettings(form);
+      await updateSettings({ ...form, gradingScale: sorted });
     } catch {
       setError('Failed to save settings');
       setSaving(false); return;
@@ -358,19 +350,12 @@ export default function SettingsPage() {
                {form.gradingScale.map((grade, i) => (
                  <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-white/50 border border-white/20">
                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                     <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
-                       style={{
-                         background: grade.grade === 'A' ? 'linear-gradient(135deg, #22c55e20, #16a34a20)' :
-                                     grade.grade === 'B' ? 'linear-gradient(135deg, #3b82f620, #2563eb20)' :
-                                     grade.grade === 'C' ? 'linear-gradient(135deg, #eab30820, #ca8a0420)' :
-                                     grade.grade === 'D' ? 'linear-gradient(135deg, #f9731620, #ea580c20)' :
-                                     'linear-gradient(135deg, #ef444420, #dc262620)',
-                         color: grade.grade === 'A' ? '#16a34a' :
-                                grade.grade === 'B' ? '#2563eb' :
-                                grade.grade === 'C' ? '#ca8a04' :
-                                grade.grade === 'D' ? '#ea580c' : '#dc2626',
-                       }}
-                     >
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm shrink-0"
+                        style={{
+                          background: gradeStyle(grade.grade).gradient,
+                          color: gradeStyle(grade.grade).hex,
+                        }}
+                      >
                        {grade.grade}
                      </div>
                      <div className="flex items-center gap-1 text-sm">

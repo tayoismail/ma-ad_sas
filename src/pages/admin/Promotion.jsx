@@ -13,6 +13,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+import { gradeStyle } from '../../lib/grading';
 import AdminSidebar from '../../components/AdminSidebar';
 
 export default function PromotionPage() {
@@ -35,16 +36,19 @@ export default function PromotionPage() {
     });
     let tablesHtml = '';
     Object.entries(grouped).forEach(([className, students]) => {
-      const rows = students.map((d, i) => `
+      const rows = students.map((d, i) => {
+        const gs = gradeStyle(d.grade);
+        return `
         <tr>
           <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;color:#666;">${i + 1}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;font-weight:600;">${d.studentName}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;text-align:center;font-weight:600;">${d.cumulative}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;text-align:center;">
-            <span style="padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;${d.grade === 'A' ? 'background:#d1fae5;color:#059669;' : d.grade === 'B' ? 'background:#dbeafe;color:#2563eb;' : d.grade === 'C' ? 'background:#fef3c7;color:#d97706;' : d.grade === 'D' ? 'background:#ffedd5;color:#ea580c;' : 'background:#fee2e2;color:#dc2626;'}">${d.grade}</span>
+            <span style="padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;background:${gs.hex}20;color:${gs.hex};">${d.grade}</span>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
       tablesHtml += `
         <div style="margin-bottom:24px;">
           <h3 style="font-size:15px;font-weight:700;margin:0 0 8px;padding-bottom:4px;border-bottom:2px solid #333;">
@@ -205,13 +209,7 @@ export default function PromotionPage() {
                             <td className="px-4 py-3 text-emerald-600 font-medium">{d.promoteTo}</td>
                             <td className="px-4 py-3 text-center font-semibold text-gray-900">{d.cumulative}</td>
                             <td className="px-4 py-3 text-center">
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                d.grade === 'A' ? 'bg-emerald-500/10 text-emerald-600' :
-                                d.grade === 'B' ? 'bg-blue-500/10 text-blue-600' :
-                                d.grade === 'C' ? 'bg-amber-500/10 text-amber-600' :
-                                d.grade === 'D' ? 'bg-orange-500/10 text-orange-600' :
-                                'bg-red-500/10 text-red-600'
-                              }`}>{d.grade}</span>
+                              {(() => { const s = gradeStyle(d.grade); return <span className={`px-2 py-0.5 rounded text-xs font-medium ${s.bg} ${s.text}`}>{d.grade}</span>; })()}
                             </td>
                             <td className="px-4 py-3 text-center">
                               {confirmed(d.studentId) ? (

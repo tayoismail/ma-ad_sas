@@ -8,6 +8,7 @@ import useResultsStore from '../../store/resultsStore';
 import useSettingsStore from '../../store/settingsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import { semesterLabel } from '../../lib/utils';
+import { gradeStyle } from '../../lib/grading';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -51,8 +52,8 @@ export default function StudentMyResults() {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const gradeColor = (g) => {
-    const map = { A: 'text-emerald-600 bg-emerald-500/10', B: 'text-blue-600 bg-blue-500/10', C: 'text-amber-600 bg-amber-500/10', D: 'text-orange-600 bg-orange-500/10', F: 'text-red-600 bg-red-500/10' };
-    return map[g] || 'text-gray-600 bg-gray-100';
+    const s = gradeStyle(g);
+    return `${s.text} ${s.bg}`;
   };
 
   return (

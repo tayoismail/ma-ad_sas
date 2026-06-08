@@ -14,7 +14,7 @@ import useSubjectsStore from '../../store/subjectsStore';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
-import { calculateGrade } from '../../lib/grading';
+import { calculateGrade, gradeStyle } from '../../lib/grading';
 import { semesterLabel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 
@@ -130,9 +130,8 @@ export default function ReportsPage() {
 
   const gradeInfo = (total) => {
     const calc = calculateGrade(total, settings?.gradingScale);
-    const colors = { A: 'text-emerald-600', B: 'text-blue-600', C: 'text-amber-600', D: 'text-orange-600', F: 'text-red-600' };
-    const bg = { A: 'bg-emerald-500/10', B: 'bg-blue-500/10', C: 'bg-amber-500/10', D: 'bg-orange-500/10', F: 'bg-red-500/10' };
-    return { grade: calc.grade, remarkAr: calc.remarkAr, color: colors[calc.grade] || 'text-gray-600', bg: bg[calc.grade] || 'bg-gray-100' };
+    const s = gradeStyle(calc.grade);
+    return { grade: calc.grade, remarkAr: calc.remarkAr, color: s.text, bg: s.bg };
   };
 
   const promotionStatus = (avg) => {
@@ -407,7 +406,6 @@ export default function ReportsPage() {
                       )}
                       {studentReportResults.sort((a, b) => a.subjectName?.localeCompare(b.subjectName)).map((r, i) => {
                         const g = gradeInfo(r.total || 0);
-                        const calc = calculateGrade(r.total || 0, settings?.gradingScale);
                         return (
                           <tr key={r.id || i} className="border-b border-gray-200">
                             <td className="px-3 py-2.5 text-gray-500 text-xs">{i + 1}</td>
@@ -418,7 +416,7 @@ export default function ReportsPage() {
                             <td className="px-3 py-2.5 text-center">
                               <span className={`px-2 py-0.5 rounded text-xs font-semibold ${g.color} ${g.bg}`}>{r.grade || g.grade}</span>
                             </td>
-                            <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-700" dir="rtl">{calc?.remarkAr || '--'}</td>
+                            <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-700" dir="rtl">{g.remarkAr || '--'}</td>
                           </tr>
                         );
                       })}
@@ -437,7 +435,6 @@ export default function ReportsPage() {
                           const denom = totalStudentSubjects || studentReportResults.length;
                           const avg = Math.round((total / denom) * 100) / 100;
                           const g = gradeInfo(avg);
-                          const calc = calculateGrade(avg, settings?.gradingScale);
                           return <>
                             <div className="text-center p-3 rounded-lg bg-white/60">
                               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Subjects</p>
