@@ -45,11 +45,13 @@ export default function ParentDashboard() {
       loadChildrenResults(children, settings.currentSession);
       loadChildrenAttendance(children, settings.currentSession, settings.currentSemester);
       // Load attendance for both semesters for cumulative calculation
+      let cancelled = false;
       const ids = children.map((c) => c.studentId);
       Promise.all([
         calculatePercentageBulk(ids, settings.currentSession, 1),
         calculatePercentageBulk(ids, settings.currentSession, 2),
-      ]).then(([m1, m2]) => setAttBySem({ 1: m1, 2: m2 })).catch(() => {});
+      ]).then(([m1, m2]) => { if (!cancelled) setAttBySem({ 1: m1, 2: m2 }); }).catch(() => {});
+      return () => { cancelled = true; };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, settings]);

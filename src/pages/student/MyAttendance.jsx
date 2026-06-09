@@ -31,15 +31,19 @@ export default function StudentMyAttendance() {
 
   useEffect(() => {
     if (!profile || !settings) return;
+    let cancelled = false;
     const load = async () => {
       setLoading(true);
       const records = await getAttendanceByStudent(profile.studentId);
+      if (cancelled) return;
       setAttendanceRecords(records);
       const pct = await calculatePercentage(profile.studentId, settings.currentSession, settings.currentSemester);
+      if (cancelled) return;
       setPercentage(pct);
       setLoading(false);
     };
     load();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, settings]);
 

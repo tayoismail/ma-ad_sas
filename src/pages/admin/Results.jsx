@@ -130,7 +130,7 @@ export default function ResultsPage() {
     const maxMap = { examScore: useTest ? 70 : 100, testScore: 30, attendance: 100 };
     const max = maxMap[field] ?? 100;
     const num = Math.max(0, Math.min(max, Number(value) || 0));
-    setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: String(num) } }));
+    setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: num } }));
   };
 
   const handleSaveAll = async () => {

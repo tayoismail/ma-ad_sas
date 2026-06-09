@@ -71,7 +71,10 @@ export default function Login() {
             <div>
               <label className="block text-sm font-medium text-white/70 mb-1.5">Email</label>
               <Input
+                id="email"
+                name="email"
                 type="email"
+                autoComplete="username"
                 placeholder="admin@maad.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -84,7 +87,10 @@ export default function Login() {
               <label className="block text-sm font-medium text-white/70 mb-1.5">Password</label>
               <div className="relative">
                 <Input
+                  id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

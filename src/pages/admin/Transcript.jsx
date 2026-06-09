@@ -76,10 +76,12 @@ export default function TranscriptPage() {
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
     (async () => {
       try {
         setLoading(true);
         const s = await getStudent(id);
+        if (cancelled) return;
         setStudent(s);
         if (s) {
           const [r, a, promSnap] = await Promise.all([
@@ -87,18 +89,20 @@ export default function TranscriptPage() {
             getAttendanceByStudent(s.studentId),
             getDocs(query(collection(db, 'promotions'), where('studentId', '==', s.studentId))),
           ]);
+          if (cancelled) return;
           const prom = promSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
           setAllResults(r);
           setAllAttendance(a);
           setCumulativeRecords([]);
           setPromoRecords(prom);
         }
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       } catch (err) {
         console.error('Failed to load transcript:', err);
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
