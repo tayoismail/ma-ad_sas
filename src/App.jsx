@@ -32,6 +32,7 @@ const AttendanceReportPage = lazy(() => import('./pages/admin/AttendanceReport')
 const ParentDashboard = lazy(() => import('./pages/parent/Dashboard'));
 const ParentChildrenResults = lazy(() => import('./pages/parent/ChildrenResults'));
 const ParentChildrenAttendance = lazy(() => import('./pages/parent/ChildrenAttendance'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
   const { init, isLoading, isAuthenticated, updateLastActivity, checkSession, logout } = useAuthStore();
@@ -87,34 +88,34 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><UsersPage /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><UsersPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AdminDashboard /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminSettings /></ProtectedRoute>} />
-        <Route path="/admin/classes" element={<ProtectedRoute roles={['admin']}><AdminClasses /></ProtectedRoute>} />
-        <Route path="/admin/students" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminStudents /></ProtectedRoute>} />
-        <Route path="/admin/students/new" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminStudentForm /></ProtectedRoute>} />
-        <Route path="/admin/students/:id" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminStudentProfile /></ProtectedRoute>} />
-        <Route path="/admin/students/:id/edit" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminStudentForm /></ProtectedRoute>} />
-        <Route path="/admin/subjects" element={<ProtectedRoute roles={['admin']}><AdminSubjects /></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AdminSettings /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/classes" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AdminClasses /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/students" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminStudents /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/students/new" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminStudentForm /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/students/:id" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminStudentProfile /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/students/:id/edit" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminStudentForm /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/subjects" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AdminSubjects /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/attendance" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AttendancePage /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/attendance/report" element={<ProtectedRoute roles={['admin', 'teacher']}><AttendanceReportPage /></ProtectedRoute>} />
+        <Route path="/admin/attendance/report" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AttendanceReportPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/results" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminResults /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/promotion" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminPromotion /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/transcript/:id" element={<ProtectedRoute roles={['admin', 'teacher', 'student']}><ErrorBoundary><AdminTranscript /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><ReportsPage /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/admin/backup" element={<ProtectedRoute roles={['admin']}><BackupPage /></ProtectedRoute>} />
-        <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
-        <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><TeacherMyStudents /></ProtectedRoute>} />
+        <Route path="/admin/backup" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><BackupPage /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherDashboard /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyStudents /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/results" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyResults /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><TeacherMyAttendance /></ProtectedRoute>} />
-        <Route path="/student/dashboard" element={<ProtectedRoute roles={['student']}><StudentDashboard /></ProtectedRoute>} />
+        <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyAttendance /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/student/dashboard" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentDashboard /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/student/results" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentMyResults /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/student/attendance" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentMyAttendance /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="/parent/dashboard" element={<ProtectedRoute roles={['parent']}><ParentDashboard /></ProtectedRoute>} />
+        <Route path="/parent/dashboard" element={<ProtectedRoute roles={['parent']}><ErrorBoundary><ParentDashboard /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/parent/results" element={<ProtectedRoute roles={['parent']}><ErrorBoundary><ParentChildrenResults /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/parent/attendance" element={<ProtectedRoute roles={['parent']}><ErrorBoundary><ParentChildrenAttendance /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/transcript/:id" element={<ProtectedRoute roles={['student', 'teacher', 'admin']}><ErrorBoundary><AdminTranscript /></ErrorBoundary></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
     </BrowserRouter>

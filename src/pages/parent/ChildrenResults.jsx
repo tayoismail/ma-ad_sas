@@ -6,6 +6,7 @@ import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import useParentStore from '../../store/parentStore';
+import useAttendanceStore from '../../store/attendanceStore';
 
 import { gradeStyle } from '../../lib/grading';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -18,6 +19,8 @@ export default function ParentChildrenResults() {
   const { settings, loadSettings } = useSettingsStore();
   const { subjects, loadSubjects } = useSubjectsStore();
   const { children, childrenResults, loading, loadChildren, loadChildrenResults, getChildCumulative } = useParentStore();
+  const { calculatePercentageBulk } = useAttendanceStore();
+  const [attBySem, setAttBySem] = useState({});
   const navigate = useNavigate();
 
   const [selectedSession, setSelectedSession] = useState('');
@@ -35,6 +38,12 @@ export default function ParentChildrenResults() {
     if (children.length > 0 && settings) {
       const session = selectedSession || settings.currentSession;
       loadChildrenResults(children, session);
+      // Load attendance for both semesters for cumulative calculation
+      const ids = children.map((c) => c.studentId);
+      Promise.all([
+        calculatePercentageBulk(ids, session, 1),
+        calculatePercentageBulk(ids, session, 2),
+      ]).then(([m1, m2]) => setAttBySem({ 1: m1, 2: m2 })).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, settings, selectedSession]);
@@ -112,7 +121,7 @@ export default function ParentChildrenResults() {
               const sem2Denom = totalSubjects || sem2Results.length;
               const sem1Avg = sem1Results.length ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / sem1Denom) * 100) / 100 : null;
               const sem2Avg = sem2Results.length ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / sem2Denom) * 100) / 100 : null;
-              const cumulative = getChildCumulative(child.studentId, childrenResults, totalSubjects);
+              const cumulative = getChildCumulative(child.studentId, childrenResults, totalSubjects, settings, attBySem);
 
               return (
                 <Card key={child.id} className="overflow-hidden border-border">

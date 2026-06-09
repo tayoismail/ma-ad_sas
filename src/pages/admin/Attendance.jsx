@@ -70,11 +70,12 @@ export default function AttendancePage() {
 
   const classStudents = students.filter((s) => s.className === filters.className);
 
-  const toggleStatus = async (studentId, currentStatus) => {
-    const next = currentStatus === 'present' ? 'absent' : currentStatus === 'absent' ? 'late' : 'present';
-    setAttendanceMap((prev) => ({ ...prev, [studentId]: next }));
+  const setStatus = async (studentId, targetStatus) => {
+    const currentStatus = attendanceMap[studentId] || '';
+    if (targetStatus === currentStatus) return;
+    setAttendanceMap((prev) => ({ ...prev, [studentId]: targetStatus }));
     try {
-      await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, next);
+      await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, targetStatus);
     } catch {
       setAttendanceMap((prev) => ({ ...prev, [studentId]: currentStatus }));
     }
@@ -258,7 +259,7 @@ export default function AttendancePage() {
                                   <div className="flex items-center justify-center gap-1">
                                     {['present', 'absent', 'late'].map((s) => (
                                       <button key={s}
-                                        onClick={() => toggleStatus(student.studentId, status)}
+                                        onClick={() => setStatus(student.studentId, s)}
                                         className={`p-1.5 rounded-lg text-xs font-medium transition-all ${
                                           status === s
                                             ? s === 'present' ? 'bg-emerald-500/20 text-emerald-600 ring-2 ring-emerald-500/30'

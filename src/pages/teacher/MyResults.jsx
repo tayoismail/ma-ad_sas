@@ -123,10 +123,11 @@ export default function TeacherMyResults() {
       return {
         studentId: s.studentId, className: filters.className,
         subjectId: filters.subjectId, subjectName: subj?.name || '',
-        session: filters.session, semester: Number(filters.semester), examScore: exam, testScore: test, total,
-        attendance: useAttendance ? (Number(scores[s.studentId]?.attendance) || null) : null,
+        session: filters.session, semester: Number(filters.semester),
         examScore: exam,
         testScore: useTest ? test : null,
+        total,
+        attendance: useAttendance ? (Number(scores[s.studentId]?.attendance) || null) : null,
         ...gradeInfo,
         enteredBy: user?.id, enteredAt: new Date().toISOString(),
       };

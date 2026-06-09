@@ -225,7 +225,14 @@ export default function ResultsPage() {
       setUploading(false);
       return;
     }
-    const overLimit = uploadData.filter((r) => r.examScore > 70 || r.testScore > 30);
+    const overLimit = uploadData.filter((r) => {
+      if (r.testScore != null) {
+        // CA mode: exam max 70, CA max 30
+        return r.examScore > 70 || r.testScore > 30;
+      }
+      // No CA: exam max 100
+      return r.examScore > 100;
+    });
     if (overLimit.length > 0) {
       setError(`${overLimit.length} record(s) have exam > 70 or CA > 30. Please correct the data.`);
       setUploading(false);

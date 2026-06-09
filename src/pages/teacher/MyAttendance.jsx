@@ -67,11 +67,12 @@ export default function TeacherMyAttendance() {
 
   const classStudents = students.filter((s) => s.className === filters.className);
 
-  const toggleStatus = async (studentId, currentStatus) => {
-    const next = currentStatus === 'present' ? 'absent' : currentStatus === 'absent' ? 'late' : 'present';
-    setAttendanceMap((prev) => ({ ...prev, [studentId]: next }));
+  const setStatus = async (studentId, targetStatus) => {
+    const currentStatus = attendanceMap[studentId] || '';
+    if (targetStatus === currentStatus) return;
+    setAttendanceMap((prev) => ({ ...prev, [studentId]: targetStatus }));
     try {
-      await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, next);
+      await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, targetStatus);
     } catch {
       setAttendanceMap((prev) => ({ ...prev, [studentId]: currentStatus }));
     }
@@ -98,20 +99,6 @@ export default function TeacherMyAttendance() {
     const d = new Date(selectedDate);
     d.setDate(d.getDate() + offset);
     setSelectedDate(d.toISOString().split('T')[0]);
-  };
-
-  const statusIcon = (status) => {
-    if (status === 'present') return <CheckCircle2 className="w-6 h-6 text-emerald-500" />;
-    if (status === 'absent') return <XCircle className="w-6 h-6 text-red-500" />;
-    if (status === 'late') return <AlertCircle className="w-6 h-6 text-amber-500" />;
-    return <div className="w-6 h-6 rounded-full border-2 border-dashed border-gray-300" />;
-  };
-
-  const statusLabel = (status) => {
-    if (status === 'present') return 'Present';
-    if (status === 'absent') return 'Absent';
-    if (status === 'late') return 'Late';
-    return 'Mark';
   };
 
   return (
@@ -189,11 +176,21 @@ export default function TeacherMyAttendance() {
                                 <p className="text-xs text-muted-foreground">{s.studentId}</p>
                               </div>
                             </div>
-                            <button onClick={() => toggleStatus(s.studentId, status)}
-                              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-muted/50 transition-colors">
-                              {statusIcon(status)}
-                              <span className="text-xs font-medium text-muted-foreground">{statusLabel(status)}</span>
-                            </button>
+                            <div className="flex items-center gap-1">
+                              {['present', 'absent', 'late'].map((s) => (
+                                <button key={s}
+                                  onClick={() => setStatus(s.studentId, s)}
+                                  className={`p-2 rounded-xl transition-all ${
+                                    status === s
+                                      ? s === 'present' ? 'bg-emerald-500/20 text-emerald-600 ring-2 ring-emerald-500/30'
+                                        : s === 'absent' ? 'bg-red-500/20 text-red-600 ring-2 ring-red-500/30'
+                                        : 'bg-amber-500/20 text-amber-600 ring-2 ring-amber-500/30'
+                                      : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
+                                  }`}>
+                                  {s === 'present' ? <CheckCircle2 className="w-5 h-5" /> : s === 'absent' ? <XCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         );
                       })}

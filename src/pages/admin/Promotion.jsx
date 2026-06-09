@@ -21,7 +21,7 @@ export default function PromotionPage() {
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { settings, loadSettings } = useSettingsStore();
-  const { cumulativeData, promotions, calculateCumulative, confirmPromotion, confirmAll } = usePromotionStore();
+  const { cumulativeData, promotions, loadPromotions, calculateCumulative, confirmPromotion, confirmAll } = usePromotionStore();
   const { loadClasses } = useClassesStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [calculated, setCalculated] = useState(false);
@@ -98,6 +98,13 @@ export default function PromotionPage() {
     loadClasses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (settings) {
+      loadPromotions(settings.currentSession);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]);
 
   const handleCalculate = async () => {
     setCalcLoading(true);

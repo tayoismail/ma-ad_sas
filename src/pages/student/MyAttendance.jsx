@@ -27,7 +27,7 @@ export default function StudentMyAttendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0] || s.parentEmail === user?.email);
+  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0]) || students.find((s) => s.parentEmail === user?.email);
 
   useEffect(() => {
     if (!profile || !settings) return;

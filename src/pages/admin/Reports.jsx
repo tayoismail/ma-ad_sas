@@ -34,16 +34,16 @@ export default function ReportsPage() {
 
   // Class result sheet filters
   const [classFilters, setClassFilters] = useState({
-    session: '2024/2025',
-    semester: '1',
+    session: settings?.currentSession || '2024/2025',
+    semester: String(settings?.currentSemester || 1),
     className: '',
   });
   const [classGenerated, setClassGenerated] = useState(false);
 
   // Student report card filters
   const [studentFilters, setStudentFilters] = useState({
-    session: '2024/2025',
-    semester: '1',
+    session: settings?.currentSession || '2024/2025',
+    semester: String(settings?.currentSemester || 1),
     className: '',
     studentId: '',
   });

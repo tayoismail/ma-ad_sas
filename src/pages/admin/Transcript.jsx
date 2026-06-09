@@ -17,9 +17,11 @@ import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 
-function calcAvg(results, totalSubjects) {
+function calcAvg(results, totalSubjects, settings, attPct) {
   if (!results || results.length === 0) return null;
-  const total = results.reduce((s, r) => s + (r.total || 0), 0);
+  const bonus = settings?.useAttendanceUpgrade && attPct != null && attPct >= (settings.attendanceThreshold ?? 90)
+    ? (settings.attendanceBonus ?? 2) : 0;
+  const total = results.reduce((s, r) => s + Math.min(100, (r.total || 0) + bonus), 0);
   const denom = totalSubjects || results.length;
   return Math.round((total / denom) * 100) / 100;
 }
@@ -233,8 +235,8 @@ export default function TranscriptPage() {
             const sem2 = sessionResults.filter((r) => r.semester === 2);
             const className = sessionResults[0]?.className || student.className;
             const totalSubjects = subjects.filter((s) => s.className === className).length;
-            const sem1Avg = calcAvg(sem1, totalSubjects);
-            const sem2Avg = calcAvg(sem2, totalSubjects);
+            const sem1Avg = calcAvg(sem1, totalSubjects, settings, attSem1);
+            const sem2Avg = calcAvg(sem2, totalSubjects, settings, attSem2);
             const sessCum = cumulativeRecords.find((c) => c.session === session);
             const cumAvg = sessCum?.cumulative ?? ((sem1Avg !== null && sem2Avg !== null) ? Math.round(((sem1Avg + sem2Avg) / 2) * 100) / 100 : (sem1Avg ?? sem2Avg));
             const promo = promoRecords.find((p) => p.session === session);

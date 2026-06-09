@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Users, Award, LogOut,
@@ -12,6 +12,7 @@ import useSubjectsStore from '../../store/subjectsStore';
 import { semesterLabel } from '../../lib/utils';
 import { gradeStyle } from '../../lib/grading';
 import useParentStore from '../../store/parentStore';
+import useAttendanceStore from '../../store/attendanceStore';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -22,6 +23,8 @@ export default function ParentDashboard() {
   const { settings, loadSettings } = useSettingsStore();
   const { subjects, loadSubjects } = useSubjectsStore();
   const { children, childrenResults, childrenAttendance, loading, loadChildren, loadChildrenResults, loadChildrenAttendance, getChildCumulative } = useParentStore();
+  const { calculatePercentageBulk } = useAttendanceStore();
+  const [attBySem, setAttBySem] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +44,12 @@ export default function ParentDashboard() {
     if (children.length > 0 && settings) {
       loadChildrenResults(children, settings.currentSession);
       loadChildrenAttendance(children, settings.currentSession, settings.currentSemester);
+      // Load attendance for both semesters for cumulative calculation
+      const ids = children.map((c) => c.studentId);
+      Promise.all([
+        calculatePercentageBulk(ids, settings.currentSession, 1),
+        calculatePercentageBulk(ids, settings.currentSession, 2),
+      ]).then(([m1, m2]) => setAttBySem({ 1: m1, 2: m2 })).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, settings]);
@@ -114,7 +123,7 @@ export default function ParentDashboard() {
                 const totalSubjects = subjects.filter((s) => s.className === child.className).length;
                 const sem1Avg = totalSubjects ? Math.round((sem1Results.reduce((s, r) => s + (r.total || 0), 0) / totalSubjects) * 100) / 100 : null;
                 const sem2Avg = totalSubjects ? Math.round((sem2Results.reduce((s, r) => s + (r.total || 0), 0) / totalSubjects) * 100) / 100 : null;
-                const cumulative = getChildCumulative(child.studentId, childrenResults, totalSubjects);
+                const cumulative = getChildCumulative(child.studentId, childrenResults, totalSubjects, settings, attBySem);
                 const attPct = childrenAttendance[child.studentId];
 
                 return (

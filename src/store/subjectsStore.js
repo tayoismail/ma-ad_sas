@@ -6,6 +6,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  query,
+  where,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -38,6 +40,11 @@ const useSubjectsStore = create((set) => ({
   },
 
   deleteSubject: async (id) => {
+    // Delete all results for this subject first
+    const resultsSnap = await getDocs(query(collection(db, 'results'), where('subjectId', '==', id)));
+    for (const d of resultsSnap.docs) {
+      await deleteDoc(d.ref);
+    }
     await deleteDoc(doc(db, 'subjects', id));
     const all = await getDocs(collection(db, 'subjects'));
     set({ subjects: all.docs.map((d) => ({ id: d.id, ...d.data() })) });

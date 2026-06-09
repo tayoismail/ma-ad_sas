@@ -30,7 +30,7 @@ export default function StudentDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0] || s.parentEmail === user?.email);
+  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0]) || students.find((s) => s.parentEmail === user?.email);
   const myResults = results.filter((r) => r.studentId === profile?.studentId);
   const sem1Results = myResults.filter((r) => r.semester === 1);
   const sem2Results = myResults.filter((r) => r.semester === 2);

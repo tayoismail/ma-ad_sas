@@ -131,7 +131,7 @@ const usePromotionStore = create((set, get) => ({
 
     const { cumulativeData } = get();
     const cum = cumulativeData.find((d) => d.studentId === studentId);
-    if (cum) {
+    if (cum && cum.className !== cum.promoteTo) {
       const studentSnap = await getDocs(query(collection(db, 'students'), where('studentId', '==', studentId)));
       for (const s of studentSnap.docs) {
         await updateDoc(doc(db, 'students', s.id), { className: cum.promoteTo });
@@ -154,9 +154,11 @@ const usePromotionStore = create((set, get) => ({
         await addDoc(collection(db, 'promotions'), { studentId: d.studentId, session, status: 'confirmed' });
       }
 
-      const studentSnap = await getDocs(query(collection(db, 'students'), where('studentId', '==', d.studentId)));
-      for (const s of studentSnap.docs) {
-        await updateDoc(doc(db, 'students', s.id), { className: d.promoteTo });
+      if (d.className !== d.promoteTo) {
+        const studentSnap = await getDocs(query(collection(db, 'students'), where('studentId', '==', d.studentId)));
+        for (const s of studentSnap.docs) {
+          await updateDoc(doc(db, 'students', s.id), { className: d.promoteTo });
+        }
       }
     }
     const all = await getDocs(query(collection(db, 'promotions'), where('session', '==', session)));
