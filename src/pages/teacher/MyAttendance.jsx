@@ -70,7 +70,11 @@ export default function TeacherMyAttendance() {
   const toggleStatus = async (studentId, currentStatus) => {
     const next = currentStatus === 'present' ? 'absent' : currentStatus === 'absent' ? 'late' : 'present';
     setAttendanceMap((prev) => ({ ...prev, [studentId]: next }));
-    await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, next);
+    try {
+      await markAttendance(studentId, filters.className, filters.session, filters.semester, selectedDate, next);
+    } catch {
+      setAttendanceMap((prev) => ({ ...prev, [studentId]: currentStatus }));
+    }
   };
 
   const markAll = async (status) => {

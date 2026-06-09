@@ -27,6 +27,7 @@ export default function UsersPage() {
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [] });
 
   const loadUsers = async () => {
@@ -65,13 +66,16 @@ export default function UsersPage() {
     setSaving(true);
     setError('');
     try {
+      const teacherClasses = form.role === 'teacher'
+        ? [...new Set(subjects.filter((s) => form.teacherSubjects.includes(s.id)).map((s) => s.className))]
+        : [];
       if (editingId) {
-        const updates = { name: form.name, email: form.email, role: form.role, teacherSubjects: form.teacherSubjects };
+        const updates = { name: form.name, email: form.email, role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses };
         await useAuthStore.getState().updateUser(editingId, updates);
       } else {
         await useAuthStore.getState().addUser({
           name: form.name, email: form.email, password: form.password,
-          role: form.role, teacherSubjects: form.teacherSubjects,
+          role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses,
         });
       }
       await loadUsers();
@@ -92,14 +96,21 @@ export default function UsersPage() {
     });
   };
 
+  // Preview which classes the teacher will be assigned to
+  const previewClasses = form.role === 'teacher'
+    ? [...new Set(subjects.filter((s) => form.teacherSubjects.includes(s.id)).map((s) => s.className))]
+    : [];
+
   const handleDelete = async (id) => {
     if (id === user?.id) { setError('Cannot delete your own account'); setDeleteConfirm(null); return; }
+    setDeleting(true);
     try {
       await useAuthStore.getState().deleteUser(id);
       await loadUsers();
     } catch (err) {
       setError(err.message || 'Failed to delete user');
     }
+    setDeleting(false);
     setDeleteConfirm(null);
   };
 
@@ -197,6 +208,7 @@ export default function UsersPage() {
                     </select>
                   </div>
                   {form.role === 'teacher' && subjects.length > 0 && (
+                    <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Assigned Subjects</label>
                       <div className="max-h-40 overflow-y-auto space-y-1.5 p-2 rounded-xl border-2 border-border/50 bg-white/80">
@@ -213,7 +225,11 @@ export default function UsersPage() {
                           </label>
                         ))}
                       </div>
+                      {previewClasses.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1.5">Access will be granted to classes: <strong>{previewClasses.join(', ')}</strong></p>
+                      )}
                     </div>
+                    </>
                   )}
                   <div className="flex gap-2 pt-2">
                     <Button variant="outline" className="flex-1" onClick={resetForm}>Cancel</Button>
@@ -242,7 +258,9 @@ export default function UsersPage() {
             <p className="text-xs text-gray-400 mb-6">This cannot be undone.</p>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => handleDelete(deleteConfirm.id)}>Delete</Button>
+              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => handleDelete(deleteConfirm.id)} disabled={deleting}>
+                {deleting ? 'Deleting...' : 'Delete'}
+              </Button>
             </div>
           </Card>
         </div>

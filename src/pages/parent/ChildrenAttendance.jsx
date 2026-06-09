@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CalendarDays, School, Hash, Moon, LogOut, CheckCircle2, XCircle, AlertCircle, Users, GraduationCap, ArrowLeft } from 'lucide-react';
+import { BookOpen, CalendarDays, School, Hash, Moon, Sun, LogOut, CheckCircle2, XCircle, AlertCircle, Users, GraduationCap, ArrowLeft } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
@@ -13,7 +13,7 @@ import { Button } from '../../components/ui/button';
 
 export default function ParentChildrenAttendance() {
   const { user, logout } = useAuthStore();
-  const { toggleTheme } = useThemeStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { settings, loadSettings } = useSettingsStore();
   const { children, loading, loadChildren } = useParentStore();
   const { getAttendanceByStudent, calculatePercentage } = useAttendanceStore();
@@ -72,7 +72,9 @@ export default function ParentChildrenAttendance() {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-accent text-muted-foreground"><Moon className="w-5 h-5" /></button>
+            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-accent text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium text-card-foreground">{user?.name || 'Parent'}</p>
               <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>

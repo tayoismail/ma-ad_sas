@@ -147,10 +147,10 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-slate-300">
-      <AdminSidebar activePath="/admin/reports" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <AdminSidebar activePath="/admin/reports" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} className="print:hidden" />
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border print:hidden">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
@@ -451,7 +451,7 @@ export default function ReportsPage() {
                             </div>
                             <div className="text-center p-3 rounded-lg bg-white/60">
                               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Grade / التقدير</p>
-                              <p className={`text-lg font-bold ${g.color}`}>{g.grade} — <span dir="rtl">{calc?.remarkAr || '--'}</span></p>
+                              <p className={`text-lg font-bold ${g.color}`}>{g.grade} — <span dir="rtl">{g.remarkAr || '--'}</span></p>
                             </div>
                             {Number(studentFilters.semester) === 2 && (() => {
                               const p = promotionStatus(avg);

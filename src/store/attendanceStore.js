@@ -9,6 +9,14 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import useSettingsStore from './settingsStore';
+
+function isFinalized(session, semester) {
+  try {
+    const settings = useSettingsStore.getState().settings;
+    return settings?.semestersFinalized?.[`${session}_sem${Number(semester)}`];
+  } catch { return false; }
+}
 
 const useAttendanceStore = create((set) => ({
   records: [],
@@ -33,6 +41,9 @@ const useAttendanceStore = create((set) => ({
   },
 
   markAttendance: async (studentId, className, session, semester, date, status) => {
+    if (isFinalized(session, semester)) {
+      throw new Error('This semester has been finalized. Attendance cannot be modified.');
+    }
     const snapshot = await getDocs(collection(db, 'attendance'));
     const existing = snapshot.docs
       .map((d) => ({ id: d.id, ...d.data() }))
@@ -47,6 +58,9 @@ const useAttendanceStore = create((set) => ({
   },
 
   markBulk: async (records) => {
+    if (records.length > 0 && isFinalized(records[0].session, records[0].semester)) {
+      throw new Error('This semester has been finalized. Attendance cannot be modified.');
+    }
     let count = 0;
     const allSnap = await getDocs(collection(db, 'attendance'));
     const existingMap = {};

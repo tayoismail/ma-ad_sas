@@ -8,7 +8,9 @@ import {
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
+import useStudentsStore from '../../store/studentsStore';
 import AdminSidebar from '../../components/AdminSidebar';
+import ConfirmModal from '../../components/ConfirmModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -32,15 +34,19 @@ export default function ClassesPage() {
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { classes, loadClasses, addClass, updateClass, deleteClass } = useClassesStore();
+  const { students, loadStudents } = useStudentsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', section: 'A', promotionTo: '' });
 
   useEffect(() => {
     loadClasses();
+    loadStudents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,6 +64,9 @@ export default function ClassesPage() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) { setError('Class name is required'); return; }
+    if (!editingId && classes.some((c) => c.name.trim().toLowerCase() === form.name.trim().toLowerCase())) {
+      setError('A class with this name already exists'); setSaving(false); return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -65,7 +74,6 @@ export default function ClassesPage() {
         ...form,
         name: form.name.trim(),
         order: editingId ? undefined : classes.length + 1,
-        studentCount: editingId ? undefined : 0,
       };
       if (editingId) {
         await updateClass(editingId, data);
@@ -80,11 +88,14 @@ export default function ClassesPage() {
   };
 
   const handleDelete = async (id) => {
+    setDeleting(true);
     try {
       await deleteClass(id);
     } catch (err) {
       setError(err.message || 'Failed to delete class');
     }
+    setDeleting(false);
+    setDeleteConfirm(null);
   };
 
   const getClassColor = (_, index) => {
@@ -231,7 +242,7 @@ export default function ClassesPage() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Users className="w-3.5 h-3.5" />
-                        <span>{cls.studentCount || 0} students</span>
+                        <span>{students.filter((s) => s.className === cls.name).length} students</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <ArrowRight className="w-3.5 h-3.5 text-emerald-500" />
@@ -243,7 +254,7 @@ export default function ClassesPage() {
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEdit(cls)}>
                         <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1 text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleDelete(cls.id)}>
+                      <Button size="sm" variant="outline" className="flex-1 text-red-500 border-red-200 hover:bg-red-50" onClick={() => setDeleteConfirm(cls)}>
                         <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
                       </Button>
                     </div>
@@ -265,6 +276,17 @@ export default function ClassesPage() {
           )}
         </main>
       </div>
+
+      <ConfirmModal
+        open={deleteConfirm !== null}
+        title="Delete Class?"
+        message={`This will permanently delete the class \"${deleteConfirm?.name || ''}\". Students in this class will not be deleted, but their class assignment will remain.`}
+        confirmLabel={deleting ? 'Deleting...' : 'Delete'}
+        variant="danger"
+        onConfirm={() => handleDelete(deleteConfirm.id)}
+        loading={deleting}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

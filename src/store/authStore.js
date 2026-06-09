@@ -21,7 +21,8 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
-const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
+const SESSION_TIMEOUT_DEFAULT = 2 * 60 * 60 * 1000;
+const SESSION_TIMEOUT_REMEMBER = 7 * 24 * 60 * 60 * 1000;
 const API_KEY = import.meta.env.VITE_FIREBASE_API_KEY;
 
 const useAuthStore = create((set, get) => ({
@@ -35,8 +36,9 @@ const useAuthStore = create((set, get) => ({
         const session = sessionStorage.getItem('maad_session');
         if (session) {
           try {
-            const { lastActivity } = JSON.parse(session);
-            if (Date.now() - lastActivity > SESSION_TIMEOUT) {
+            const { lastActivity, remembered } = JSON.parse(session);
+            const timeout = remembered ? SESSION_TIMEOUT_REMEMBER : SESSION_TIMEOUT_DEFAULT;
+            if (Date.now() - lastActivity > timeout) {
               await signOut(auth);
               sessionStorage.removeItem('maad_session');
               set({ user: null, isAuthenticated: false, isLoading: false });
@@ -48,7 +50,20 @@ const useAuthStore = create((set, get) => ({
         try {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
-            set({ user: { id: firebaseUser.uid, ...userDoc.data() }, isAuthenticated: true, isLoading: false });
+            const userData = userDoc.data();
+            // Backfill teacherClasses for existing teachers who don't have it yet
+            if (userData.role === 'teacher' && userData.teacherSubjects?.length > 0 && !userData.teacherClasses) {
+              try {
+                const subjectsSnap = await getDocs(collection(db, 'subjects'));
+                const allSubjects = subjectsSnap.docs.map((d) => d.data());
+                const teacherClasses = [...new Set(
+                  allSubjects.filter((s) => userData.teacherSubjects.includes(s.id)).map((s) => s.className)
+                )];
+                await updateDoc(doc(db, 'users', firebaseUser.uid), { teacherClasses });
+                userData.teacherClasses = teacherClasses;
+              } catch { /* best-effort backfill */ }
+            }
+            set({ user: { id: firebaseUser.uid, ...userData }, isAuthenticated: true, isLoading: false });
             get().updateLastActivity();
           } else {
             const profile = {
@@ -70,7 +85,9 @@ const useAuthStore = create((set, get) => ({
   },
 
   updateLastActivity: () => {
-    sessionStorage.setItem('maad_session', JSON.stringify({ lastActivity: Date.now() }));
+    const session = sessionStorage.getItem('maad_session');
+    const remembered = session ? JSON.parse(session).remembered : false;
+    sessionStorage.setItem('maad_session', JSON.stringify({ lastActivity: Date.now(), remembered }));
   },
 
   checkSession: () => {
@@ -79,8 +96,9 @@ const useAuthStore = create((set, get) => ({
     const session = sessionStorage.getItem('maad_session');
     if (session) {
       try {
-        const { lastActivity } = JSON.parse(session);
-        if (Date.now() - lastActivity > SESSION_TIMEOUT) {
+        const { lastActivity, remembered } = JSON.parse(session);
+        const timeout = remembered ? SESSION_TIMEOUT_REMEMBER : SESSION_TIMEOUT_DEFAULT;
+        if (Date.now() - lastActivity > timeout) {
           signOut(auth);
           return false;
         }
@@ -103,7 +121,7 @@ const useAuthStore = create((set, get) => ({
     try {
       await updateDoc(doc(db, 'users', userCredential.user.uid), { lastLogin: new Date().toISOString() });
     } catch { /* lastLogin is best-effort */ }
-    get().updateLastActivity();
+    sessionStorage.setItem('maad_session', JSON.stringify({ lastActivity: Date.now(), remembered: rememberMe }));
     return { id: userCredential.user.uid, ...profile };
   },
 
@@ -136,6 +154,7 @@ const useAuthStore = create((set, get) => ({
       email: data.email,
       role: data.role,
       teacherSubjects: data.teacherSubjects || [],
+      teacherClasses: data.teacherClasses || [],
       createdAt: new Date().toISOString(),
     });
     return uid;

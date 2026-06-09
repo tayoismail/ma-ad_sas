@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
 import { useThemeStore } from './store/themeStore';
@@ -6,31 +6,32 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminSettings from './pages/admin/Settings';
-import AdminClasses from './pages/admin/Classes';
-import AdminStudents from './pages/admin/Students';
-import AdminStudentForm from './pages/admin/StudentForm';
-import AdminStudentProfile from './pages/admin/StudentProfile';
-import AdminSubjects from './pages/admin/Subjects';
-import AdminResults from './pages/admin/Results';
-import AdminPromotion from './pages/admin/Promotion';
-import AdminTranscript from './pages/admin/Transcript';
-import TeacherDashboard from './pages/teacher/Dashboard';
-import TeacherMyStudents from './pages/teacher/MyStudents';
-import TeacherMyResults from './pages/teacher/MyResults';
-import TeacherMyAttendance from './pages/teacher/MyAttendance';
-import StudentDashboard from './pages/student/Dashboard';
-import StudentMyResults from './pages/student/MyResults';
-import StudentMyAttendance from './pages/student/MyAttendance';
-import BackupPage from './pages/admin/Backup';
-import ReportsPage from './pages/admin/Reports';
-import UsersPage from './pages/admin/Users';
-import AttendancePage from './pages/admin/Attendance';
-import AttendanceReportPage from './pages/admin/AttendanceReport';
-import ParentDashboard from './pages/parent/Dashboard';
-import ParentChildrenResults from './pages/parent/ChildrenResults';
-import ParentChildrenAttendance from './pages/parent/ChildrenAttendance';
+
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+const AdminClasses = lazy(() => import('./pages/admin/Classes'));
+const AdminStudents = lazy(() => import('./pages/admin/Students'));
+const AdminStudentForm = lazy(() => import('./pages/admin/StudentForm'));
+const AdminStudentProfile = lazy(() => import('./pages/admin/StudentProfile'));
+const AdminSubjects = lazy(() => import('./pages/admin/Subjects'));
+const AdminResults = lazy(() => import('./pages/admin/Results'));
+const AdminPromotion = lazy(() => import('./pages/admin/Promotion'));
+const AdminTranscript = lazy(() => import('./pages/admin/Transcript'));
+const TeacherDashboard = lazy(() => import('./pages/teacher/Dashboard'));
+const TeacherMyStudents = lazy(() => import('./pages/teacher/MyStudents'));
+const TeacherMyResults = lazy(() => import('./pages/teacher/MyResults'));
+const TeacherMyAttendance = lazy(() => import('./pages/teacher/MyAttendance'));
+const StudentDashboard = lazy(() => import('./pages/student/Dashboard'));
+const StudentMyResults = lazy(() => import('./pages/student/MyResults'));
+const StudentMyAttendance = lazy(() => import('./pages/student/MyAttendance'));
+const BackupPage = lazy(() => import('./pages/admin/Backup'));
+const ReportsPage = lazy(() => import('./pages/admin/Reports'));
+const UsersPage = lazy(() => import('./pages/admin/Users'));
+const AttendancePage = lazy(() => import('./pages/admin/Attendance'));
+const AttendanceReportPage = lazy(() => import('./pages/admin/AttendanceReport'));
+const ParentDashboard = lazy(() => import('./pages/parent/Dashboard'));
+const ParentChildrenResults = lazy(() => import('./pages/parent/ChildrenResults'));
+const ParentChildrenAttendance = lazy(() => import('./pages/parent/ChildrenAttendance'));
 
 export default function App() {
   const { init, isLoading, isAuthenticated, updateLastActivity, checkSession, logout } = useAuthStore();
@@ -82,11 +83,12 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <Suspense fallback={<div className="min-h-screen gradient-secondary flex items-center justify-center"><div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><UsersPage /></ProtectedRoute>} />
-        <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AdminDashboard /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminSettings /></ProtectedRoute>} />
         <Route path="/admin/classes" element={<ProtectedRoute roles={['admin']}><AdminClasses /></ProtectedRoute>} />
         <Route path="/admin/students" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminStudents /></ProtectedRoute>} />
@@ -94,26 +96,27 @@ export default function App() {
         <Route path="/admin/students/:id" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminStudentProfile /></ProtectedRoute>} />
         <Route path="/admin/students/:id/edit" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminStudentForm /></ProtectedRoute>} />
         <Route path="/admin/subjects" element={<ProtectedRoute roles={['admin']}><AdminSubjects /></ProtectedRoute>} />
-        <Route path="/admin/attendance" element={<ProtectedRoute roles={['admin', 'teacher']}><AttendancePage /></ProtectedRoute>} />
+        <Route path="/admin/attendance" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AttendancePage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/attendance/report" element={<ProtectedRoute roles={['admin', 'teacher']}><AttendanceReportPage /></ProtectedRoute>} />
-        <Route path="/admin/results" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminResults /></ProtectedRoute>} />
-        <Route path="/admin/promotion" element={<ProtectedRoute roles={['admin', 'teacher']}><AdminPromotion /></ProtectedRoute>} />
-        <Route path="/admin/transcript/:id" element={<ProtectedRoute roles={['admin', 'teacher', 'student']}><AdminTranscript /></ProtectedRoute>} />
-        <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'teacher']}><ReportsPage /></ProtectedRoute>} />
+        <Route path="/admin/results" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminResults /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/promotion" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><AdminPromotion /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/transcript/:id" element={<ProtectedRoute roles={['admin', 'teacher', 'student']}><ErrorBoundary><AdminTranscript /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><ReportsPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/backup" element={<ProtectedRoute roles={['admin']}><BackupPage /></ProtectedRoute>} />
         <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
         <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><TeacherMyStudents /></ProtectedRoute>} />
         <Route path="/teacher/results" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyResults /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><TeacherMyAttendance /></ProtectedRoute>} />
         <Route path="/student/dashboard" element={<ProtectedRoute roles={['student']}><StudentDashboard /></ProtectedRoute>} />
-        <Route path="/student/results" element={<ProtectedRoute roles={['student']}><StudentMyResults /></ProtectedRoute>} />
-        <Route path="/student/attendance" element={<ProtectedRoute roles={['student']}><StudentMyAttendance /></ProtectedRoute>} />
+        <Route path="/student/results" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentMyResults /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/student/attendance" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentMyAttendance /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/parent/dashboard" element={<ProtectedRoute roles={['parent']}><ParentDashboard /></ProtectedRoute>} />
-        <Route path="/parent/results" element={<ProtectedRoute roles={['parent']}><ParentChildrenResults /></ProtectedRoute>} />
-        <Route path="/parent/attendance" element={<ProtectedRoute roles={['parent']}><ParentChildrenAttendance /></ProtectedRoute>} />
-        <Route path="/transcript/:id" element={<ProtectedRoute roles={['student', 'teacher', 'admin']}><AdminTranscript /></ProtectedRoute>} />
+        <Route path="/parent/results" element={<ProtectedRoute roles={['parent']}><ErrorBoundary><ParentChildrenResults /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/parent/attendance" element={<ProtectedRoute roles={['parent']}><ErrorBoundary><ParentChildrenAttendance /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/transcript/:id" element={<ProtectedRoute roles={['student', 'teacher', 'admin']}><ErrorBoundary><AdminTranscript /></ErrorBoundary></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

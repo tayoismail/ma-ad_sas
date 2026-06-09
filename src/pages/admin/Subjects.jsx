@@ -26,6 +26,7 @@ export default function SubjectsPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '', arabicName: '', className: '', passingMark: 50,
@@ -51,6 +52,9 @@ export default function SubjectsPage() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
+    if (!editingId && subjects.some((s) => s.name.trim().toLowerCase() === form.name.trim().toLowerCase() && s.className === form.className)) {
+      setError('A subject with this name already exists in this class'); return;
+    }
     setSaving(true);
     try {
       if (editingId) {
@@ -66,11 +70,13 @@ export default function SubjectsPage() {
   };
 
   const handleDelete = async (id) => {
+    setDeleting(true);
     try {
       await deleteSubject(id);
     } catch (err) {
       setError(err.message || 'Failed to delete subject');
     }
+    setDeleting(false);
     setDeleteConfirm(null);
   };
 
@@ -220,7 +226,9 @@ export default function SubjectsPage() {
             <p className="text-sm text-muted-foreground mb-6">This will also remove all results for this subject.</p>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => handleDelete(deleteConfirm)}>Delete</Button>
+              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => handleDelete(deleteConfirm)} disabled={deleting}>
+                {deleting ? 'Deleting...' : 'Delete'}
+              </Button>
             </div>
           </Card>
         </div>

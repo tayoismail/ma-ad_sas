@@ -165,7 +165,7 @@ export default function TranscriptPage() {
 
   return (
     <div className="min-h-screen bg-slate-300">
-      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border print:hidden">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
@@ -190,7 +190,7 @@ export default function TranscriptPage() {
         </div>
       </header>
 
-      <main className="p-4 lg:p-8 max-w-5xl mx-auto">
+      <main className="p-4 lg:p-8 max-w-5xl mx-auto print:p-0">
         <div ref={transcriptRef} className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden" dir="ltr">
           <div className="gradient-primary p-8 text-white text-center relative">
             <div className="absolute top-4 left-4 w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center border-2 border-white/20">

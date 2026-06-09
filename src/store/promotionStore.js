@@ -144,7 +144,8 @@ const usePromotionStore = create((set, get) => ({
 
   confirmAll: async (session) => {
     const { cumulativeData } = get();
-    for (const d of cumulativeData) {
+    const eligible = cumulativeData.filter((d) => d.cumulative !== null);
+    for (const d of eligible) {
       const promoSnapshot = await getDocs(query(collection(db, 'promotions'), where('studentId', '==', d.studentId), where('session', '==', session)));
       const existing = promoSnapshot.docs[0];
       if (existing) {

@@ -25,6 +25,8 @@ export default function BackupPage() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState(null);
   const [restoreConfirm, setRestoreConfirm] = useState(null);
+  const [restoreProgress, setRestoreProgress] = useState('');
+  const [rollbackData, setRollbackData] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleExport = async () => {
@@ -62,11 +64,24 @@ export default function BackupPage() {
     if (!restoreConfirm) return;
     setImporting(true);
     setRestoreConfirm(null);
+    setRestoreProgress('Backing up current data...');
+    let backup = null;
+    try {
+      backup = {};
+      for (const name of COLLECTIONS) {
+        const snap = await getDocs(collection(db, name));
+        backup[name] = snap.docs.map((d) => ({ _id: d.id, ...d.data() }));
+      }
+      setRollbackData(backup);
+    } catch {
+      setRollbackData(null);
+    }
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
         const data = JSON.parse(evt.target.result);
         for (const name of COLLECTIONS) {
+          setRestoreProgress(`Restoring ${name}...`);
           const snap = await getDocs(collection(db, name));
           for (const d of snap.docs) {
             await deleteDoc(doc(db, name, d.id));
@@ -78,10 +93,30 @@ export default function BackupPage() {
             }
           }
         }
+        setRestoreProgress('');
         setResult({ type: 'success', message: 'Data restored successfully! Please refresh the page.' });
       } catch {
-        setResult({ type: 'error', message: 'Invalid backup file' });
+        setRestoreProgress('');
+        setResult({ type: 'error', message: 'Restore failed. Rolling back to previous data...' });
+        if (rollbackData) {
+          try {
+            for (const name of COLLECTIONS) {
+              const snap = await getDocs(collection(db, name));
+              for (const d of snap.docs) { await deleteDoc(doc(db, name, d.id)); }
+              if (rollbackData[name]?.length) {
+                for (const item of rollbackData[name]) {
+                  const { _id, ...rest } = item;
+                  await setDoc(doc(db, name, _id), rest);
+                }
+              }
+            }
+            setResult({ type: 'success', message: 'Restore failed but data was rolled back successfully. No data was lost.' });
+          } catch {
+            setResult({ type: 'error', message: 'CRITICAL: Restore failed and rollback also failed. Please restore from a manual backup.' });
+          }
+        }
       }
+      setRollbackData(null);
       setImporting(false);
     };
     reader.readAsText(restoreConfirm);
@@ -140,7 +175,7 @@ export default function BackupPage() {
             <p className="text-sm text-gray-500 mb-4">Import from a previously exported JSON backup. This will OVERWRITE all existing data.</p>
             <label className="flex items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed border-border/50 bg-white/30 hover:bg-white/50 cursor-pointer transition-colors">
               {importing ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Upload className="w-5 h-5 text-primary" />}
-              <span className="text-sm text-gray-600">{importing ? 'Restoring...' : 'Choose backup file'}</span>
+              <span className="text-sm text-gray-600">{importing ? restoreProgress || 'Restoring...' : 'Choose backup file'}</span>
               <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileSelected} disabled={importing} />
             </label>
           </Card>

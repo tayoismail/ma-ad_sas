@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Award, BookOpen, Download, Moon, LogOut, ArrowLeft } from 'lucide-react';
+import { Award, BookOpen, Download, Moon, Sun, LogOut, ArrowLeft } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -15,7 +15,7 @@ import { Button } from '../../components/ui/button';
 
 export default function StudentMyResults() {
   const { user, logout } = useAuthStore();
-  const { toggleTheme } = useThemeStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { students, loadStudents } = useStudentsStore();
   const { results, loadResults } = useResultsStore();
   const { loadSettings } = useSettingsStore();
@@ -26,7 +26,7 @@ export default function StudentMyResults() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const profile = students.find((s) => s.parentEmail === user?.email || s.studentId === user?.email?.split('@')[0] || s.name === user?.name);
+  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0] || s.parentEmail === user?.email);
   const myResults = results.filter((r) => r.studentId === profile?.studentId);
 
   const sessions = [...new Set(myResults.map((r) => r.session))].sort();
@@ -68,7 +68,9 @@ export default function StudentMyResults() {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-accent text-muted-foreground"><Moon className="w-5 h-5" /></button>
+            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-accent text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <Avatar className="ring-2 ring-emerald-500/20"><AvatarFallback className="bg-emerald-500/10 text-emerald-500">{(user?.name || 'S').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-red-500" onClick={handleLogout}><LogOut className="w-4 h-4" /></Button>
           </div>

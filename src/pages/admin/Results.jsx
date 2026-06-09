@@ -47,8 +47,12 @@ export default function ResultsPage() {
   const [uploadData, setUploadData] = useState([]);
   const [uploadResult, setUploadResult] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [useTest, setUseTest] = useState(false);
-  const [useAttendance, setUseAttendance] = useState(false);
+  const [useTest, setUseTest] = useState(() => {
+    try { return localStorage.getItem('maad_useTest') === 'true'; } catch { return false; }
+  });
+  const [useAttendance, setUseAttendance] = useState(() => {
+    try { return localStorage.getItem('maad_useAttendance') === 'true'; } catch { return false; }
+  });
   const latestFilterRef = useRef('');
 
   useEffect(() => {
@@ -69,6 +73,7 @@ export default function ResultsPage() {
 
   const handleToggleUseTest = () => {
     setUseTest((prev) => {
+      try { localStorage.setItem('maad_useTest', String(!prev)); } catch {}
       if (!prev) {
         setScores((s) => {
           const next = { ...s };
@@ -162,6 +167,8 @@ export default function ResultsPage() {
         attendance: useAttendance ? (Number(s.attendance) || null) : null,
         total,
         ...gradeInfo,
+        enteredBy: user?.id,
+        enteredAt: new Date().toISOString(),
       });
     }
     } catch (err) {
@@ -243,6 +250,8 @@ export default function ResultsPage() {
         className: student?.className || '',
         total,
         ...gradeInfo,
+        enteredBy: user?.id,
+        enteredAt: new Date().toISOString(),
       };
     });
     const count = await saveResults(enriched);
@@ -394,7 +403,7 @@ export default function ResultsPage() {
                 Include CA (Continuous Assessment)
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input type="checkbox" checked={useAttendance} onChange={() => setUseAttendance(!useAttendance)} className="rounded border-gray-300" />
+                <input type="checkbox" checked={useAttendance} onChange={() => { const next = !useAttendance; setUseAttendance(next); try { localStorage.setItem('maad_useAttendance', String(next)); } catch {} }} className="rounded border-gray-300" />
                 Include Attendance %
               </label>
               <div className="flex items-center gap-2 ml-auto">

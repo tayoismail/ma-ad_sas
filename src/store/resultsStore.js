@@ -10,6 +10,14 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import useSettingsStore from './settingsStore';
+
+function isFinalized(session, semester) {
+  try {
+    const settings = useSettingsStore.getState().settings;
+    return settings?.semestersFinalized?.[`${session}_sem${Number(semester)}`];
+  } catch { return false; }
+}
 
 const useResultsStore = create((set) => ({
   results: [],
@@ -32,6 +40,9 @@ const useResultsStore = create((set) => ({
   },
 
   saveResult: async (data) => {
+    if (isFinalized(data.session, data.semester)) {
+      throw new Error('This semester has been finalized. Results cannot be modified.');
+    }
     const snapshot = await getDocs(collection(db, 'results'));
     const existing = snapshot.docs
       .map((d) => ({ id: d.id, ...d.data() }))
@@ -46,6 +57,9 @@ const useResultsStore = create((set) => ({
   },
 
   saveResults: async (records) => {
+    if (records.length > 0 && isFinalized(records[0].session, records[0].semester)) {
+      throw new Error('This semester has been finalized. Results cannot be modified.');
+    }
     let success = 0;
     const allSnap = await getDocs(collection(db, 'results'));
     const existingMap = {};

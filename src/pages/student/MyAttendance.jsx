@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, BookOpen, Moon, LogOut, CheckCircle2, XCircle, AlertCircle, School, ArrowLeft } from 'lucide-react';
+import { CalendarDays, BookOpen, Moon, Sun, LogOut, CheckCircle2, XCircle, AlertCircle, School, ArrowLeft } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useStudentsStore from '../../store/studentsStore';
@@ -13,7 +13,7 @@ import { Button } from '../../components/ui/button';
 
 export default function StudentMyAttendance() {
   const { user, logout } = useAuthStore();
-  const { toggleTheme } = useThemeStore();
+  const { theme, toggleTheme } = useThemeStore();
   const { students, loadStudents } = useStudentsStore();
   const { settings, loadSettings } = useSettingsStore();
   const { getAttendanceByStudent, calculatePercentage } = useAttendanceStore();
@@ -27,7 +27,7 @@ export default function StudentMyAttendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0] || s.parentEmail === user?.email || s.name === user?.name);
+  const profile = students.find((s) => s.studentId === user?.email?.split('@')[0] || s.parentEmail === user?.email);
 
   useEffect(() => {
     if (!profile || !settings) return;
@@ -69,7 +69,9 @@ export default function StudentMyAttendance() {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-accent text-muted-foreground"><Moon className="w-5 h-5" /></button>
+            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-accent text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <Avatar className="ring-2 ring-emerald-500/20"><AvatarFallback className="bg-emerald-500/10 text-emerald-500">{(user?.name || 'S').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-red-500" onClick={handleLogout}><LogOut className="w-4 h-4" /></Button>
           </div>

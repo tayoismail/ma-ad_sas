@@ -10,6 +10,22 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
+    // Returns the teacher's assigned class names array.
+    // Falls back to empty array if field doesn't exist yet (migration period).
+    function getTeacherClasses() {
+      let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      let classes = doc.data.teacherClasses;
+      // If teacherClasses not set or empty, allow all (migration fallback)
+      return classes == null || size(classes) == 0 ? null : classes;
+    }
+
+    // Check if a className is in the teacher's assigned classes.
+    // If getTeacherClasses() returns null (no field set), allow all classes (migration fallback).
+    function isTeacherAssignedClass(className) {
+      let allowed = getTeacherClasses();
+      return getRole() == 'teacher' && (allowed == null || className in allowed);
+    }
+
     // ─── Admins: full access to everything ──────────────────────
     match /{document=**} {
       allow read, write: if isAuth() && getRole() == 'admin';
@@ -34,22 +50,31 @@ service cloud.firestore {
       allow read: if isAuth();
     }
 
-    // ─── Students: teachers can read/write, others read ────────
+    // ─── Students: teachers restricted to assigned classes ─────
     match /students/{doc} {
       allow read: if isAuth();
-      allow write: if isAuth() && getRole() in ['teacher'];
+      allow write: if isAuth() && (
+        getRole() == 'admin' ||
+        isTeacherAssignedClass(request.resource.data.className)
+      );
     }
 
-    // ─── Results: teachers can read/write, others read ──────────
+    // ─── Results: teachers restricted to assigned classes ───────
     match /results/{doc} {
       allow read: if isAuth();
-      allow write: if isAuth() && getRole() in ['teacher'];
+      allow write: if isAuth() && (
+        getRole() == 'admin' ||
+        isTeacherAssignedClass(request.resource.data.className)
+      );
     }
 
-    // ─── Attendance: teachers can read/write, others read ──────
+    // ─── Attendance: teachers restricted to assigned classes ────
     match /attendance/{doc} {
       allow read: if isAuth();
-      allow write: if isAuth() && getRole() in ['teacher'];
+      allow write: if isAuth() && (
+        getRole() == 'admin' ||
+        isTeacherAssignedClass(request.resource.data.className)
+      );
     }
 
     // ─── Promotions: teachers can read, admins can write ────────

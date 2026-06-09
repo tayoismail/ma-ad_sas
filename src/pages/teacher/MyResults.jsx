@@ -30,7 +30,12 @@ export default function TeacherMyResults() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
-  const [useAttendance, setUseAttendance] = useState(false);
+  const [useAttendance, setUseAttendance] = useState(() => {
+    try { return localStorage.getItem('maad_useAttendance') === 'true'; } catch { return false; }
+  });
+  const [useTest, setUseTest] = useState(() => {
+    try { return localStorage.getItem('maad_useTest') === 'true'; } catch { return false; }
+  });
   const latestFilterRef = useRef('');
 
   useEffect(() => { loadSettings(); loadClasses(); loadSubjects(); loadStudents();
@@ -81,10 +86,28 @@ export default function TeacherMyResults() {
       setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: '' } }));
       return;
     }
-    const maxMap = { examScore: 70, testScore: 30, attendance: 100 };
-    const max = maxMap[field] ?? 70;
+    const maxMap = { examScore: useTest ? 70 : 100, testScore: 30, attendance: 100 };
+    const max = maxMap[field] ?? 100;
     const num = Math.max(0, Math.min(max, Number(value) || 0));
     setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: num } }));
+  };
+
+  const handleToggleUseTest = () => {
+    setUseTest((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('maad_useTest', String(next)); } catch {}
+      if (next) {
+        setScores((s) => {
+          const updated = { ...s };
+          for (const id of Object.keys(updated)) {
+            const exam = Number(updated[id]?.examScore) || 0;
+            if (exam > 70) updated[id] = { ...updated[id], examScore: 70 };
+          }
+          return updated;
+        });
+      }
+      return next;
+    });
   };
 
   const handleSaveAll = async () => {
@@ -102,6 +125,8 @@ export default function TeacherMyResults() {
         subjectId: filters.subjectId, subjectName: subj?.name || '',
         session: filters.session, semester: Number(filters.semester), examScore: exam, testScore: test, total,
         attendance: useAttendance ? (Number(scores[s.studentId]?.attendance) || null) : null,
+        examScore: exam,
+        testScore: useTest ? test : null,
         ...gradeInfo,
         enteredBy: user?.id, enteredAt: new Date().toISOString(),
       };
@@ -159,9 +184,13 @@ export default function TeacherMyResults() {
             <span>Session: <strong>{filters.session}</strong></span>
             <span>Semester: <strong>{semesterLabel(Number(filters.semester))}</strong></span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <input type="checkbox" checked={useAttendance} onChange={() => setUseAttendance(!useAttendance)} className="rounded border-gray-300" />
+              <input type="checkbox" checked={useTest} onChange={handleToggleUseTest} className="rounded border-gray-300" />
+              Include CA (Continuous Assessment)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input type="checkbox" checked={useAttendance} onChange={() => { const next = !useAttendance; setUseAttendance(next); try { localStorage.setItem('maad_useAttendance', String(next)); } catch {} }} className="rounded border-gray-300" />
               Include Attendance %
             </label>
           </div>
@@ -179,8 +208,8 @@ export default function TeacherMyResults() {
                       <thead className="bg-muted/50">
                         <tr>
                           <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Student</th>
-                          <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Exam</th>
-                          <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">CA (30)</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Exam ({useTest ? 70 : 100})</th>
+                          {useTest && <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">CA (30)</th>}
                           {useAttendance && <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Attend %</th>}
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Total</th>
                           <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Grade</th>
@@ -207,15 +236,17 @@ export default function TeacherMyResults() {
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-center">
-                                  <input type="number" min="0" max="70" value={exam}
+                                  <input type="number" min="0" max={useTest ? 70 : 100} value={exam}
                                    onChange={(e) => updateScore(s.studentId, 'examScore', e.target.value)}
                                    className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                                </td>
+                               {useTest && (
                                <td className="px-4 py-3 text-center">
                                  <input type="number" min="0" max="30" value={test}
                                    onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
                                    className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
                                </td>
+                               )}
                                {useAttendance && (
                                  <td className="px-4 py-3 text-center">
                                    <input type="number" min="0" max="100" value={scores[s.studentId]?.attendance ?? ''}
