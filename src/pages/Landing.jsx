@@ -47,6 +47,10 @@ export default function Landing() {
             بسم الله الرحمن الرحيم
           </p>
 
+          <p className="text-xl sm:text-2xl font-black text-white/80 mb-3 sm:mb-4" dir="rtl" style={{ fontFamily: "'Noto Naskh Arabic', 'Traditional Arabic', serif" }}>
+            مَعْهَدُ أَهْلِ الْآثَارِ
+          </p>
+
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-1 sm:mb-2 tracking-tight">
             MA'AD AHLIL
           </h1>
@@ -55,9 +59,8 @@ export default function Landing() {
             AATHAR
           </h1>
 
-          <p className="text-lg sm:text-2xl font-bold text-white/80 max-w-2xl mx-auto leading-relaxed px-2">
-            Elevating The Religion with Qur'an and Sunnah<br />
-            <span className="text-white/60 font-semibold">Upon the way of the Salaf.</span>
+          <p className="text-xl sm:text-2xl font-bold text-white/80 max-w-2xl mx-auto leading-relaxed px-2" dir="rtl" style={{ fontFamily: "'Noto Naskh Arabic', 'Traditional Arabic', serif" }}>
+            التمسُّكُ بالكتابِ والسُّنَّةِ بإخلاصٍ
           </p>
         </div>
 
