@@ -177,17 +177,17 @@ export default function TeacherMyAttendance() {
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
-                              {['present', 'absent', 'late'].map((s) => (
-                                <button key={s}
-                                  onClick={() => setStatus(s.studentId, s)}
+                              {['present', 'absent', 'late'].map((statusType) => (
+                                <button key={statusType}
+                                  onClick={() => setStatus(s.studentId, statusType)}
                                   className={`p-2 rounded-xl transition-all ${
-                                    status === s
-                                      ? s === 'present' ? 'bg-emerald-500/20 text-emerald-600 ring-2 ring-emerald-500/30'
-                                        : s === 'absent' ? 'bg-red-500/20 text-red-600 ring-2 ring-red-500/30'
+                                    status === statusType
+                                      ? statusType === 'present' ? 'bg-emerald-500/20 text-emerald-600 ring-2 ring-emerald-500/30'
+                                        : statusType === 'absent' ? 'bg-red-500/20 text-red-600 ring-2 ring-red-500/30'
                                         : 'bg-amber-500/20 text-amber-600 ring-2 ring-amber-500/30'
                                       : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
                                   }`}>
-                                  {s === 'present' ? <CheckCircle2 className="w-5 h-5" /> : s === 'absent' ? <XCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                                  {statusType === 'present' ? <CheckCircle2 className="w-5 h-5" /> : statusType === 'absent' ? <XCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                                 </button>
                               ))}
                             </div>

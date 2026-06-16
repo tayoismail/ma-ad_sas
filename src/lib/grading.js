@@ -47,7 +47,7 @@ export function validateGradingScale(scale) {
 }
 
 export function calculateTotal(examScore = 0, testScore = 0) {
-  const exam = Number(examScore) || 0;
-  const test = Number(testScore) || 0;
+  const exam = Math.max(0, Number(examScore) || 0);
+  const test = Math.max(0, Number(testScore) || 0);
   return Math.min(100, exam + test);
 }

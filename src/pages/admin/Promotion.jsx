@@ -28,6 +28,12 @@ export default function PromotionPage() {
   const [calcLoading, setCalcLoading] = useState(false);
   const [confirmAllOpen, setConfirmAllOpen] = useState(false);
 
+  const confirmed = (studentId) => promotions.find((p) => p.studentId === studentId && p.status === 'confirmed');
+
+  const promoted = cumulativeData.filter((d) => d.shouldPromote);
+  const repeating = cumulativeData.filter((d) => !d.shouldPromote && d.cumulative !== null);
+  const noData = cumulativeData.filter((d) => d.cumulative === null);
+
   const handlePrint = () => {
     const grouped = {};
     promoted.forEach((d) => {
@@ -116,12 +122,6 @@ export default function PromotionPage() {
     }
     setCalcLoading(false);
   };
-
-  const confirmed = (studentId) => promotions.find((p) => p.studentId === studentId && p.status === 'confirmed');
-
-  const promoted = cumulativeData.filter((d) => d.shouldPromote);
-  const repeating = cumulativeData.filter((d) => !d.shouldPromote && d.cumulative !== null);
-  const noData = cumulativeData.filter((d) => d.cumulative === null);
 
   return (
     <div className="min-h-screen bg-slate-300">

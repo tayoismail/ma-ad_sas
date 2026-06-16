@@ -69,6 +69,7 @@ const useAttendanceStore = create((set) => ({
       const key = `${r.studentId}|${r.className}|${r.session}|${r.semester}|${r.date}`;
       existingMap[key] = d.id;
     }
+    let failed = 0;
     for (const r of records) {
       try {
         const key = `${r.studentId}|${r.className}|${r.session}|${r.semester}|${r.date}`;
@@ -78,10 +79,11 @@ const useAttendanceStore = create((set) => ({
           await addDoc(collection(db, 'attendance'), r);
         }
         count++;
-      } catch { /* skip individual record errors */ }
+      } catch { failed++; }
     }
     const all = await getDocs(collection(db, 'attendance'));
     set({ records: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    if (failed > 0) console.warn(`Attendance: ${failed} of ${records.length} records failed to save`);
     return count;
   },
 

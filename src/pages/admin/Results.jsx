@@ -73,7 +73,7 @@ export default function ResultsPage() {
 
   const handleToggleUseTest = () => {
     setUseTest((prev) => {
-      try { localStorage.setItem('maad_useTest', String(!prev)); } catch {}
+      try { localStorage.setItem('maad_useTest', String(!prev)); } catch { /* silent */ }
       if (!prev) {
         setScores((s) => {
           const next = { ...s };
@@ -147,36 +147,41 @@ export default function ResultsPage() {
     setSaving(true);
     const subj = subjects.find((s) => String(s.id) === String(filters.subjectId));
     const scale = settings?.gradingScale;
-    try {
+    let savedCount = 0;
+    let lastError = null;
     for (const student of classStudents) {
       const s = scores[student.studentId] || {};
       const examScore = Number(s.examScore) || 0;
       const testScore = useTest ? (Number(s.testScore) || 0) : 0;
       const total = calculateTotal(examScore, testScore);
       const gradeInfo = calculateGrade(total, scale);
-      await saveResult({
-        studentId: student.studentId,
-        studentName: student.name,
-        subjectId: filters.subjectId,
-        subjectName: subj?.name || '',
-        className: filters.className,
-        session: filters.session,
-        semester: Number(filters.semester),
-        examScore,
-        testScore: useTest ? testScore : null,
-        attendance: useAttendance ? (Number(s.attendance) || null) : null,
-        total,
-        ...gradeInfo,
-        enteredBy: user?.id,
-        enteredAt: new Date().toISOString(),
-      });
-    }
-    } catch (err) {
-      setError(err.message || 'Failed to save results');
-      setSaving(false);
-      return;
+      try {
+        await saveResult({
+          studentId: student.studentId,
+          studentName: student.name,
+          subjectId: filters.subjectId,
+          subjectName: subj?.name || '',
+          className: filters.className,
+          session: filters.session,
+          semester: Number(filters.semester),
+          examScore,
+          testScore: useTest ? testScore : null,
+          attendance: useAttendance ? (Number(s.attendance) || null) : null,
+          total,
+          ...gradeInfo,
+          enteredBy: user?.id,
+          enteredAt: new Date().toISOString(),
+        });
+        savedCount++;
+      } catch (err) {
+        lastError = err;
+      }
     }
     setSaving(false);
+    if (savedCount === 0 && lastError) {
+      setError(lastError.message || 'Failed to save results');
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -410,7 +415,7 @@ export default function ResultsPage() {
                 Include CA (Continuous Assessment)
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input type="checkbox" checked={useAttendance} onChange={() => { const next = !useAttendance; setUseAttendance(next); try { localStorage.setItem('maad_useAttendance', String(next)); } catch {} }} className="rounded border-gray-300" />
+                <input type="checkbox" checked={useAttendance} onChange={() => { const next = !useAttendance; setUseAttendance(next); try { localStorage.setItem('maad_useAttendance', String(next)); } catch { /* silent */ } }} className="rounded border-gray-300" />
                 Include Attendance %
               </label>
               <div className="flex items-center gap-2 ml-auto">

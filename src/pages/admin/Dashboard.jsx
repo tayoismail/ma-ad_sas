@@ -49,7 +49,6 @@ export default function AdminDashboard() {
       const teachers = allUsers.filter((u) => u.role === 'teacher' && u.teacherSubjects?.length);
       if (!teachers.length || !settings) {
         setPendingTeachers([]);
-        setTeachersLoading(false);
         return;
       }
       const session = settings.currentSession;
@@ -75,17 +74,14 @@ export default function AdminDashboard() {
       }
       setPendingTeachers(pending);
     } catch { /* ignore */ }
-    setTeachersLoading(false);
   }, [settings, subjects]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (settings && subjects.length) {
-      loadPendingTeachers();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadPendingTeachers().finally(() => setTeachersLoading(false));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings, subjects]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  }, [settings, subjects, loadPendingTeachers]);
 
   const stats = [
     { label: 'Total Students', value: students.length || '--', icon: Users, cardBg: 'from-blue-600 to-indigo-700' },

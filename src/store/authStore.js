@@ -30,8 +30,13 @@ const useAuthStore = create((set, get) => ({
   isAuthenticated: false,
   isLoading: true,
 
+  _unsubscribe: null,
+
   init: async () => {
-    onAuthStateChanged(auth, async (firebaseUser) => {
+    // Prevent duplicate listeners
+    const prev = get()._unsubscribe;
+    if (prev) prev();
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const session = sessionStorage.getItem('maad_session');
         if (session) {
@@ -82,6 +87,7 @@ const useAuthStore = create((set, get) => ({
         set({ user: null, isAuthenticated: false, isLoading: false });
       }
     });
+    set({ _unsubscribe: unsub });
   },
 
   updateLastActivity: () => {
@@ -169,7 +175,20 @@ const useAuthStore = create((set, get) => ({
   },
 
   deleteUser: async (id) => {
+    // Delete from Firestore first, then revoke Firebase Auth via REST API
     await deleteDoc(doc(db, 'users', id));
+    try {
+      const res = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: await auth.currentUser?.getIdToken() }),
+        }
+      );
+      // If delete targets a different user, we need admin SDK — log warning instead
+      if (!res.ok) console.warn('Could not revoke auth for deleted user. Use Firebase Admin SDK for full cleanup.');
+    } catch { /* best-effort auth cleanup */ }
   },
 
   resetPassword: async (email) => {

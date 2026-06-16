@@ -239,23 +239,23 @@ export default function TranscriptPage() {
             const sem2 = sessionResults.filter((r) => r.semester === 2);
             const className = sessionResults[0]?.className || student.className;
             const totalSubjects = subjects.filter((s) => s.className === className).length;
+            const attSem1 = calcAttendancePct(student.studentId, session, 1);
+            const attSem2 = calcAttendancePct(student.studentId, session, 2);
             const sem1Avg = calcAvg(sem1, totalSubjects, settings, attSem1);
             const sem2Avg = calcAvg(sem2, totalSubjects, settings, attSem2);
             const sessCum = cumulativeRecords.find((c) => c.session === session);
             const cumAvg = sessCum?.cumulative ?? ((sem1Avg !== null && sem2Avg !== null) ? Math.round(((sem1Avg + sem2Avg) / 2) * 100) / 100 : (sem1Avg ?? sem2Avg));
             const promo = promoRecords.find((p) => p.session === session);
-            const attSem1 = calcAttendancePct(student.studentId, session, 1);
-            const attSem2 = calcAttendancePct(student.studentId, session, 2);
 
             const subjectRows = (() => {
-              const subjects = {};
+              const grouped = {};
               sessionResults.forEach((r) => {
-                if (!subjects[r.subjectName]) subjects[r.subjectName] = {};
-                subjects[r.subjectName][`sem${r.semester}`] = r;
+                if (!grouped[r.subjectName]) grouped[r.subjectName] = {};
+                grouped[r.subjectName][`sem${r.semester}`] = r;
               });
               const allSubjectNames = [...new Set(sessionResults.map((r) => r.subjectName))];
               const ordered = allSubjectNames.sort();
-              return ordered.map((name) => ({ name, data: subjects[name] }));
+              return ordered.map((name) => ({ name, data: grouped[name] }));
             })();
 
             return (

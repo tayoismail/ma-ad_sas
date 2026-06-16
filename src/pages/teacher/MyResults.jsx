@@ -95,7 +95,7 @@ export default function TeacherMyResults() {
   const handleToggleUseTest = () => {
     setUseTest((prev) => {
       const next = !prev;
-      try { localStorage.setItem('maad_useTest', String(next)); } catch {}
+      try { localStorage.setItem('maad_useTest', String(next)); } catch { /* silent */ }
       if (next) {
         setScores((s) => {
           const updated = { ...s };
@@ -132,9 +132,13 @@ export default function TeacherMyResults() {
         enteredBy: user?.id, enteredAt: new Date().toISOString(),
       };
     });
-    const ok = await saveResults(records);
-    if (ok) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
-    else setError('Failed to save results');
+    try {
+      const ok = await saveResults(records);
+      if (ok > 0) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+      else setError('No records were saved. Check if the semester is finalized.');
+    } catch (err) {
+      setError(err.message || 'Failed to save results');
+    }
     setSaving(false);
   };
 
@@ -191,7 +195,7 @@ export default function TeacherMyResults() {
               Include CA (Continuous Assessment)
             </label>
             <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <input type="checkbox" checked={useAttendance} onChange={() => { const next = !useAttendance; setUseAttendance(next); try { localStorage.setItem('maad_useAttendance', String(next)); } catch {} }} className="rounded border-gray-300" />
+              <input type="checkbox" checked={useAttendance} onChange={() => { const next = !useAttendance; setUseAttendance(next); try { localStorage.setItem('maad_useAttendance', String(next)); } catch { /* silent */ } }} className="rounded border-gray-300" />
               Include Attendance %
             </label>
           </div>

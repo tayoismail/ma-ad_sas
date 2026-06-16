@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Save, School,
   Calendar, Layers, Loader2, CheckCircle2,
-  AlertCircle, Bell, Menu,
+  AlertCircle, Menu,
   Lock, Unlock, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -132,9 +132,8 @@ export default function SettingsPage() {
               <h1 className="text-lg font-semibold text-card-foreground">School Settings</h1>
             </div>
             <div className="flex items-center gap-3">
-              <button className="relative p-2 rounded-xl hover:bg-gray-100 text-muted-foreground">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+              <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <div className="text-right hidden sm:block">

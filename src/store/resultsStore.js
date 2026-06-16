@@ -24,12 +24,16 @@ const useResultsStore = create((set) => ({
   loading: true,
 
   loadResults: async (filters = {}) => {
-    let snapshot = await getDocs(collection(db, 'results'));
-    let results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    if (filters.className) results = results.filter((r) => r.className === filters.className);
-    if (filters.session) results = results.filter((r) => r.session === filters.session);
-    if (filters.semester) results = results.filter((r) => r.semester === Number(filters.semester));
-    set({ results, loading: false });
+    try {
+      let snapshot = await getDocs(collection(db, 'results'));
+      let results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (filters.className) results = results.filter((r) => r.className === filters.className);
+      if (filters.session) results = results.filter((r) => r.session === filters.session);
+      if (filters.semester) results = results.filter((r) => r.semester === Number(filters.semester));
+      set({ results, loading: false });
+    } catch {
+      set({ loading: false });
+    }
   },
 
   getResultsForClass: async (className, session, semester, subjectId) => {
