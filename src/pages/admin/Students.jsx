@@ -154,6 +154,7 @@ export default function StudentsPage() {
     {
       key: 'sex',
       label: 'Sex',
+      hideOnMobile: true,
       render: (row) => (
         <span className="text-sm text-gray-600">{row.sex || '--'}</span>
       ),
@@ -161,6 +162,7 @@ export default function StudentsPage() {
     {
       key: 'parentName',
       label: 'Parent',
+      hideOnMobile: true,
       render: (row) => (
         <div className="text-sm">
           <p className="text-gray-700">{row.parentName || '--'}</p>
@@ -171,7 +173,7 @@ export default function StudentsPage() {
     {
       key: 'actions',
       label: 'Actions',
-      width: '260px',
+      width: '180px',
       sortable: false,
       render: (row) => (
         <div className="flex items-center gap-1">

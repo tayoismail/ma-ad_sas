@@ -47,7 +47,7 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
               {columns.map((col) => (
                 <TableHead
                   key={col.key}
-                  className={col.sortable !== false ? 'cursor-pointer select-none hover:text-gray-900 transition-colors' : ''}
+                  className={`${col.sortable !== false ? 'cursor-pointer select-none hover:text-gray-900 transition-colors' : ''}${col.hideOnMobile ? ' hidden sm:table-cell' : ''}`}
                   onClick={() => col.sortable !== false && handleSort(col.key)}
                   style={col.width ? { width: col.width } : {}}
                 >
@@ -72,7 +72,7 @@ export default function DataTable({ columns, data, pageSize = 10 }) {
               paginated.map((row, i) => (
                 <TableRow key={row.id || i}>
                   {columns.map((col) => (
-                    <TableCell key={col.key}>
+                    <TableCell key={col.key} className={col.hideOnMobile ? ' hidden sm:table-cell' : ''}>
                       {col.render ? col.render(row) : row[col.key]}
                     </TableCell>
                   ))}
