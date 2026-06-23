@@ -285,12 +285,12 @@ export default function TranscriptPage() {
                     <thead>
                       <tr className="bg-gray-50 border-y border-gray-200">
                         <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 uppercase w-1/4">Subject</th>
-                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Exam</th>
-                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">CA</th>
+                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Exam</th>
+                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">CA</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Total</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Grade</th>
-                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Exam</th>
-                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">CA</th>
+                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Exam</th>
+                        <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">CA</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Total</th>
                         <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Grade</th>
                       </tr>
@@ -307,8 +307,8 @@ export default function TranscriptPage() {
                       {subjectRows.map(({ name, data }) => (
                         <tr key={name} className="border-b border-gray-100">
                           <td className="px-3 py-2.5 font-medium text-gray-900 text-xs">{name}</td>
-                          <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem1?.examScore ?? '--'}</td>
-                          <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem1?.testScore ?? '--'}</td>
+                          <td className="px-3 py-2.5 text-center text-xs text-gray-700 hidden md:table-cell">{data.sem1?.examScore ?? '--'}</td>
+                          <td className="px-3 py-2.5 text-center text-xs text-gray-700 hidden md:table-cell">{data.sem1?.testScore ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-900">{data.sem1?.total ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center">
                             {data.sem1?.grade ? (
@@ -318,8 +318,8 @@ export default function TranscriptPage() {
                               </div>
                             ) : '--'}
                           </td>
-                          <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem2?.examScore ?? '--'}</td>
-                          <td className="px-3 py-2.5 text-center text-xs text-gray-700">{data.sem2?.testScore ?? '--'}</td>
+                          <td className="px-3 py-2.5 text-center text-xs text-gray-700 hidden md:table-cell">{data.sem2?.examScore ?? '--'}</td>
+                          <td className="px-3 py-2.5 text-center text-xs text-gray-700 hidden md:table-cell">{data.sem2?.testScore ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-900">{data.sem2?.total ?? '--'}</td>
                           <td className="px-3 py-2.5 text-center">
                             {data.sem2?.grade ? (

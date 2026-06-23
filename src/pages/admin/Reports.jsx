@@ -246,9 +246,9 @@ export default function ReportsPage() {
                   <table className="w-full text-sm border-collapse">
                     <thead>
                       <tr className="bg-gray-50 border-y border-gray-200">
-                        <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">#</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase hidden sm:table-cell">#</th>
                         <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Student</th>
-                        <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">ID</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase hidden md:table-cell">ID</th>
                         {classSubjects.map((s) => (
                           <th key={s} className="text-center px-2 py-2.5 text-xs font-bold text-gray-700 uppercase min-w-[80px]">{s}</th>
                         ))}
@@ -267,9 +267,9 @@ export default function ReportsPage() {
                         const promo = Number(classFilters.semester) === 2 ? promotionStatus(row.avg) : null;
                         return (
                           <tr key={row.student.id} className="border-b border-gray-200 hover:bg-gray-50/50">
-                            <td className="px-3 py-2.5 text-gray-500 text-xs">{i + 1}</td>
+                            <td className="px-3 py-2.5 text-gray-500 text-xs hidden sm:table-cell">{i + 1}</td>
                             <td className="px-3 py-2.5 font-semibold text-gray-900">{row.student.name}</td>
-                            <td className="px-3 py-2.5 text-gray-600 text-xs font-mono">{row.student.studentId || '--'}</td>
+                            <td className="px-3 py-2.5 text-gray-600 text-xs font-mono hidden md:table-cell">{row.student.studentId || '--'}</td>
                             {classSubjects.map((subj) => {
                               const sr = row.subjectScores[classSubjects.indexOf(subj)];
                               return <td key={subj} className="px-2 py-2.5 text-center font-semibold text-gray-800">{sr?.total ?? '--'}</td>;
@@ -391,13 +391,13 @@ export default function ReportsPage() {
                   <table className="w-full text-sm border-collapse">
                     <thead>
                       <tr className="bg-gray-50 border-y border-gray-200">
-                        <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">#</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase hidden sm:table-cell">#</th>
                         <th className="text-left px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Subject</th>
-                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Exam Score</th>
-                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">CA Score</th>
+                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase hidden md:table-cell">Exam Score</th>
+                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase hidden md:table-cell">CA Score</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Total</th>
                         <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Grade</th>
-                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase">Remark (الوصف)</th>
+                        <th className="text-center px-3 py-2.5 text-xs font-bold text-gray-700 uppercase hidden sm:table-cell">Remark</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -408,15 +408,15 @@ export default function ReportsPage() {
                         const g = gradeInfo(r.total || 0);
                         return (
                           <tr key={r.id || i} className="border-b border-gray-200">
-                            <td className="px-3 py-2.5 text-gray-500 text-xs">{i + 1}</td>
+                            <td className="px-3 py-2.5 text-gray-500 text-xs hidden sm:table-cell">{i + 1}</td>
                             <td className="px-3 py-2.5 font-semibold text-gray-900">{r.subjectName}</td>
-                            <td className="px-3 py-2.5 text-center font-semibold text-gray-800">{r.examScore ?? '--'}</td>
-                            <td className="px-3 py-2.5 text-center font-semibold text-gray-800">{r.testScore ?? '--'}</td>
+                            <td className="px-3 py-2.5 text-center font-semibold text-gray-800 hidden md:table-cell">{r.examScore ?? '--'}</td>
+                            <td className="px-3 py-2.5 text-center font-semibold text-gray-800 hidden md:table-cell">{r.testScore ?? '--'}</td>
                             <td className="px-3 py-2.5 text-center font-bold text-gray-900">{r.total ?? '--'}</td>
                             <td className="px-3 py-2.5 text-center">
                               <span className={`px-2 py-0.5 rounded text-xs font-semibold ${g.color} ${g.bg}`}>{r.grade || g.grade}</span>
                             </td>
-                            <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-700" dir="rtl">{g.remarkAr || '--'}</td>
+                            <td className="px-3 py-2.5 text-center text-xs font-semibold text-gray-700 hidden sm:table-cell">{g.remarkAr || '--'}</td>
                           </tr>
                         );
                       })}
