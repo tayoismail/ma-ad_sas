@@ -220,7 +220,7 @@ export default function StudentsPage() {
       <AdminSidebar activePath="/admin/students" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">
@@ -270,19 +270,19 @@ export default function StudentsPage() {
           )}
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">All Students</h2>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-xl font-semibold text-gray-900 truncate">All Students</h2>
               <p className="text-sm text-gray-500 mt-0.5">{students.length} total students</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 shrink-0">
               {user?.role !== 'teacher' && (
                 <>
-                  <Button variant="outline" onClick={() => setShowUpload(!showUpload)}>
-                    <Upload className="w-4 h-4 mr-2" /> Mass Upload
+                  <Button variant="outline" size="sm" onClick={() => setShowUpload(!showUpload)}>
+                    <Upload className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Mass Upload</span><span className="sm:hidden">Upload</span>
                   </Button>
-                  <Button onClick={() => navigate('/admin/students/new')} className="gradient-accent text-white border-0 shadow-lg shadow-purple-500/20">
-                    <Plus className="w-4 h-4 mr-2" /> Add Student
+                  <Button size="sm" onClick={() => navigate('/admin/students/new')} className="gradient-accent text-white border-0 shadow-lg shadow-purple-500/20">
+                    <Plus className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Add Student</span><span className="sm:hidden">Add</span>
                   </Button>
                 </>
               )}

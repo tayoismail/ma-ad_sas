@@ -55,7 +55,7 @@ export default function TeacherDashboard() {
     <div className="min-h-screen bg-slate-300">
       <AdminSidebar activePath="/teacher/dashboard" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="lg:pl-72">
-      <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
+      <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>

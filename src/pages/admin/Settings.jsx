@@ -120,7 +120,7 @@ export default function SettingsPage() {
       <AdminSidebar activePath="/admin/settings" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">

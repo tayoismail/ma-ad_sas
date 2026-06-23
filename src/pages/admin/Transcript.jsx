@@ -171,7 +171,7 @@ export default function TranscriptPage() {
 
   return (
     <div className="min-h-screen bg-slate-300">
-      <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border print:hidden">
+      <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm print:hidden">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground">

@@ -67,7 +67,7 @@ export default function ParentDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-300">
-      <header className="sticky top-0 z-30 bg-card/60 backdrop-blur-xl border-b border-border">
+      <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm border-b border-border">
         <div className="flex items-center justify-between px-4 lg:px-8 h-16">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>

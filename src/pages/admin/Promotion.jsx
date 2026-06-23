@@ -128,7 +128,7 @@ export default function PromotionPage() {
       <AdminSidebar activePath="/admin/promotion" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
@@ -147,15 +147,16 @@ export default function PromotionPage() {
 
         <main className="p-4 lg:p-8 space-y-6">
           <Card className="p-6 bg-card border-border">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Session: {settings?.currentSession || '--'}</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Calculate cumulative averages and process promotions</p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-gray-900 truncate">Session: {settings?.currentSession || '--'}</h2>
+                <p className="text-sm text-gray-500 mt-0.5 truncate">Calculate cumulative averages and process promotions</p>
               </div>
               {user?.role !== 'teacher' && (
-                <Button onClick={handleCalculate} disabled={calcLoading} className="gradient-accent text-white border-0 shadow-lg shadow-purple-500/20">
+                <Button onClick={handleCalculate} disabled={calcLoading} className="gradient-accent text-white border-0 shadow-lg shadow-purple-500/20 shrink-0">
                   {calcLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                  {calcLoading ? 'Calculating...' : 'Calculate Cumulative'}
+                  <span className="hidden sm:inline">{calcLoading ? 'Calculating...' : 'Calculate Cumulative'}</span>
+                  <span className="sm:hidden">{calcLoading ? 'Calculating...' : 'Calculate'}</span>
                 </Button>
               )}
             </div>

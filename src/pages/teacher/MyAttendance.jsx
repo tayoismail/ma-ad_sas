@@ -164,19 +164,19 @@ export default function TeacherMyAttendance() {
               </div>
               {filters.className && (
                 <>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <CalendarDays className="w-5 h-5 text-primary shrink-0" />
-                      <span className="text-sm font-medium text-card-foreground">{dateStr}</span>
+                      <span className="text-sm font-medium text-card-foreground truncate hidden sm:inline">{dateStr}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={() => changeDate(-1)}><ChevronLeft className="w-4 h-4" /></Button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button variant="outline" size="sm" onClick={() => changeDate(-1)} className="px-2"><ChevronLeft className="w-4 h-4" /></Button>
                       <span className="text-sm font-medium text-card-foreground min-w-[100px] text-center">{selectedDate}</span>
-                      <Button variant="outline" size="sm" onClick={() => changeDate(1)}><ChevronRight className="w-4 h-4" /></Button>
+                      <Button variant="outline" size="sm" onClick={() => changeDate(1)} className="px-2"><ChevronRight className="w-4 h-4" /></Button>
                     </div>
-                    <div className="flex gap-1">
-                      <Button variant="outline" size="sm" onClick={() => markAll('present')} disabled={saving} className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 text-xs sm:text-sm">All Present</Button>
-                      <Button variant="outline" size="sm" onClick={() => markAll('absent')} disabled={saving} className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm">All Absent</Button>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="outline" size="sm" onClick={() => markAll('present')} disabled={saving} className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 text-xs sm:text-sm px-2">All Present</Button>
+                      <Button variant="outline" size="sm" onClick={() => markAll('absent')} disabled={saving} className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm px-2">All Absent</Button>
                     </div>
                   </div>
                   <Card className="overflow-hidden border-border">
