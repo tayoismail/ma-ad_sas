@@ -364,8 +364,8 @@ export default function StudentsPage() {
           )}
 
           {/* Search & Filter */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="relative flex-1 sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder="Search by name, ID, or parent..."
@@ -377,7 +377,7 @@ export default function StudentsPage() {
             <select
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="h-11 rounded-xl border-2 border-border/50 bg-white/60 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 min-w-[160px]"
+              className="h-11 rounded-xl border-2 border-border/50 bg-white/60 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 min-w-[160px]"
             >
               <option value="">All Classes</option>
               {filteredClasses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
