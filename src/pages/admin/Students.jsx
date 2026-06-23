@@ -138,7 +138,6 @@ export default function StudentsPage() {
           </div>
           <div>
             <p className="font-medium text-gray-900">{row.name}</p>
-            {row.arabicName && <p className="text-xs text-gray-400" dir="rtl">{row.arabicName}</p>}
           </div>
         </div>
       ),

@@ -268,7 +268,7 @@ export default function ReportsPage() {
                         return (
                           <tr key={row.student.id} className="border-b border-gray-200 hover:bg-gray-50/50">
                             <td className="px-3 py-2.5 text-gray-500 text-xs">{i + 1}</td>
-                            <td className="px-3 py-2.5 font-semibold text-gray-900" dir="rtl">{row.student.arabicName || row.student.name}</td>
+                            <td className="px-3 py-2.5 font-semibold text-gray-900">{row.student.name}</td>
                             <td className="px-3 py-2.5 text-gray-600 text-xs font-mono">{row.student.studentId || '--'}</td>
                             {classSubjects.map((subj) => {
                               const sr = row.subjectScores[classSubjects.indexOf(subj)];
@@ -379,7 +379,6 @@ export default function ReportsPage() {
                   <div className="p-5 border-b border-gray-100">
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student Name</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.name}</p></div>
-                      <div dir="rtl"><p className="text-[10px] text-gray-400 uppercase tracking-wider">الاسم</p><p className="text-base font-semibold text-gray-900">{selectedStudent.arabicName || '--'}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Sex</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.sex || '--'}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student ID</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.studentId}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Class</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.className}</p></div>

@@ -116,9 +116,6 @@ export default function StudentProfile() {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-gray-900">{student.name}</h2>
-                  {student.arabicName && (
-                    <p className="text-lg text-gray-500 mt-0.5" dir="rtl">{student.arabicName}</p>
-                  )}
                   <div className="flex flex-wrap gap-2 mt-3">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       <School className="w-3 h-3" /> {student.className}

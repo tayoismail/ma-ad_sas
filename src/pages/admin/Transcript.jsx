@@ -216,7 +216,6 @@ export default function TranscriptPage() {
           <div className="p-6 border-b border-gray-100">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student Name</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.name}</p></div>
-              <div dir="rtl"><p className="text-[10px] text-gray-400 uppercase tracking-wider">الاسم</p><p className="text-base font-semibold text-gray-900 mt-0.5">{student.arabicName || '--'}</p></div>
               <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student ID</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.studentId || '--'}</p></div>
               <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Current Class</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.className}</p></div>
               <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Date of Birth</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.dateOfBirth || '--'}</p></div>
