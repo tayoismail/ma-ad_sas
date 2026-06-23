@@ -30,6 +30,7 @@ export default function StudentsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('');
+  const [sexFilter, setSexFilter] = useState('');
   const [showUpload, setShowUpload] = useState(false);
   const [uploadData, setUploadData] = useState([]);
   const [uploadResult, setUploadResult] = useState(null);
@@ -65,9 +66,10 @@ export default function StudentsPage() {
         s.studentId?.toLowerCase().includes(search.toLowerCase()) ||
         s.parentName?.toLowerCase().includes(search.toLowerCase());
       const matchClass = !classFilter || s.className === classFilter;
-      return matchSearch && matchClass;
+      const matchSex = !sexFilter || s.sex === sexFilter;
+      return matchSearch && matchClass && matchSex;
     });
-  }, [students, search, classFilter]);
+  }, [students, search, classFilter, sexFilter]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -379,6 +381,15 @@ export default function StudentsPage() {
             >
               <option value="">All Classes</option>
               {filteredClasses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+            <select
+              value={sexFilter}
+              onChange={(e) => setSexFilter(e.target.value)}
+              className="h-11 rounded-xl border-2 border-border/50 bg-white/60 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 min-w-[120px]"
+            >
+              <option value="">All Sex</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
             </select>
           </div>
 
