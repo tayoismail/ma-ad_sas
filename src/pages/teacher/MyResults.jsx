@@ -226,12 +226,100 @@ export default function TeacherMyResults() {
                 </Card>
               ) : (
                 <Card className="overflow-hidden border-border">
+                  <div className="p-4 border-b border-border">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Award className="w-5 h-5 text-primary shrink-0" />
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-card-foreground text-sm sm:text-base truncate">
+                            {filters.className} — {subjects.find((s) => String(s.id) === String(filters.subjectId))?.name}
+                          </h3>
+                          <p className="text-xs text-muted-foreground truncate">{semesterLabel(Number(filters.semester))} · {filters.session}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-sm text-muted-foreground hidden sm:inline">{classStudents.length} students</span>
+                        <Button size="sm" onClick={handleSaveAll} disabled={saving} className="gradient-accent text-white border-0">
+                          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          <span className="hidden sm:inline">Save All</span>
+                          <span className="sm:hidden">Save</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                   <div className="p-3 border-b border-border">
                     <input type="text" value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)}
                       placeholder="Search by name or ID..."
                       className="w-full sm:w-72 h-10 rounded-xl border-2 border-border/50 bg-white/80 px-4 text-sm focus:outline-none focus:border-primary/40" />
                   </div>
-                  <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                  {/* Mobile card layout */}
+                  <div className="sm:hidden space-y-3 p-3">
+                    {classStudents.length === 0 && (
+                      <div className="text-center py-8">
+                        <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No students found</p>
+                      </div>
+                    )}
+                    {classStudents.map((s) => {
+                      const exam = scores[s.studentId]?.examScore ?? '';
+                      const test = scores[s.studentId]?.testScore ?? '';
+                      const total = calculateTotal(Number(exam) || 0, Number(test) || 0);
+                      const g = calculateGrade(total, settings?.gradingScale);
+                      const gs = gradeStyle(g.grade);
+                      return (
+                        <div key={s.id} className="bg-white/50 rounded-xl border border-white/10 p-3">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
+                                {s.name?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-card-foreground text-sm">{s.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <p className="text-xs font-semibold text-card-foreground">{s.studentId}</p>
+                                  {s.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${s.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{s.sex}</span>}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-3 py-1 rounded-lg text-sm font-bold border ${gs.bg} ${gs.text}`}>{g.grade}</span>
+                              <span className="text-base font-bold text-card-foreground">{total}</span>
+                            </div>
+                          </div>
+                          <div className={`grid ${useTest && useAttendance ? 'grid-cols-3' : useTest || useAttendance ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+                            <div>
+                              <label className="text-[10px] font-medium text-muted-foreground uppercase">Exam ({useTest ? 70 : 100})</label>
+                              <input type="number" min="0" max={useTest ? 70 : 100} value={exam}
+                                onChange={(e) => updateScore(s.studentId, 'examScore', e.target.value)}
+                                style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                className="w-full h-10 text-center rounded-lg border-2 border-primary/30 text-sm font-semibold focus:outline-none focus:border-primary/40 mt-0.5" />
+                            </div>
+                            {useTest && (
+                              <div>
+                                <label className="text-[10px] font-medium text-muted-foreground uppercase">CA (30)</label>
+                                <input type="number" min="0" max="30" value={test}
+                                  onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
+                                  style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                  className="w-full h-10 text-center rounded-lg border-2 border-primary/30 text-sm font-semibold focus:outline-none focus:border-primary/40 mt-0.5" />
+                              </div>
+                            )}
+                            {useAttendance && (
+                              <div>
+                                <label className="text-[10px] font-medium text-muted-foreground uppercase">Attend %</label>
+                                <input type="number" min="0" max="100" value={scores[s.studentId]?.attendance ?? ''}
+                                  onChange={(e) => updateScore(s.studentId, 'attendance', e.target.value)}
+                                  style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                  className="w-full h-10 text-center rounded-lg border-2 border-primary/30 text-sm font-semibold focus:outline-none focus:border-primary/40 mt-0.5" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop table layout */}
+                  <div className="hidden sm:block overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50">
                         <tr>
@@ -294,12 +382,7 @@ export default function TeacherMyResults() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="p-4 border-t border-border flex justify-end">
-                    <Button onClick={handleSaveAll} disabled={saving} className="gradient-accent text-white border-0">
-                      {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                      Save All Results
-                    </Button>
-                  </div>
+
                 </Card>
               )}
             </>

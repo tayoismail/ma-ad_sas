@@ -293,10 +293,10 @@ export default function ResultsPage() {
     XLSX.writeFile(wb, 'results_upload_template.xlsx');
   };
 
-  const gradeBadge = (total) => {
+  const gradeBadge = (total, large) => {
     const g = calculateGrade(total, settings?.gradingScale);
     const s = gradeStyle(g.grade);
-    return <span className={`px-2 py-0.5 rounded text-xs font-medium border ${s.bg} ${s.text}`}>{g.grade}</span>;
+    return <span className={`${large ? 'px-3 py-1 text-sm' : 'px-2 py-0.5 text-xs'} rounded font-bold border ${s.bg} ${s.text}`}>{g.grade}</span>;
   };
 
   return (
@@ -442,24 +442,29 @@ export default function ResultsPage() {
           {/* Score Entry */}
           {filters.className && filters.subjectId && (
             <Card className="overflow-hidden bg-card border-border">
-              <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold text-gray-900">
-                    {filters.className} — {subjects.find((s) => String(s.id) === String(filters.subjectId))?.name}
-                  </h3>
-                  <span className="text-xs text-gray-400">{semesterLabel(filters.semester)} · {filters.session}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">{classStudents.length} students</span>
-                  {isFinalized ? (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-500"><Lock className="w-3.5 h-3.5" /> Finalized</span>
-                  ) : (
-                    <Button size="sm" onClick={handleSaveAll} disabled={saving} className="gradient-accent text-white border-0">
-                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      Save All
-                    </Button>
-                  )}
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Award className="w-5 h-5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                        {filters.className} — {subjects.find((s) => String(s.id) === String(filters.subjectId))?.name}
+                      </h3>
+                      <p className="text-xs text-gray-400 truncate">{semesterLabel(filters.semester)} · {filters.session}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm text-gray-500 hidden sm:inline">{classStudents.length} students</span>
+                    {isFinalized ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-500"><Lock className="w-3.5 h-3.5" /> Finalized</span>
+                    ) : (
+                      <Button size="sm" onClick={handleSaveAll} disabled={saving} className="gradient-accent text-white border-0">
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        <span className="hidden sm:inline">Save All</span>
+                        <span className="sm:hidden">Save</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="p-3 border-b border-white/10">
@@ -468,7 +473,74 @@ export default function ResultsPage() {
                   className="w-full sm:w-72 h-10 rounded-xl border-2 border-border/50 bg-white/80 px-4 pl-9 text-sm focus:outline-none focus:border-primary/40"
                   style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23999\'%3E%3Ccircle cx=\'11\' cy=\'11\' r=\'8\'/><path stroke-linecap=\'round\' stroke-width=\'2\' d=\'M21 21l-4.35-4.35\'/></svg>")', backgroundRepeat: 'no-repeat', backgroundPosition: '12px center', backgroundSize: '16px' }} />
               </div>
-              <div className="overflow-x-auto">
+              {/* Mobile card layout */}
+              <div className="sm:hidden space-y-3 p-3">
+                {classStudents.length === 0 && (
+                  <div className="text-center py-8">
+                    <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400">No students found</p>
+                  </div>
+                )}
+                {classStudents.map((student) => {
+                  const s = scores[student.studentId] || {};
+                  const exam = Number(s.examScore) || 0;
+                  const test = useTest ? (Number(s.testScore) || 0) : 0;
+                  const total = calculateTotal(exam, test);
+                  return (
+                    <div key={student.id} className="bg-white/50 rounded-xl border border-white/10 p-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
+                            {student.name?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 text-sm">{student.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <p className="text-xs font-semibold text-gray-600">{student.studentId}</p>
+                              {student.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${student.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{student.sex}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {gradeBadge(total, true)}
+                          <span className="text-base font-bold text-gray-900">{total}</span>
+                        </div>
+                      </div>
+                      <div className={`grid ${useTest && useAttendance ? 'grid-cols-3' : useTest || useAttendance ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+                        <div>
+                          <label className="text-[10px] font-medium text-gray-500 uppercase">Exam ({useTest ? 70 : 100})</label>
+                          <Input type="number" min={0} max={useTest ? 70 : 100} value={s.examScore ?? ''}
+                            onChange={(e) => updateScore(student.studentId, 'examScore', e.target.value)}
+                            disabled={isFinalized}
+                            style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                            className="w-full h-10 text-center text-sm font-semibold border-primary/30 mt-0.5" />
+                        </div>
+                        {useTest && (
+                          <div>
+                            <label className="text-[10px] font-medium text-gray-500 uppercase">CA (30)</label>
+                            <Input type="number" min={0} max={30} value={s.testScore ?? ''}
+                              onChange={(e) => updateScore(student.studentId, 'testScore', e.target.value)}
+                              style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                              className="w-full h-10 text-center text-sm font-semibold border-primary/30 mt-0.5" />
+                          </div>
+                        )}
+                        {useAttendance && (
+                          <div>
+                            <label className="text-[10px] font-medium text-gray-500 uppercase">Attend %</label>
+                            <Input type="number" min={0} max={100} value={s.attendance ?? ''}
+                              onChange={(e) => updateScore(student.studentId, 'attendance', e.target.value)}
+                              style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                              className="w-full h-10 text-center text-sm font-semibold border-primary/30 mt-0.5" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop table layout */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-white/40 border-b border-white/10">
