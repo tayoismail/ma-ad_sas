@@ -26,12 +26,13 @@ export default function TeacherMyAttendance() {
   const { settings, loadSettings } = useSettingsStore();
   const { getRecordsForClass, markAttendance, markBulk } = useAttendanceStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [filters, setFilters] = useState({ session: '', semester: '1', className: '' });
+  const [filters, setFilters] = useState({ session: '', semester: '1', className: '', sex: '' });
   const [today] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceMap, setAttendanceMap] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [studentSearch, setStudentSearch] = useState('');
 
   useEffect(() => { loadSettings(); loadClasses(); loadStudents(); loadSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,7 +66,15 @@ export default function TeacherMyAttendance() {
   }, [filters.className, selectedDate, loadAttendance]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const classStudents = students.filter((s) => s.className === filters.className);
+  const classStudents = students.filter((s) => {
+    if (s.className !== filters.className) return false;
+    if (filters.sex && s.sex !== filters.sex) return false;
+    if (studentSearch.trim()) {
+      const q = studentSearch.trim().toLowerCase();
+      return (s.name || '').toLowerCase().includes(q) || (s.studentId || '').toLowerCase().includes(q);
+    }
+    return true;
+  });
 
   const setStatus = async (studentId, targetStatus) => {
     const currentStatus = attendanceMap[studentId] || '';
@@ -105,7 +114,7 @@ export default function TeacherMyAttendance() {
     <div className="min-h-screen bg-slate-300">
       <AdminSidebar activePath="/teacher/attendance" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
@@ -141,6 +150,17 @@ export default function TeacherMyAttendance() {
                   <option value="">Select Class</option>
                   {filteredClasses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                 </select>
+                {filters.className && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-muted-foreground">Sex</label>
+                    <select value={filters.sex} onChange={(e) => setFilters({ ...filters, sex: e.target.value })}
+                      className="h-9 rounded-lg border-2 border-border/50 bg-white/60 px-3 text-sm focus:outline-none focus:border-primary/40">
+                      <option value="">All</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                )}
               </div>
               {filters.className && (
                 <>
@@ -160,6 +180,11 @@ export default function TeacherMyAttendance() {
                     </div>
                   </div>
                   <Card className="overflow-hidden border-border">
+                    <div className="p-3 border-b border-border">
+                      <input type="text" value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)}
+                        placeholder="Search by name or ID..."
+                        className="w-full sm:w-72 h-10 rounded-xl border-2 border-border/50 bg-white/80 px-4 text-sm focus:outline-none focus:border-primary/40" />
+                    </div>
                     <div className="divide-y divide-border">
                       {classStudents.length === 0 ? (
                         <div className="p-8 text-center text-sm text-muted-foreground">No students in this class.</div>

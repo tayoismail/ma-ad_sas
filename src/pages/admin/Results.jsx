@@ -53,6 +53,7 @@ export default function ResultsPage() {
   const [useAttendance, setUseAttendance] = useState(() => {
     try { return localStorage.getItem('maad_useAttendance') === 'true'; } catch { return false; }
   });
+  const [studentSearch, setStudentSearch] = useState('');
   const latestFilterRef = useRef('');
 
   useEffect(() => {
@@ -96,7 +97,15 @@ export default function ResultsPage() {
     const names = [...new Set(subjects.filter((s) => teacherSubjectIds.includes(s.id)).map((s) => s.className))];
     return classes.filter((c) => names.includes(c.name));
   }, [classes, subjects, teacherSubjectIds, isTeacher]);
-  const classStudents = students.filter((s) => s.className === filters.className && (!filters.sex || s.sex === filters.sex));
+  const classStudents = students.filter((s) => {
+    if (s.className !== filters.className) return false;
+    if (filters.sex && s.sex !== filters.sex) return false;
+    if (studentSearch.trim()) {
+      const q = studentSearch.trim().toLowerCase();
+      return (s.name || '').toLowerCase().includes(q) || (s.studentId || '').toLowerCase().includes(q);
+    }
+    return true;
+  });
   const isFinalized = settings?.semestersFinalized?.[`${filters.session}_sem${filters.semester}`];
 
   const handleLoadResults = async () => {
@@ -297,7 +306,7 @@ export default function ResultsPage() {
       <AdminSidebar activePath="/admin/results" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
@@ -453,6 +462,12 @@ export default function ResultsPage() {
                   )}
                 </div>
               </div>
+              <div className="p-3 border-b border-white/10">
+                <input type="text" value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)}
+                  placeholder="Search by name or ID..."
+                  className="w-full sm:w-72 h-10 rounded-xl border-2 border-border/50 bg-white/80 px-4 pl-9 text-sm focus:outline-none focus:border-primary/40"
+                  style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23999\'%3E%3Ccircle cx=\'11\' cy=\'11\' r=\'8\'/><path stroke-linecap=\'round\' stroke-width=\'2\' d=\'M21 21l-4.35-4.35\'/></svg>")', backgroundRepeat: 'no-repeat', backgroundPosition: '12px center', backgroundSize: '16px' }} />
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -478,37 +493,39 @@ export default function ResultsPage() {
                           <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
                                 {student.name?.charAt(0)?.toUpperCase() || '?'}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900 text-sm">{student.name}</p>
+                                <p className="font-semibold text-gray-900 text-base">{student.name}</p>
                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                  {student.arabicName && <p className="text-xs text-gray-400" dir="rtl">{student.arabicName}</p>}
-                                  {student.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${student.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{student.sex}</span>}
+                                  {student.sex && <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${student.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{student.sex}</span>}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center text-xs font-mono text-gray-400">{student.studentId || '--'}</td>
+                          <td className="px-4 py-3 text-center text-sm font-semibold text-gray-600">{student.studentId || '--'}</td>
                           <td className="px-3 py-3">
                             <Input type="number" min={0} max={useTest ? 70 : 100} value={s.examScore ?? ''}
                               onChange={(e) => updateScore(student.studentId, 'examScore', e.target.value)}
                               disabled={isFinalized}
-                              className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
+                              style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                              className="w-20 h-11 text-center mx-auto text-sm font-semibold border-primary/30" />
                           </td>
                           {useTest && (
                             <td className="px-3 py-3">
                               <Input type="number" min={0} max={30} value={s.testScore ?? ''}
                                 onChange={(e) => updateScore(student.studentId, 'testScore', e.target.value)}
-                                className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
+                                style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                className="w-20 h-11 text-center mx-auto text-sm font-semibold border-primary/30" />
                             </td>
                           )}
                           {useAttendance && (
                             <td className="px-3 py-3">
                               <Input type="number" min={0} max={100} value={s.attendance ?? ''}
                                 onChange={(e) => updateScore(student.studentId, 'attendance', e.target.value)}
-                                className="w-20 h-11 text-center bg-white/60 mx-auto text-sm" />
+                                style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                className="w-20 h-11 text-center mx-auto text-sm font-semibold border-primary/30" />
                             </td>
                           )}
                           <td className="px-3 py-3 text-center font-semibold text-gray-900">{total}</td>

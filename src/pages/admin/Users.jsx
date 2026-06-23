@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu, Moon, Sun
+  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu, Moon, Sun, Search
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -29,6 +29,7 @@ export default function UsersPage() {
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [] });
+  const [subjectSearch, setSubjectSearch] = useState('');
 
   const loadUsers = async () => {
     try {
@@ -51,6 +52,7 @@ export default function UsersPage() {
     setEditingId(null);
     setShowForm(false);
     setError('');
+    setSubjectSearch('');
   };
 
   const handleEdit = (u) => {
@@ -58,6 +60,7 @@ export default function UsersPage() {
     setEditingId(u.id);
     setShowForm(true);
     setError('');
+    setSubjectSearch('');
   };
 
   const handleSubmit = async () => {
@@ -100,6 +103,35 @@ export default function UsersPage() {
   const previewClasses = form.role === 'teacher'
     ? [...new Set(subjects.filter((s) => form.teacherSubjects.includes(s.id)).map((s) => s.className))]
     : [];
+
+  // Group subjects by className for the assignment picker
+  const subjectGroups = (() => {
+    const lower = subjectSearch.trim().toLowerCase();
+    const filtered = subjects.filter((s) => !lower || s.name.toLowerCase().includes(lower) || (s.arabicName || '').toLowerCase().includes(lower));
+    const groups = {};
+    filtered.forEach((s) => {
+      if (!groups[s.className]) groups[s.className] = [];
+      groups[s.className].push(s);
+    });
+    return groups;
+  })();
+
+  const isGroupFullySelected = (className) => {
+    const groupSubjects = subjects.filter((s) => s.className === className);
+    return groupSubjects.length > 0 && groupSubjects.every((s) => form.teacherSubjects.includes(s.id));
+  };
+
+  const toggleGroup = (className) => {
+    setForm((prev) => {
+      const groupSubjectIds = subjects.filter((s) => s.className === className).map((s) => s.id);
+      const allSelected = isGroupFullySelected(className);
+      if (allSelected) {
+        return { ...prev, teacherSubjects: prev.teacherSubjects.filter((id) => !groupSubjectIds.includes(id)) };
+      }
+      const merged = [...new Set([...prev.teacherSubjects, ...groupSubjectIds])];
+      return { ...prev, teacherSubjects: merged };
+    });
+  };
 
   const handleDelete = async (id) => {
     if (id === user?.id) { setError('Cannot delete your own account'); setDeleteConfirm(null); return; }
@@ -211,19 +243,49 @@ export default function UsersPage() {
                     <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Assigned Subjects</label>
-                      <div className="max-h-40 overflow-y-auto space-y-1.5 p-2 rounded-xl border-2 border-border/50 bg-white/80">
-                        {subjects.map((s) => (
-                          <label key={s.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg">
-                            <input
-                              type="checkbox"
-                              checked={(form.teacherSubjects || []).includes(s.id)}
-                              onChange={() => toggleSubject(s.id)}
-                              className="rounded border-gray-300 text-primary focus:ring-primary/30"
-                            />
-                            <span className="text-sm text-gray-700">{s.name} {s.arabicName ? `(${s.arabicName})` : ''}</span>
-                            <span className="text-xs text-gray-400 ml-auto">{s.className}</span>
-                          </label>
+                      <div className="relative mb-2">
+                        <input
+                          type="text"
+                          value={subjectSearch}
+                          onChange={(e) => setSubjectSearch(e.target.value)}
+                          placeholder="Search subjects..."
+                          className="w-full h-10 rounded-xl border-2 border-border/50 bg-white/80 px-4 pl-9 text-sm focus:outline-none focus:border-primary/40"
+                        />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </div>
+                      <div className="max-h-64 overflow-y-auto space-y-3 p-2 rounded-xl border-2 border-border/50 bg-white/80">
+                        {Object.entries(subjectGroups).map(([className, classSubjects]) => (
+                          <div key={className}>
+                            <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1.5 rounded-lg mb-1 sticky top-0 bg-white/90 z-10">
+                              <input
+                                type="checkbox"
+                                checked={isGroupFullySelected(className)}
+                                onChange={() => toggleGroup(className)}
+                                className="rounded border-gray-300 text-primary focus:ring-primary/30"
+                              />
+                              <span className="text-xs font-bold text-primary uppercase tracking-wider">{className}</span>
+                              <span className="text-[10px] text-gray-400 ml-auto">
+                                {classSubjects.filter((s) => (form.teacherSubjects || []).includes(s.id)).length}/{classSubjects.length}
+                              </span>
+                            </label>
+                            <div className="ml-4 space-y-0.5">
+                              {classSubjects.map((s) => (
+                                <label key={s.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-lg">
+                                  <input
+                                    type="checkbox"
+                                    checked={(form.teacherSubjects || []).includes(s.id)}
+                                    onChange={() => toggleSubject(s.id)}
+                                    className="rounded border-gray-300 text-primary focus:ring-primary/30"
+                                  />
+                                  <span className="text-sm text-gray-700">{s.name}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
                         ))}
+                        {Object.keys(subjectGroups).length === 0 && (
+                          <p className="text-sm text-gray-400 text-center py-3">No subjects match your search</p>
+                        )}
                       </div>
                       {previewClasses.length > 0 && (
                         <p className="text-xs text-gray-500 mt-1.5">Access will be granted to classes: <strong>{previewClasses.join(', ')}</strong></p>

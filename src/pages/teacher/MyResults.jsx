@@ -25,7 +25,7 @@ export default function TeacherMyResults() {
   const { getResultsForClass, saveResults } = useResultsStore();
   const { settings, loadSettings } = useSettingsStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [filters, setFilters] = useState({ className: '', subjectId: '', session: settings?.currentSession || '2024/2025', semester: String(settings?.currentSemester || 1) });
+  const [filters, setFilters] = useState({ className: '', subjectId: '', session: settings?.currentSession || '2024/2025', semester: String(settings?.currentSemester || 1), sex: '' });
   const [scores, setScores] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -36,6 +36,7 @@ export default function TeacherMyResults() {
   const [useTest, setUseTest] = useState(() => {
     try { return localStorage.getItem('maad_useTest') === 'true'; } catch { return false; }
   });
+  const [studentSearch, setStudentSearch] = useState('');
   const latestFilterRef = useRef('');
 
   useEffect(() => { loadSettings(); loadClasses(); loadSubjects(); loadStudents();
@@ -58,7 +59,15 @@ export default function TeacherMyResults() {
   const filteredSubjects = subjects.filter((s) =>
     s.className === filters.className && teacherSubjectIds.includes(s.id)
   );
-  const classStudents = students.filter((s) => s.className === filters.className);
+  const classStudents = students.filter((s) => {
+    if (s.className !== filters.className) return false;
+    if (filters.sex && s.sex !== filters.sex) return false;
+    if (studentSearch.trim()) {
+      const q = studentSearch.trim().toLowerCase();
+      return (s.name || '').toLowerCase().includes(q) || (s.studentId || '').toLowerCase().includes(q);
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (!filters.className || !filters.subjectId) return;
@@ -146,7 +155,7 @@ export default function TeacherMyResults() {
     <div className="min-h-screen bg-slate-300">
       <AdminSidebar activePath="/teacher/results" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 bg-card/70 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
@@ -198,6 +207,15 @@ export default function TeacherMyResults() {
               <input type="checkbox" checked={useAttendance} onChange={() => { const next = !useAttendance; setUseAttendance(next); try { localStorage.setItem('maad_useAttendance', String(next)); } catch { /* silent */ } }} className="rounded border-gray-300" />
               Include Attendance %
             </label>
+            <div className="flex items-center gap-2 ml-auto">
+              <label className="text-xs font-medium text-muted-foreground">Sex</label>
+              <select value={filters.sex} onChange={(e) => setFilters({ ...filters, sex: e.target.value })}
+                className="h-9 rounded-lg border-2 border-border/50 bg-white/60 px-3 text-sm focus:outline-none focus:border-primary/40">
+                <option value="">All</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
           </div>
           {filters.className && filters.subjectId && (
             <>
@@ -208,6 +226,11 @@ export default function TeacherMyResults() {
                 </Card>
               ) : (
                 <Card className="overflow-hidden border-border">
+                  <div className="p-3 border-b border-border">
+                    <input type="text" value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)}
+                      placeholder="Search by name or ID..."
+                      className="w-full sm:w-72 h-10 rounded-xl border-2 border-border/50 bg-white/80 px-4 text-sm focus:outline-none focus:border-primary/40" />
+                  </div>
                   <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50">
@@ -230,33 +253,35 @@ export default function TeacherMyResults() {
                             <tr key={s.id} className="border-t border-border hover:bg-muted/20">
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
+                                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
                                     {s.name?.charAt(0)?.toUpperCase() || '?'}
                                   </div>
                                   <div>
-                                    <p className="font-medium text-card-foreground">{s.name}</p>
-                                    {s.arabicName && <p className="text-xs text-muted-foreground" dir="rtl">{s.arabicName}</p>}
-                                    <p className="text-xs text-muted-foreground">{s.studentId}</p>
+                                    <p className="font-semibold text-card-foreground text-base">{s.name}</p>
+                                    <p className="text-sm text-muted-foreground">{s.studentId}</p>
                                   </div>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-center">
                                   <input type="number" min="0" max={useTest ? 70 : 100} value={exam}
                                    onChange={(e) => updateScore(s.studentId, 'examScore', e.target.value)}
-                                   className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                   style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                   className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-primary/30 text-sm font-semibold focus:outline-none focus:border-primary/40" />
                                </td>
                                {useTest && (
                                <td className="px-4 py-3 text-center">
                                  <input type="number" min="0" max="30" value={test}
                                    onChange={(e) => updateScore(s.studentId, 'testScore', e.target.value)}
-                                   className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                   style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                   className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-primary/30 text-sm font-semibold focus:outline-none focus:border-primary/40" />
                                </td>
                                )}
                                {useAttendance && (
                                  <td className="px-4 py-3 text-center">
                                    <input type="number" min="0" max="100" value={scores[s.studentId]?.attendance ?? ''}
                                      onChange={(e) => updateScore(s.studentId, 'attendance', e.target.value)}
-                                     className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-border/50 bg-background text-sm focus:outline-none focus:border-primary/40" />
+                                     style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}
+                                     className="w-16 sm:w-20 h-11 text-center rounded-lg border-2 border-primary/30 text-sm font-semibold focus:outline-none focus:border-primary/40" />
                                 </td>
                               )}
                               <td className="px-4 py-3 text-center font-semibold text-card-foreground">{total}</td>
