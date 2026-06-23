@@ -238,7 +238,7 @@ export default function TeacherMyResults() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-sm text-muted-foreground hidden sm:inline">{classStudents.length} students</span>
+                        <span className="text-[10px] sm:text-sm text-muted-foreground font-medium">{classStudents.length} students</span>
                         <Button size="sm" onClick={handleSaveAll} disabled={saving} className="gradient-accent text-white border-0">
                           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                           <span className="hidden sm:inline">Save All</span>

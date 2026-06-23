@@ -454,7 +454,7 @@ export default function ResultsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm text-gray-500 hidden sm:inline">{classStudents.length} students</span>
+                    <span className="text-[10px] sm:text-sm text-gray-500 font-medium">{classStudents.length} students</span>
                     {isFinalized ? (
                       <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-500"><Lock className="w-3.5 h-3.5" /> Finalized</span>
                     ) : (
