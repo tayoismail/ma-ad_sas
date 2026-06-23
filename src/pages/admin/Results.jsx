@@ -414,7 +414,7 @@ export default function ResultsPage() {
                   className="flex h-11 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40"
                   disabled={!filters.className}>
                   <option value="">Select Subject</option>
-                  {filteredSubjects.map((s) => <option key={s.id} value={s.id}>{s.name} {s.arabicName ? `(${s.arabicName})` : ''}</option>)}
+                  {filteredSubjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
             </div>

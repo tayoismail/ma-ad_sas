@@ -199,7 +199,6 @@ export default function SubjectsPage() {
                         </div>
                         <div>
                           <p className="font-semibold text-sm text-gray-900">{subj.name}</p>
-                          {subj.arabicName && <p className="text-xs text-gray-400" dir="rtl">{subj.arabicName}</p>}
                         </div>
                       </div>
                     </div>

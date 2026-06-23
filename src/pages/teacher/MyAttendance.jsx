@@ -191,28 +191,32 @@ export default function TeacherMyAttendance() {
                       ) : classStudents.map((s) => {
                         const status = attendanceMap[s.studentId];
                         return (
-                          <div key={s.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/20 transition-colors">
+                          <div key={s.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 hover:bg-muted/20 transition-colors">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
                                 {s.name?.charAt(0)?.toUpperCase() || '?'}
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-card-foreground">{s.name}</p>
-                                <p className="text-xs text-muted-foreground">{s.studentId}</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-semibold text-muted-foreground">{s.studentId}</p>
+                                  {s.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${s.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{s.sex}</span>}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 pl-11 sm:pl-0">
                               {['present', 'absent', 'late'].map((statusType) => (
                                 <button key={statusType}
                                   onClick={() => setStatus(s.studentId, statusType)}
-                                  className={`p-2 rounded-xl transition-all ${
+                                  className={`px-3 py-2 rounded-xl transition-all text-xs font-medium flex items-center gap-1 ${
                                     status === statusType
                                       ? statusType === 'present' ? 'bg-emerald-500/20 text-emerald-600 ring-2 ring-emerald-500/30'
                                         : statusType === 'absent' ? 'bg-red-500/20 text-red-600 ring-2 ring-red-500/30'
                                         : 'bg-amber-500/20 text-amber-600 ring-2 ring-amber-500/30'
                                       : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
                                   }`}>
-                                  {statusType === 'present' ? <CheckCircle2 className="w-5 h-5" /> : statusType === 'absent' ? <XCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                                  {statusType === 'present' ? <CheckCircle2 className="w-4 h-4" /> : statusType === 'absent' ? <XCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                                  <span className="hidden sm:inline">{statusType.charAt(0).toUpperCase() + statusType.slice(1)}</span>
                                 </button>
                               ))}
                             </div>
