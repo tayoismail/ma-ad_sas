@@ -203,17 +203,17 @@ export default function PromotionPage() {
                     <table className="w-full text-sm">
                       <thead><tr className="bg-white/40 border-b border-white/10">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Student</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">From</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">From</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">To</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Cumulative</th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Grade</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Grade</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Action</th>
                       </tr></thead>
                       <tbody>
                         {promoted.map((d) => (
                           <tr key={d.studentId} className="border-b border-white/10 hover:bg-white/30">
                             <td className="px-4 py-3 font-medium text-gray-900">{d.studentName}</td>
-                            <td className="px-4 py-3 text-gray-500">{d.className}</td>
+                            <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{d.className}</td>
                             <td className="px-4 py-3 text-emerald-600 font-medium">{d.promoteTo}</td>
                             <td className="px-4 py-3 text-center font-semibold text-gray-900">{d.cumulative}</td>
                             <td className="px-4 py-3 text-center">
@@ -245,18 +245,18 @@ export default function PromotionPage() {
                     <table className="w-full text-sm">
                       <thead><tr className="bg-white/40 border-b border-white/10">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Student</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Class</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Class</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Cumulative</th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Grade</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Grade</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Action</th>
                       </tr></thead>
                       <tbody>
                         {repeating.map((d) => (
                           <tr key={d.studentId} className="border-b border-white/10 hover:bg-white/30">
                             <td className="px-4 py-3 font-medium text-gray-900">{d.studentName}</td>
-                            <td className="px-4 py-3 text-gray-500">{d.className}</td>
+                            <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{d.className}</td>
                             <td className="px-4 py-3 text-center font-semibold text-red-600">{d.cumulative}</td>
-                            <td className="px-4 py-3 text-center"><span className="px-2 py-0.5 rounded text-xs font-medium bg-red-500/10 text-red-600">{d.grade}</span></td>
+                            <td className="px-4 py-3 text-center hidden sm:table-cell"><span className="px-2 py-0.5 rounded text-xs font-medium bg-red-500/10 text-red-600">{d.grade}</span></td>
                             <td className="px-4 py-3 text-center">
                               {confirmed(d.studentId) ? (
                                 <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle2 className="w-3 h-3" /> Confirmed Repeat</span>

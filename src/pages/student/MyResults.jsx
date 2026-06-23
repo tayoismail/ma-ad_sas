@@ -131,9 +131,9 @@ export default function StudentMyResults() {
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Subject</th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Semester</th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Exam</th>
-                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">CA</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Semester</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Exam</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">CA</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Total</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">Grade</th>
                       </tr>
@@ -142,9 +142,9 @@ export default function StudentMyResults() {
                       {sessionResults.map((r, i) => (
                         <tr key={i} className="border-t border-border hover:bg-muted/20">
                           <td className="px-4 py-3 font-medium text-card-foreground">{r.subjectName}</td>
-                          <td className="px-4 py-3 text-center text-muted-foreground">{semesterLabel(r.semester)}</td>
-                          <td className="px-4 py-3 text-center text-card-foreground">{r.examScore ?? '--'}</td>
-                          <td className="px-4 py-3 text-center text-card-foreground">{r.testScore ?? '--'}</td>
+                          <td className="px-4 py-3 text-center text-muted-foreground hidden sm:table-cell">{semesterLabel(r.semester)}</td>
+                          <td className="px-4 py-3 text-center text-card-foreground hidden md:table-cell">{r.examScore ?? '--'}</td>
+                          <td className="px-4 py-3 text-center text-card-foreground hidden md:table-cell">{r.testScore ?? '--'}</td>
                           <td className="px-4 py-3 text-center font-semibold text-card-foreground">{r.total ?? '--'}</td>
                           <td className="px-4 py-3 text-center">
                             <span className={`px-2 py-0.5 rounded text-xs font-medium ${gradeColor(r.grade)}`}>{r.grade}</span>

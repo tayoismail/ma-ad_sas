@@ -145,6 +145,7 @@ export default function StudentsPage() {
     {
       key: 'className',
       label: 'Class',
+      hideOnMobile: true,
       render: (row) => (
         <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
           {row.className}

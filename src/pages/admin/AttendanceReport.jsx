@@ -153,9 +153,9 @@ export default function AttendanceReportPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-white/40 border-b border-white/10">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">#</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">#</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Student</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">ID</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">ID</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Attendance %</th>
                         <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
                       </tr>
@@ -163,9 +163,9 @@ export default function AttendanceReportPage() {
                     <tbody>
                       {reportData.map((d, i) => (
                         <tr key={d.studentId} className="border-b border-white/10 hover:bg-white/30">
-                          <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">{i + 1}</td>
                           <td className="px-4 py-3 font-medium text-gray-900">{d.name}</td>
-                          <td className="px-4 py-3 text-xs font-mono text-gray-400">{d.studentId}</td>
+                          <td className="px-4 py-3 text-xs font-mono text-gray-400 hidden md:table-cell">{d.studentId}</td>
                           <td className="px-4 py-3 text-center">
                             {d.attendance !== null ? (
                               <span className={`font-semibold ${d.attendance >= 90 ? 'text-emerald-600' : d.attendance >= 50 ? 'text-amber-600' : 'text-red-600'}`}>

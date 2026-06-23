@@ -169,8 +169,8 @@ export default function UsersPage() {
         <div><p className="font-medium text-gray-900 text-sm">{u.name}</p><p className="text-xs text-gray-400">ID: {u.id}</p></div>
       </div>
     )},
-    { key: 'email', label: 'Email', render: (u) => <span className="text-gray-600 text-sm">{u.email}</span> },
-    { key: 'role', label: 'Role', render: (u) => (
+    { key: 'email', label: 'Email', hideOnMobile: true, render: (u) => <span className="text-gray-600 text-sm">{u.email}</span> },
+    { key: 'role', label: 'Role', hideOnMobile: true, render: (u) => (
       <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium capitalize text-center ${roleColors[u.role] || 'bg-gray-100 text-gray-600'}`}>{u.role}</span>
     )},
     { key: 'actions', label: 'Actions', sortable: false, width: '140px', render: (u) => (
