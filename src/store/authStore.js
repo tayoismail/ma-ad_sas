@@ -122,10 +122,31 @@ const useAuthStore = create((set, get) => ({
 
   login: async (email, password, rememberMe = false) => {
     await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    let userCredential;
+    try {
+      userCredential = await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      const code = err.code || '';
+      if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+        throw new Error('Invalid email or password', { cause: err });
+      }
+      if (code === 'auth/invalid-email') {
+        throw new Error('Invalid email format', { cause: err });
+      }
+      if (code === 'auth/too-many-requests') {
+        throw new Error('Too many login attempts. Please try again later.', { cause: err });
+      }
+      if (code === 'auth/user-disabled') {
+        throw new Error('This account has been disabled', { cause: err });
+      }
+      if (code === 'auth/network-request-failed') {
+        throw new Error('Network error. Please check your connection and try again.', { cause: err });
+      }
+      throw new Error('Login failed. Please try again.', { cause: err });
+    }
     const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
     if (!userDoc.exists()) {
-      throw new Error('User profile not found');
+      throw new Error('Login failed. Please try again.');
     }
     const profile = userDoc.data();
     try {

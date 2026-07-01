@@ -34,6 +34,7 @@ export default function StudentsPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [uploadData, setUploadData] = useState([]);
   const [uploadResult, setUploadResult] = useState(null);
+  const [duplicateIds, setDuplicateIds] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -102,10 +103,11 @@ export default function StudentsPage() {
     setUploading(true);
     const result = await bulkAddStudents(uploadData);
     setUploadResult(result);
+    setDuplicateIds(result.duplicateIds || []);
     setUploading(false);
     setUploadData([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setUploadResult(null), 5000);
+    setTimeout(() => { setUploadResult(null); setDuplicateIds([]); }, 8000);
   };
 
   const downloadTemplate = () => {
@@ -255,13 +257,24 @@ export default function StudentsPage() {
         <main className="p-4 lg:p-8 space-y-6">
           {/* Upload result toast */}
           {uploadResult && (
-            <div className={`flex items-center gap-2 p-4 rounded-xl border text-sm animate-fade-in ${
+            <div className={`space-y-2 p-4 rounded-xl border text-sm animate-fade-in ${
               uploadResult.errors === 0
                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
                 : 'bg-amber-500/10 border-amber-500/20 text-amber-600'
             }`}>
-              {uploadResult.errors === 0 ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-              {uploadResult.success} students imported{uploadResult.errors > 0 ? `, ${uploadResult.errors} failed` : ''}
+              <div className="flex items-center gap-2">
+                {uploadResult.errors === 0 ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                {uploadResult.success} students imported{uploadResult.errors > 0 ? `, ${uploadResult.errors} failed` : ''}
+              </div>
+              {duplicateIds.length > 0 && (
+                <div className="flex items-start gap-2 mt-2 p-3 rounded-lg bg-red-500/5 border border-red-500/10">
+                  <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-red-600 font-medium">Duplicate Student IDs skipped:</p>
+                    <p className="text-red-500/80 mt-1 font-mono text-xs">{duplicateIds.join(', ')}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -87,16 +87,18 @@ export default function StudentForm() {
       setFormError('Please enter a valid phone number'); return;
     }
 
-    try {
-      const snap = await getDocs(query(collection(db, 'students'), where('studentId', '==', form.studentId)));
-      const existing = snap.docs[0];
-      if (existing && (!isEdit || existing.id !== id)) {
-        setFormError('Student ID already exists');
+    if (form.studentId.trim()) {
+      try {
+        const snap = await getDocs(query(collection(db, 'students'), where('studentId', '==', form.studentId.trim())));
+        const existing = snap.docs[0];
+        if (existing && (!isEdit || existing.id !== id)) {
+          setFormError(`Student ID "${form.studentId.trim()}" already exists. Please use a unique ID.`);
+          return;
+        }
+      } catch {
+        setFormError('Failed to validate student ID');
         return;
       }
-    } catch {
-      setFormError('Failed to validate student ID');
-      return;
     }
 
     setSaving(true);

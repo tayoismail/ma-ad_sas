@@ -10,6 +10,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
@@ -20,7 +21,7 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const user = await login(email, password, false);
+      const user = await login(email, password, rememberMe);
       if (!user || !user.role) { setError('Login failed: invalid response'); return; }
       navigate(`/${user.role}/dashboard`);
     } catch (err) {
@@ -104,6 +105,17 @@ export default function Login() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500/20"
+              />
+              <label htmlFor="rememberMe" className="text-sm text-white/60 cursor-pointer">Remember me</label>
             </div>
 
             <Button

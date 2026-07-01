@@ -78,11 +78,15 @@ const useStudentsStore = create((set) => ({
   bulkAddStudents: async (records) => {
     let success = 0;
     let errors = 0;
+    const duplicateIds = [];
     const existingSnap = await getDocs(collection(db, 'students'));
     const existingIds = new Set(existingSnap.docs.map((d) => d.data().studentId).filter(Boolean));
+    // Also track IDs within the upload batch itself to catch in-file duplicates
+    const batchIds = new Set();
     for (const record of records) {
       try {
-        if (record.studentId && existingIds.has(record.studentId)) {
+        if (record.studentId && (existingIds.has(record.studentId) || batchIds.has(record.studentId))) {
+          duplicateIds.push(record.studentId);
           errors++;
           continue;
         }
@@ -90,7 +94,10 @@ const useStudentsStore = create((set) => ({
           ...record,
           createdAt: new Date().toISOString(),
         });
-        if (record.studentId) existingIds.add(record.studentId);
+        if (record.studentId) {
+          existingIds.add(record.studentId);
+          batchIds.add(record.studentId);
+        }
         success++;
       } catch {
         errors++;
@@ -99,7 +106,7 @@ const useStudentsStore = create((set) => ({
     const all = await getDocs(collection(db, 'students'));
     set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
     if (success > 0) auditLog('student.bulk_create', 'students', { requested: records.length, success, errors });
-    return { success, errors };
+    return { success, errors, duplicateIds };
   },
 }));
 
