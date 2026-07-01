@@ -10,6 +10,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { auditLog } from '../lib/audit';
 
 const useClassesStore = create((set) => ({
   classes: [],
@@ -25,6 +26,7 @@ const useClassesStore = create((set) => ({
     const docRef = await addDoc(collection(db, 'classes'), cls);
     const all = await getDocs(query(collection(db, 'classes'), orderBy('order')));
     set({ classes: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    auditLog('class.create', 'classes', { name: cls.name });
     return docRef.id;
   },
 
@@ -33,12 +35,14 @@ const useClassesStore = create((set) => ({
     await updateDoc(doc(db, 'classes', id), clean);
     const all = await getDocs(query(collection(db, 'classes'), orderBy('order')));
     set({ classes: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    auditLog('class.update', 'classes', { id, fields: Object.keys(clean) });
   },
 
   deleteClass: async (id) => {
     await deleteDoc(doc(db, 'classes', id));
     const all = await getDocs(query(collection(db, 'classes'), orderBy('order')));
     set({ classes: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    auditLog('class.delete', 'classes', { id });
   },
 }));
 

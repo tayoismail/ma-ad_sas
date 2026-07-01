@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Users, GraduationCap, School, BookMarked, CalendarDays,
-  Award, Printer, TrendingUp, Database, Settings, LayoutDashboard, LogOut
+  Award, Printer, TrendingUp, Database, Settings, LayoutDashboard, LogOut, Shield
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { Button } from './ui/button';
@@ -17,6 +17,7 @@ const allLinks = [
   { label: 'Reports', icon: Printer, path: '/admin/reports' },
   { label: 'Promotion', icon: TrendingUp, path: '/admin/promotion' },
   { label: 'Backup', icon: Database, path: '/admin/backup' },
+  { label: 'Audit Log', icon: Shield, path: '/admin/audit' },
   { label: 'Settings', icon: Settings, path: '/admin/settings' },
 ];
 

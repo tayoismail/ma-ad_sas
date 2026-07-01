@@ -10,6 +10,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { auditLog } from '../lib/audit';
 
 const useSubjectsStore = create((set) => ({
   subjects: [],
@@ -29,6 +30,7 @@ const useSubjectsStore = create((set) => ({
     });
     const all = await getDocs(collection(db, 'subjects'));
     set({ subjects: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    auditLog('subject.create', 'subjects', { name: data.name, className: data.className });
     return docRef.id;
   },
 
@@ -37,15 +39,19 @@ const useSubjectsStore = create((set) => ({
     await updateDoc(doc(db, 'subjects', id), clean);
     const all = await getDocs(collection(db, 'subjects'));
     set({ subjects: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    auditLog('subject.update', 'subjects', { id, fields: Object.keys(clean) });
   },
 
   deleteSubject: async (id) => {
     // Delete all results for this subject first
     const resultsSnap = await getDocs(query(collection(db, 'results'), where('subjectId', '==', id)));
+    let cascadeCount = 0;
     for (const d of resultsSnap.docs) {
       await deleteDoc(d.ref);
+      cascadeCount++;
     }
     await deleteDoc(doc(db, 'subjects', id));
+    auditLog('subject.delete', 'subjects', { id, cascadeDeletes: cascadeCount });
     const all = await getDocs(collection(db, 'subjects'));
     set({ subjects: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },

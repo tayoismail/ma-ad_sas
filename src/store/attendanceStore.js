@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import useSettingsStore from './settingsStore';
+import { auditLog } from '../lib/audit';
 
 function isFinalized(session, semester) {
   try {
@@ -51,9 +52,11 @@ const useAttendanceStore = create((set) => ({
 
     if (existing) {
       await updateDoc(doc(db, 'attendance', existing.id), { status });
+      auditLog('attendance.update', 'attendance', { studentId, className, date, status });
       return existing.id;
     }
     const docRef = await addDoc(collection(db, 'attendance'), { studentId, className, session, semester: Number(semester), date, status });
+    auditLog('attendance.create', 'attendance', { studentId, className, date, status });
     return docRef.id;
   },
 
@@ -62,6 +65,8 @@ const useAttendanceStore = create((set) => ({
       throw new Error('This semester has been finalized. Attendance cannot be modified.');
     }
     let count = 0;
+    let created = 0;
+    let updated = 0;
     const allSnap = await getDocs(collection(db, 'attendance'));
     const existingMap = {};
     for (const d of allSnap.docs) {
@@ -75,12 +80,15 @@ const useAttendanceStore = create((set) => ({
         const key = `${r.studentId}|${r.className}|${r.session}|${r.semester}|${r.date}`;
         if (existingMap[key]) {
           await updateDoc(doc(db, 'attendance', existingMap[key]), { status: r.status });
+          updated++;
         } else {
           await addDoc(collection(db, 'attendance'), r);
+          created++;
         }
         count++;
       } catch { failed++; }
     }
+    if (count > 0) auditLog('attendance.mark_bulk', 'attendance', { total: records.length, created, updated, failed, className: records[0]?.className, session: records[0]?.session, semester: records[0]?.semester, date: records[0]?.date });
     const all = await getDocs(collection(db, 'attendance'));
     set({ records: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
     if (failed > 0) console.warn(`Attendance: ${failed} of ${records.length} records failed to save`);

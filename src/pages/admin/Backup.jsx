@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
-import { collection, getDocs, deleteDoc, setDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
 import AdminSidebar from '../../components/AdminSidebar';
@@ -46,6 +46,7 @@ export default function BackupPage() {
       a.click();
       URL.revokeObjectURL(url);
       setResult({ type: 'success', message: 'Data exported successfully!' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
       setResult({ type: 'error', message: 'Export failed' });
     }
@@ -60,14 +61,27 @@ export default function BackupPage() {
     e.target.value = '';
   };
 
+  // Process an array of operations in batches of 500 (Firestore batch limit)
+  const processBatched = async (collectionName, items, operation, setProgress) => {
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+      const chunk = items.slice(i, i + BATCH_SIZE);
+      setProgress(`${operation.label} ${Math.min(i + BATCH_SIZE, items.length)}/${items.length}...`);
+      const batch = writeBatch(db);
+      for (const item of chunk) {
+        operation.fn(batch, collectionName, item);
+      }
+      await batch.commit();
+    }
+  };
+
   const handleImport = async () => {
     if (!restoreConfirm) return;
     setImporting(true);
     setRestoreConfirm(null);
     setRestoreProgress('Backing up current data...');
-    let backup = null;
     try {
-      backup = {};
+      const backup = {};
       for (const name of COLLECTIONS) {
         const snap = await getDocs(collection(db, name));
         backup[name] = snap.docs.map((d) => ({ _id: d.id, ...d.data() }));
@@ -81,20 +95,26 @@ export default function BackupPage() {
       try {
         const data = JSON.parse(evt.target.result);
         for (const name of COLLECTIONS) {
-          setRestoreProgress(`Restoring ${name}...`);
           const snap = await getDocs(collection(db, name));
-          for (const d of snap.docs) {
-            await deleteDoc(doc(db, name, d.id));
+          if (snap.docs.length > 0) {
+            await processBatched(name, snap.docs, {
+              label: `Deleting ${name}`,
+              fn: (batch, col, d) => batch.delete(d.ref),
+            }, setRestoreProgress);
           }
           if (data[name]?.length) {
-            for (const item of data[name]) {
-              const { _id, ...rest } = item;
-              await setDoc(doc(db, name, _id), rest);
-            }
+            await processBatched(name, data[name], {
+              label: `Restoring ${name}`,
+              fn: (batch, col, item) => {
+                const { _id, ...rest } = item;
+                batch.set(doc(db, col, _id), rest);
+              },
+            }, setRestoreProgress);
           }
         }
         setRestoreProgress('');
         setResult({ type: 'success', message: 'Data restored successfully! Please refresh the page.' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch {
         setRestoreProgress('');
         setResult({ type: 'error', message: 'Restore failed. Rolling back to previous data...' });
@@ -102,12 +122,20 @@ export default function BackupPage() {
           try {
             for (const name of COLLECTIONS) {
               const snap = await getDocs(collection(db, name));
-              for (const d of snap.docs) { await deleteDoc(doc(db, name, d.id)); }
+              if (snap.docs.length > 0) {
+                await processBatched(name, snap.docs, {
+                  label: `Rolling back ${name}`,
+                  fn: (batch, col, d) => batch.delete(d.ref),
+                }, setRestoreProgress);
+              }
               if (rollbackData[name]?.length) {
-                for (const item of rollbackData[name]) {
-                  const { _id, ...rest } = item;
-                  await setDoc(doc(db, name, _id), rest);
-                }
+                await processBatched(name, rollbackData[name], {
+                  label: `Restoring ${name}`,
+                  fn: (batch, col, item) => {
+                    const { _id, ...rest } = item;
+                    batch.set(doc(db, col, _id), rest);
+                  },
+                }, setRestoreProgress);
               }
             }
             setResult({ type: 'success', message: 'Restore failed but data was rolled back successfully. No data was lost.' });

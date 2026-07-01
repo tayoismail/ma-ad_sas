@@ -1,5 +1,5 @@
 import { useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import useAuthStore from './store/authStore';
 import { useThemeStore } from './store/themeStore';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -33,6 +33,7 @@ const ParentDashboard = lazy(() => import('./pages/parent/Dashboard'));
 const ParentChildrenResults = lazy(() => import('./pages/parent/ChildrenResults'));
 const ParentChildrenAttendance = lazy(() => import('./pages/parent/ChildrenAttendance'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const AuditLogPage = lazy(() => import('./pages/admin/AuditLog'));
 
 export default function App() {
   const { init, isLoading, isAuthenticated, updateLastActivity, checkSession, logout } = useAuthStore();
@@ -104,6 +105,7 @@ export default function App() {
         <Route path="/admin/transcript/:id" element={<ProtectedRoute roles={['admin', 'teacher', 'student']}><ErrorBoundary><AdminTranscript /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><ReportsPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/backup" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><BackupPage /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/audit" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AuditLogPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherDashboard /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyStudents /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/results" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyResults /></ErrorBoundary></ProtectedRoute>} />

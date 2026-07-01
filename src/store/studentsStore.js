@@ -11,6 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { auditLog } from '../lib/audit';
 
 const useStudentsStore = create((set) => ({
   students: [],
@@ -35,6 +36,7 @@ const useStudentsStore = create((set) => ({
     });
     const all = await getDocs(collection(db, 'students'));
     set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    auditLog('student.create', 'students', { name: data.name, className: data.className, studentId: data.studentId });
     return docRef.id;
   },
 
@@ -43,22 +45,32 @@ const useStudentsStore = create((set) => ({
     await updateDoc(doc(db, 'students', id), clean);
     const all = await getDocs(collection(db, 'students'));
     set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    auditLog('student.update', 'students', { id, fields: Object.keys(clean) });
   },
 
   deleteStudent: async (id) => {
     const studentSnap = await getDoc(doc(db, 'students', id));
+    let studentName = '';
+    let studentClass = '';
+    let cascadeCount = 0;
     if (studentSnap.exists()) {
       const student = studentSnap.data();
+      studentName = student.name;
+      studentClass = student.className;
       const resultsSnap = await getDocs(query(collection(db, 'results'), where('studentId', '==', student.studentId)));
       for (const r of resultsSnap.docs) await deleteDoc(r.ref);
+      cascadeCount += resultsSnap.size;
 
       const attendanceSnap = await getDocs(query(collection(db, 'attendance'), where('studentId', '==', student.studentId)));
       for (const r of attendanceSnap.docs) await deleteDoc(r.ref);
+      cascadeCount += attendanceSnap.size;
 
       const promoSnap = await getDocs(query(collection(db, 'promotions'), where('studentId', '==', student.studentId)));
       for (const r of promoSnap.docs) await deleteDoc(r.ref);
+      cascadeCount += promoSnap.size;
     }
     await deleteDoc(doc(db, 'students', id));
+    auditLog('student.delete', 'students', { id, name: studentName, className: studentClass, cascadeDeletes: cascadeCount });
     const all = await getDocs(collection(db, 'students'));
     set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
@@ -86,6 +98,7 @@ const useStudentsStore = create((set) => ({
     }
     const all = await getDocs(collection(db, 'students'));
     set({ students: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
+    if (success > 0) auditLog('student.bulk_create', 'students', { requested: records.length, success, errors });
     return { success, errors };
   },
 }));

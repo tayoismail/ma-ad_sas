@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { calculateGrade, calculateTotal } from '../lib/grading';
+import { auditLog } from '../lib/audit';
 
 async function getAttendancePct(studentId, session, semester) {
   const snapshot = await getDocs(
@@ -138,6 +139,7 @@ const usePromotionStore = create((set, get) => ({
       }
     }
 
+    auditLog('promotion.confirm', 'promotions', { studentId, session });
     const all = await getDocs(query(collection(db, 'promotions'), where('session', '==', session)));
     set({ promotions: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },
@@ -161,6 +163,7 @@ const usePromotionStore = create((set, get) => ({
         }
       }
     }
+    auditLog('promotion.confirm_batch', 'promotions', { session, count: eligible.length });
     const all = await getDocs(query(collection(db, 'promotions'), where('session', '==', session)));
     set({ promotions: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },

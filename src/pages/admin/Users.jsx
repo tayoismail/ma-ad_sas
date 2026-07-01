@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu, Moon, Sun, Search
+  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu, Moon, Sun, Search, CheckCircle2
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import AdminSidebar from '../../components/AdminSidebar';
+import ConfirmModal from '../../components/ConfirmModal';
 import useSubjectsStore from '../../store/subjectsStore';
 import DataTable from '../../components/DataTable';
 import { Card } from '../../components/ui/card';
@@ -27,6 +28,7 @@ export default function UsersPage() {
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState('');
+  const [saved, setSaved] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [] });
   const [subjectSearch, setSubjectSearch] = useState('');
@@ -75,14 +77,18 @@ export default function UsersPage() {
       if (editingId) {
         const updates = { name: form.name, email: form.email, role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses };
         await useAuthStore.getState().updateUser(editingId, updates);
+        setSaved('User updated successfully');
       } else {
         await useAuthStore.getState().addUser({
           name: form.name, email: form.email, password: form.password,
           role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses,
         });
+        setSaved('User created successfully');
       }
       await loadUsers();
       resetForm();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSaved(''), 3000);
     } catch (e) {
       setError(e.message || 'Failed to save');
     }
@@ -138,6 +144,9 @@ export default function UsersPage() {
     setDeleting(true);
     try {
       await useAuthStore.getState().deleteUser(id);
+      setSaved('User deleted successfully');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSaved(''), 3000);
       await loadUsers();
     } catch (err) {
       setError(err.message || 'Failed to delete user');
@@ -151,6 +160,9 @@ export default function UsersPage() {
     setError('');
     try {
       await useAuthStore.getState().resetPassword(resetPasswordUser.email);
+      setSaved('Password reset email sent successfully');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSaved(''), 3000);
       setResetPasswordUser(null);
     } catch (e) {
       setError(e.message || 'Failed to send reset email');
@@ -209,6 +221,11 @@ export default function UsersPage() {
           {error && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm animate-fade-in">
               <AlertCircle className="w-4 h-4" /> {error}
+            </div>
+          )}
+          {saved && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
+              <CheckCircle2 className="w-4 h-4" /> {saved}
             </div>
           )}
 
@@ -311,22 +328,16 @@ export default function UsersPage() {
         </main>
       </div>
 
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setDeleteConfirm(null)}>
-          <Card className="w-full max-w-sm p-6 bg-white/90 backdrop-blur-2xl border-white/20 shadow-2xl animate-fade-in text-center">
-            <div className="w-12 h-12 rounded-2xl bg-red-500/10 mx-auto mb-4 flex items-center justify-center"><AlertCircle className="w-6 h-6 text-red-500" /></div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete User?</h3>
-            <p className="text-sm text-gray-500 mb-1">{deleteConfirm.name} ({deleteConfirm.email})</p>
-            <p className="text-xs text-gray-400 mb-6">This cannot be undone.</p>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => handleDelete(deleteConfirm.id)} disabled={deleting}>
-                {deleting ? 'Deleting...' : 'Delete'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      <ConfirmModal
+        open={!!deleteConfirm}
+        title="Delete User?"
+        message={`${deleteConfirm?.name} (${deleteConfirm?.email}) — This cannot be undone.`}
+        confirmLabel={deleting ? 'Deleting...' : 'Delete'}
+        variant="danger"
+        loading={deleting}
+        onConfirm={() => handleDelete(deleteConfirm?.id)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
 
       {resetPasswordUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && (setResetPasswordUser(null), setError(''))}>

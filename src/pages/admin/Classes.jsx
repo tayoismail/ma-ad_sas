@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, School, Users, Menu, Bell, AlertCircle,
   Pencil, Trash2, ArrowRight,
-  X, Check, Loader2, Moon, Sun
+  X, Check, Loader2, Moon, Sun, CheckCircle2
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -40,6 +40,7 @@ export default function ClassesPage() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [saved, setSaved] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ name: '', section: 'A', promotionTo: '' });
@@ -77,10 +78,14 @@ export default function ClassesPage() {
       };
       if (editingId) {
         await updateClass(editingId, data);
+        setSaved('Class updated successfully');
       } else {
         await addClass(data);
+        setSaved('Class created successfully');
       }
       resetForm();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to save class');
     }
@@ -91,6 +96,9 @@ export default function ClassesPage() {
     setDeleting(true);
     try {
       await deleteClass(id);
+      setSaved('Class deleted successfully');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to delete class');
     }
@@ -151,6 +159,11 @@ export default function ClassesPage() {
           {error && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm animate-fade-in">
               <AlertCircle className="w-4 h-4" /> {error}
+            </div>
+          )}
+          {saved && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
+              <CheckCircle2 className="w-4 h-4" /> {saved}
             </div>
           )}
           <div className="flex items-center justify-between">
@@ -280,7 +293,7 @@ export default function ClassesPage() {
       <ConfirmModal
         open={deleteConfirm !== null}
         title="Delete Class?"
-        message={`This will permanently delete the class \"${deleteConfirm?.name || ''}\". Students in this class will not be deleted, but their class assignment will remain.`}
+        message={`This will permanently delete the class "${deleteConfirm?.name || ''}". Students in this class will not be deleted, but their class assignment will remain.`}
         confirmLabel={deleting ? 'Deleting...' : 'Delete'}
         variant="danger"
         onConfirm={() => handleDelete(deleteConfirm.id)}

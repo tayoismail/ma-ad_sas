@@ -82,5 +82,12 @@ service cloud.firestore {
       allow read: if isAuth();
       allow write: if isAuth() && getRole() == 'admin';
     }
+
+    // ─── Audit Logs: append-only, admin-readable only ──────────
+    match /auditLogs/{doc} {
+      allow read: if isAuth() && getRole() == 'admin';
+      allow create: if isAuth();
+      allow update, delete: if false;  // immutable — no edits or deletions
+    }
   }
 }

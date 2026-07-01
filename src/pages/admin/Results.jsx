@@ -20,6 +20,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import AdminSidebar from '../../components/AdminSidebar';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function ResultsPage() {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ export default function ResultsPage() {
     try { return localStorage.getItem('maad_useAttendance') === 'true'; } catch { return false; }
   });
   const [studentSearch, setStudentSearch] = useState('');
+  const [missingConfirm, setMissingConfirm] = useState(null); // { count }
   const latestFilterRef = useRef('');
 
   useEffect(() => {
@@ -142,7 +144,16 @@ export default function ResultsPage() {
     setScores((prev) => ({ ...prev, [studentId]: { ...prev[studentId], [field]: num } }));
   };
 
-  const handleSaveAll = async () => {
+  const countMissingScores = () => {
+    return classStudents.filter((s) => {
+      const sc = scores[s.studentId] || {};
+      const exam = Number(sc.examScore) || 0;
+      const test = Number(sc.testScore) || 0;
+      return exam === 0 && test === 0;
+    }).length;
+  };
+
+  const doSaveAll = async () => {
     setError('');
     for (const student of classStudents) {
       const s = scores[student.studentId] || {};
@@ -192,7 +203,18 @@ export default function ResultsPage() {
       return;
     }
     setSaved(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleSaveAll = async () => {
+    setError('');
+    const missing = countMissingScores();
+    if (missing > 0) {
+      setMissingConfirm({ count: missing });
+      return;
+    }
+    await doSaveAll();
   };
 
   const handleFileUpload = (e) => {
@@ -279,6 +301,7 @@ export default function ResultsPage() {
     setUploadResult(count);
     setUploading(false);
     setUploadData([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (filters.className && filters.subjectId) handleLoadResults();
     setTimeout(() => setUploadResult(null), 5000);
   };
@@ -347,6 +370,16 @@ export default function ResultsPage() {
               <CheckCircle2 className="w-4 h-4" /> Results saved successfully
             </div>
           )}
+          <ConfirmModal
+            open={!!missingConfirm}
+            title="Students Without Scores"
+            message={`${missingConfirm?.count} of ${classStudents.length} students have no score entered. Are you sure you want to save? This may be an oversight.`}
+            confirmLabel="Save Anyway"
+            cancelLabel="Go Back"
+            variant="warning"
+            onConfirm={async () => { setMissingConfirm(null); await doSaveAll(); }}
+            onCancel={() => setMissingConfirm(null)}
+          />
 
           {uploadResult && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">

@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import useSettingsStore from './settingsStore';
+import { auditLog } from '../lib/audit';
 
 function isFinalized(session, semester) {
   try {
@@ -54,9 +55,11 @@ const useResultsStore = create((set) => ({
 
     if (existing) {
       await updateDoc(doc(db, 'results', existing.id), data);
+      auditLog('results.update', 'results', { studentId: data.studentId, subjectId: data.subjectId, className: data.className });
       return existing.id;
     }
     const docRef = await addDoc(collection(db, 'results'), data);
+    auditLog('results.create', 'results', { studentId: data.studentId, subjectId: data.subjectId, className: data.className });
     return docRef.id;
   },
 
@@ -65,6 +68,8 @@ const useResultsStore = create((set) => ({
       throw new Error('This semester has been finalized. Results cannot be modified.');
     }
     let success = 0;
+    let updated = 0;
+    let created = 0;
     const allSnap = await getDocs(collection(db, 'results'));
     const existingMap = {};
     for (const d of allSnap.docs) {
@@ -77,12 +82,15 @@ const useResultsStore = create((set) => ({
         const key = `${r.studentId}|${r.subjectId}|${r.session}|${r.semester}`;
         if (existingMap[key]) {
           await updateDoc(doc(db, 'results', existingMap[key]), r);
+          updated++;
         } else {
           await addDoc(collection(db, 'results'), r);
+          created++;
         }
         success++;
       } catch { /* skip individual record errors */ }
     }
+    if (success > 0) auditLog('results.save_batch', 'results', { total: records.length, created, updated, className: records[0]?.className, subjectId: records[0]?.subjectId, session: records[0]?.session, semester: records[0]?.semester });
     const all = await getDocs(collection(db, 'results'));
     set({ results: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
     return success;
@@ -90,6 +98,7 @@ const useResultsStore = create((set) => ({
 
   deleteResult: async (id) => {
     await deleteDoc(doc(db, 'results', id));
+    auditLog('results.delete', 'results', { id });
     const all = await getDocs(collection(db, 'results'));
     set({ results: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
   },

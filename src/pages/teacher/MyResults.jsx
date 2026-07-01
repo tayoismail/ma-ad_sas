@@ -11,6 +11,7 @@ import useResultsStore from '../../store/resultsStore';
 import { calculateGrade, calculateTotal, gradeStyle } from '../../lib/grading';
 import { semesterLabel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
+import ConfirmModal from '../../components/ConfirmModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -37,6 +38,7 @@ export default function TeacherMyResults() {
     try { return localStorage.getItem('maad_useTest') === 'true'; } catch { return false; }
   });
   const [studentSearch, setStudentSearch] = useState('');
+  const [missingConfirm, setMissingConfirm] = useState(null); // { count, proceed fn }
   const latestFilterRef = useRef('');
 
   useEffect(() => { loadSettings(); loadClasses(); loadSubjects(); loadStudents();
@@ -119,7 +121,16 @@ export default function TeacherMyResults() {
     });
   };
 
-  const handleSaveAll = async () => {
+  const countMissingScores = () => {
+    return classStudents.filter((s) => {
+      const sc = scores[s.studentId];
+      const exam = Number(sc?.examScore) || 0;
+      const test = Number(sc?.testScore) || 0;
+      return exam === 0 && test === 0;
+    }).length;
+  };
+
+  const doSaveAll = async () => {
     if (!filters.className || !filters.subjectId) { setError('Select class and subject'); return; }
     if (!settings) { setError('Settings not loaded yet'); return; }
     setSaving(true); setError(''); setSaved(false);
@@ -143,12 +154,23 @@ export default function TeacherMyResults() {
     });
     try {
       const ok = await saveResults(records);
-      if (ok > 0) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+      if (ok > 0) { setSaved(true); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => setSaved(false), 3000); }
       else setError('No records were saved. Check if the semester is finalized.');
     } catch (err) {
       setError(err.message || 'Failed to save results');
     }
     setSaving(false);
+  };
+
+  const handleSaveAll = async () => {
+    if (!filters.className || !filters.subjectId) { setError('Select class and subject'); return; }
+    if (!settings) { setError('Settings not loaded yet'); return; }
+    const missing = countMissingScores();
+    if (missing > 0) {
+      setMissingConfirm({ count: missing });
+      return;
+    }
+    await doSaveAll();
   };
 
   return (
@@ -180,6 +202,16 @@ export default function TeacherMyResults() {
           {saved && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm"><CheckCircle2 className="w-4 h-4" /> Results saved successfully</div>
           )}
+          <ConfirmModal
+            open={!!missingConfirm}
+            title="Students Without Scores"
+            message={`${missingConfirm?.count} of ${classStudents.length} students have no score entered. Are you sure you want to save? This may be an oversight.`}
+            confirmLabel="Save Anyway"
+            cancelLabel="Go Back"
+            variant="warning"
+            onConfirm={async () => { setMissingConfirm(null); await doSaveAll(); }}
+            onCancel={() => setMissingConfirm(null)}
+          />
           <div className="flex flex-col sm:flex-row gap-3">
             <select value={filters.className} onChange={(e) => setFilters({ ...filters, className: e.target.value, subjectId: '' })}
               className="h-11 rounded-xl border-2 border-border/50 bg-white/60 px-4 text-sm shadow-sm focus:outline-none focus:border-primary/40 min-w-[200px]">

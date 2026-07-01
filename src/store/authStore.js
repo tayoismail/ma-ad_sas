@@ -20,6 +20,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { auditLog, setAuditUser } from '../lib/audit';
 
 const SESSION_TIMEOUT_DEFAULT = 2 * 60 * 60 * 1000;
 const SESSION_TIMEOUT_REMEMBER = 7 * 24 * 60 * 60 * 1000;
@@ -70,6 +71,7 @@ const useAuthStore = create((set, get) => ({
             }
             set({ user: { id: firebaseUser.uid, ...userData }, isAuthenticated: true, isLoading: false });
             get().updateLastActivity();
+            setAuditUser({ id: firebaseUser.uid, ...userData });
           } else {
             const profile = {
               name: firebaseUser.email.split('@')[0],
@@ -79,6 +81,8 @@ const useAuthStore = create((set, get) => ({
             };
             await setDoc(doc(db, 'users', firebaseUser.uid), profile);
             set({ user: { id: firebaseUser.uid, ...profile }, isAuthenticated: true, isLoading: false });
+            setAuditUser({ id: firebaseUser.uid, ...profile });
+            auditLog('user.create', 'users', { name: profile.name, email: profile.email, role: 'admin' });
           }
         } catch {
           set({ isLoading: false });
@@ -128,10 +132,15 @@ const useAuthStore = create((set, get) => ({
       await updateDoc(doc(db, 'users', userCredential.user.uid), { lastLogin: new Date().toISOString() });
     } catch { /* lastLogin is best-effort */ }
     sessionStorage.setItem('maad_session', JSON.stringify({ lastActivity: Date.now(), remembered: rememberMe }));
-    return { id: userCredential.user.uid, ...profile };
+    const user = { id: userCredential.user.uid, ...profile };
+    setAuditUser(user);
+    auditLog('user.login', 'users', { email });
+    return user;
   },
 
   logout: async () => {
+    auditLog('user.logout', 'users', {});
+    setAuditUser(null);
     sessionStorage.removeItem('maad_session');
     await signOut(auth);
   },
@@ -163,6 +172,7 @@ const useAuthStore = create((set, get) => ({
       teacherClasses: data.teacherClasses || [],
       createdAt: new Date().toISOString(),
     });
+    auditLog('user.create', 'users', { name: data.name, email: data.email, role: data.role });
     return uid;
   },
 
@@ -171,12 +181,14 @@ const useAuthStore = create((set, get) => ({
     void _password;
     if (Object.keys(profile).length > 0) {
       await updateDoc(doc(db, 'users', id), profile);
+      auditLog('user.update', 'users', { id, fields: Object.keys(profile) });
     }
   },
 
   deleteUser: async (id) => {
     // Delete from Firestore first, then revoke Firebase Auth via REST API
     await deleteDoc(doc(db, 'users', id));
+    auditLog('user.delete', 'users', { id });
     try {
       const res = await fetch(
         `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`,

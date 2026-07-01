@@ -104,6 +104,7 @@ export default function StudentsPage() {
     setUploadResult(result);
     setUploading(false);
     setUploadData([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setUploadResult(null), 5000);
   };
 

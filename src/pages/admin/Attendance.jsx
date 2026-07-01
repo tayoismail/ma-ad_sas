@@ -98,6 +98,7 @@ export default function AttendancePage() {
     }
     setSaving(false);
     setSaved(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setSaved(false), 3000);
   };
 

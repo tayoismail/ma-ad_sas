@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, School,
   Menu, Pencil, Trash2, X, Check,
-  Loader2, BookMarked, AlertCircle, Moon, Sun
+  Loader2, BookMarked, AlertCircle, Moon, Sun, CheckCircle2
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
 import AdminSidebar from '../../components/AdminSidebar';
+import ConfirmModal from '../../components/ConfirmModal';
 import useSubjectsStore from '../../store/subjectsStore';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -28,6 +29,7 @@ export default function SubjectsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
+  const [saved, setSaved] = useState('');
   const [form, setForm] = useState({
     name: '', arabicName: '', className: '', passingMark: 50,
   });
@@ -59,10 +61,14 @@ export default function SubjectsPage() {
     try {
       if (editingId) {
         await updateSubject(editingId, form);
+        setSaved('Subject updated successfully');
       } else {
         await addSubject(form);
+        setSaved('Subject created successfully');
       }
       resetForm();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to save subject');
     }
@@ -73,6 +79,9 @@ export default function SubjectsPage() {
     setDeleting(true);
     try {
       await deleteSubject(id);
+      setSaved('Subject deleted successfully');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to delete subject');
     }
@@ -129,6 +138,11 @@ export default function SubjectsPage() {
           {error && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm animate-fade-in">
               <AlertCircle className="w-4 h-4" /> {error}
+            </div>
+          )}
+          {saved && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
+              <CheckCircle2 className="w-4 h-4" /> {saved}
             </div>
           )}
 
@@ -217,21 +231,16 @@ export default function SubjectsPage() {
         </main>
       </div>
 
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setDeleteConfirm(null)}>
-          <Card className="w-full max-w-sm p-6 bg-card border-border shadow-2xl animate-fade-in text-center">
-            <div className="w-12 h-12 rounded-2xl bg-red-500/10 mx-auto mb-4 flex items-center justify-center"><AlertCircle className="w-6 h-6 text-red-500" /></div>
-            <h3 className="text-lg font-semibold text-card-foreground mb-2">Delete Subject?</h3>
-            <p className="text-sm text-muted-foreground mb-6">This will also remove all results for this subject.</p>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => handleDelete(deleteConfirm)} disabled={deleting}>
-                {deleting ? 'Deleting...' : 'Delete'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      <ConfirmModal
+        open={!!deleteConfirm}
+        title="Delete Subject?"
+        message="This will also remove all results for this subject."
+        confirmLabel={deleting ? 'Deleting...' : 'Delete'}
+        variant="danger"
+        loading={deleting}
+        onConfirm={() => handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

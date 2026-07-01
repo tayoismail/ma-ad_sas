@@ -86,6 +86,7 @@ export default function SettingsPage() {
     }
     setSaving(false);
     setSaved(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -102,6 +103,7 @@ export default function SettingsPage() {
     setFinalizing(false);
     setFinalizeConfirm(null);
     setSaved(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setSaved(false), 3000);
   };
 

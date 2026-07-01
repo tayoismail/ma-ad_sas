@@ -5,6 +5,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { auditLog } from '../lib/audit';
 
 const defaultSettings = {
   schoolName: "MA'AD AHLIL AATHAR",
@@ -45,6 +46,7 @@ const useSettingsStore = create((set) => ({
     await setDoc(doc(db, 'settings', 'school_settings'), data, { merge: true });
     const snap = await getDoc(doc(db, 'settings', 'school_settings'));
     set({ settings: { id: snap.id, ...snap.data() } });
+    auditLog('settings.update', 'settings', { fields: Object.keys(data) });
   },
 }));
 

@@ -98,7 +98,7 @@ export default function TeacherMyAttendance() {
     const map = {};
     records.forEach((r) => { map[r.studentId] = r.status; });
     setAttendanceMap(map);
-    setSaved(true); setTimeout(() => setSaved(false), 2000);
+    setSaved(true); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => setSaved(false), 2000);
     setSaving(false);
   };
 
