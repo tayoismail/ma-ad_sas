@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Plus, Upload, Download, Menu,
   Trash2, Pencil, Eye, X, ArrowLeft,
   FileSpreadsheet, AlertCircle, CheckCircle2, Loader2,
-  FileText, Moon, Sun
+  FileText, Moon, Sun, Printer
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import useAuthStore from '../../store/authStore';
@@ -15,6 +16,7 @@ import useSubjectsStore from '../../store/subjectsStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import DataTable from '../../components/DataTable';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -37,6 +39,8 @@ export default function StudentsPage() {
   const [duplicateIds, setDuplicateIds] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleteSuccess, setDeleteSuccess] = useState('');
+  const [printMode, setPrintMode] = useState(false);
 
   useEffect(() => {
     loadClasses();
@@ -123,6 +127,15 @@ export default function StudentsPage() {
   const handleDelete = async (id) => {
     await deleteStudent(id);
     setDeleteConfirm(null);
+    setDeleteSuccess('Student deleted successfully');
+  };
+
+  const handlePrint = () => {
+    setPrintMode(true);
+    setTimeout(() => {
+      window.print();
+      setPrintMode(false);
+    }, 150);
   };
 
   const columns = [
@@ -222,8 +235,6 @@ export default function StudentsPage() {
 
   return (
     <div className="min-h-screen bg-slate-300">
-      <div className="" />
-
       <AdminSidebar activePath="/admin/students" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="lg:pl-72">
@@ -239,6 +250,9 @@ export default function StudentsPage() {
               <h1 className="text-lg font-semibold text-card-foreground">Students</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={handlePrint} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground" title="Print Student List">
+                <Printer className="w-5 h-5" />
+              </button>
               <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
@@ -255,6 +269,8 @@ export default function StudentsPage() {
         </header>
 
         <main className="p-4 lg:p-8 space-y-6">
+
+
           {/* Upload result toast */}
           {uploadResult && (
             <div className={`space-y-2 p-4 rounded-xl border text-sm animate-fade-in ${
@@ -416,6 +432,7 @@ export default function StudentsPage() {
         </main>
       </div>
 
+      <SuccessModal open={!!deleteSuccess} title="Deleted" message={deleteSuccess} onClose={() => setDeleteSuccess('')} autoCloseMs={3000} />
       <ConfirmModal
         open={deleteConfirm !== null}
         title="Delete Student?"
@@ -425,6 +442,50 @@ export default function StudentsPage() {
         onConfirm={() => handleDelete(deleteConfirm)}
         onCancel={() => setDeleteConfirm(null)}
       />
+
+      {/* Print-only student list — portal renders directly into body so CSS body > * selector works */}
+      {printMode && createPortal(
+        <div className="print-only-container">
+          <div className="print-header">
+            <h1>Student List</h1>
+            <p className="print-subtitle">
+              {filtered.length} students{classFilter ? ` — Class: ${classFilter}` : ''}{sexFilter ? ` — Sex: ${sexFilter}` : ''}{search ? ` — Search: "${search}"` : ''}
+            </p>
+            <p className="print-date">Printed on {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+          <table className="print-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Sex</th>
+                <th>Parent</th>
+                <th>Parent Phone</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((s, i) => (
+                <tr key={s.id || i}>
+                  <td className="print-cell-center">{i + 1}</td>
+                  <td className="print-cell-center">{s.studentId || '--'}</td>
+                  <td>{s.name}</td>
+                  <td className="print-cell-center">{s.className}</td>
+                  <td className="print-cell-center">{s.sex || '--'}</td>
+                  <td>{s.parentName || '--'}</td>
+                  <td className="print-cell-center">{s.parentPhone || '--'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <p className="print-empty">No students match the current filters.</p>
+          )}
+          <p className="print-footer">Generated by School Management System</p>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

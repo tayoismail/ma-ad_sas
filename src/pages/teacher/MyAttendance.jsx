@@ -9,6 +9,7 @@ import useAttendanceStore from '../../store/attendanceStore';
 import useSettingsStore from '../../store/settingsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import AdminSidebar from '../../components/AdminSidebar';
+import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -32,6 +33,7 @@ export default function TeacherMyAttendance() {
   const [attendanceMap, setAttendanceMap] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
 
   useEffect(() => { loadSettings(); loadClasses(); loadStudents(); loadSubjects();
@@ -89,16 +91,21 @@ export default function TeacherMyAttendance() {
 
   const markAll = async (status) => {
     setSaving(true);
+    setError('');
     const records = classStudents.map((s) => ({
       studentId: s.studentId, className: filters.className,
       session: filters.session, semester: Number(filters.semester),
       date: selectedDate, status,
     }));
-    await markBulk(records);
-    const map = {};
-    records.forEach((r) => { map[r.studentId] = r.status; });
-    setAttendanceMap(map);
-    setSaved(true); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => setSaved(false), 2000);
+    try {
+      await markBulk(records);
+      const map = {};
+      records.forEach((r) => { map[r.studentId] = r.status; });
+      setAttendanceMap(map);
+      setSaved(true);
+    } catch {
+      setError('Failed to save attendance');
+    }
     setSaving(false);
   };
 
@@ -133,9 +140,10 @@ export default function TeacherMyAttendance() {
           </div>
         </header>
         <main className="p-4 lg:p-8 space-y-6">
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in"><CheckCircle2 className="w-4 h-4" /> Attendance saved</div>
+          {error && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm animate-fade-in"><AlertCircle className="w-4 h-4" /> {error}</div>
           )}
+
           {teacherClassNames.length === 0 ? (
             <Card className="p-12 text-center border-border">
               <School className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
@@ -231,6 +239,7 @@ export default function TeacherMyAttendance() {
           )}
         </main>
       </div>
+      <SuccessModal open={saved} title="Saved" message="Attendance saved" onClose={() => setSaved(false)} autoCloseMs={3000} />
     </div>
   );
 }

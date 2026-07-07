@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, School,
   Menu, Pencil, Trash2, X, Check,
-  Loader2, BookMarked, AlertCircle, Moon, Sun, CheckCircle2
+  Loader2, BookMarked, AlertCircle, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 import useSubjectsStore from '../../store/subjectsStore';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -67,8 +68,6 @@ export default function SubjectsPage() {
         setSaved('Subject created successfully');
       }
       resetForm();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to save subject');
     }
@@ -80,8 +79,6 @@ export default function SubjectsPage() {
     try {
       await deleteSubject(id);
       setSaved('Subject deleted successfully');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to delete subject');
     }
@@ -140,15 +137,11 @@ export default function SubjectsPage() {
               <AlertCircle className="w-4 h-4" /> {error}
             </div>
           )}
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" /> {saved}
-            </div>
-          )}
+
 
           {showForm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && resetForm()}>
-              <Card className="w-full max-w-md p-6 bg-card border-border shadow-2xl animate-fade-in">
+              <Card className="w-full max-w-md p-6 bg-card border-border shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-card-foreground">{editingId ? 'Edit Subject' : 'Add New Subject'}</h3>
                   <button onClick={resetForm} className="p-1 rounded-lg hover:bg-accent text-gray-400"><X className="w-5 h-5" /></button>
@@ -231,6 +224,7 @@ export default function SubjectsPage() {
         </main>
       </div>
 
+      <SuccessModal open={!!saved} title="Success" message={saved} onClose={() => setSaved('')} autoCloseMs={3000} />
       <ConfirmModal
         open={!!deleteConfirm}
         title="Delete Subject?"

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Download, Upload, Menu, CheckCircle2,
+  ArrowLeft, Download, Upload, Menu,
   AlertCircle, Loader2, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -10,6 +10,7 @@ import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Card } from '../../components/ui/card';
 import AdminSidebar from '../../components/AdminSidebar';
+import SuccessModal from '../../components/SuccessModal';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -46,12 +47,11 @@ export default function BackupPage() {
       a.click();
       URL.revokeObjectURL(url);
       setResult({ type: 'success', message: 'Data exported successfully!' });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
       setResult({ type: 'error', message: 'Export failed' });
     }
     setExporting(false);
-    setTimeout(() => setResult(null), 5000);
+
   };
 
   const handleFileSelected = (e) => {
@@ -114,7 +114,6 @@ export default function BackupPage() {
         }
         setRestoreProgress('');
         setResult({ type: 'success', message: 'Data restored successfully! Please refresh the page.' });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch {
         setRestoreProgress('');
         setResult({ type: 'error', message: 'Restore failed. Rolling back to previous data...' });
@@ -174,12 +173,9 @@ export default function BackupPage() {
         </header>
 
         <main className="p-4 lg:p-8 max-w-2xl space-y-6">
-          {result && (
-            <div className={`flex items-center gap-2 p-4 rounded-xl border text-sm animate-fade-in ${
-              result.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-600'
-            }`}>
-              {result.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-              {result.message}
+          {result?.type === 'error' && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm animate-fade-in">
+              <AlertCircle className="w-4 h-4" /> {result.message}
             </div>
           )}
 
@@ -219,6 +215,7 @@ export default function BackupPage() {
         onConfirm={handleImport}
         onCancel={() => { setRestoreConfirm(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
       />
+      <SuccessModal open={result?.type === 'success'} title="Success" message={result?.message || ''} onClose={() => setResult(null)} autoCloseMs={4000} />
     </div>
   );
 }

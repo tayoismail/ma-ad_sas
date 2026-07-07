@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu, Moon, Sun, Search, CheckCircle2
+  ArrowLeft, Plus, Pencil, Trash2, X, Check, Loader2, AlertCircle, Key, Menu, Moon, Sun, Search
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 import useSubjectsStore from '../../store/subjectsStore';
 import DataTable from '../../components/DataTable';
 import { Card } from '../../components/ui/card';
@@ -87,8 +88,6 @@ export default function UsersPage() {
       }
       await loadUsers();
       resetForm();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSaved(''), 3000);
     } catch (e) {
       setError(e.message || 'Failed to save');
     }
@@ -145,8 +144,6 @@ export default function UsersPage() {
     try {
       await useAuthStore.getState().deleteUser(id);
       setSaved('User deleted successfully');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSaved(''), 3000);
       await loadUsers();
     } catch (err) {
       setError(err.message || 'Failed to delete user');
@@ -161,8 +158,6 @@ export default function UsersPage() {
     try {
       await useAuthStore.getState().resetPassword(resetPasswordUser.email);
       setSaved('Password reset email sent successfully');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSaved(''), 3000);
       setResetPasswordUser(null);
     } catch (e) {
       setError(e.message || 'Failed to send reset email');
@@ -223,15 +218,11 @@ export default function UsersPage() {
               <AlertCircle className="w-4 h-4" /> {error}
             </div>
           )}
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" /> {saved}
-            </div>
-          )}
+
 
           {showForm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && resetForm()}>
-              <Card className="w-full max-w-md p-6 bg-white/90 backdrop-blur-2xl border-white/20 shadow-2xl animate-fade-in">
+              <Card className="w-full max-w-md p-6 bg-white/90 backdrop-blur-2xl border-white/20 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">{editingId ? 'Edit User' : 'Add User'}</h3>
                   <button onClick={resetForm} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-5 h-5" /></button>
@@ -328,6 +319,7 @@ export default function UsersPage() {
         </main>
       </div>
 
+      <SuccessModal open={!!saved} title="Success" message={saved} onClose={() => setSaved('')} autoCloseMs={3000} />
       <ConfirmModal
         open={!!deleteConfirm}
         title="Delete User?"
@@ -341,7 +333,7 @@ export default function UsersPage() {
 
       {resetPasswordUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && (setResetPasswordUser(null), setError(''))}>
-          <Card className="w-full max-w-md p-6 bg-white/90 backdrop-blur-2xl border-white/20 shadow-2xl animate-fade-in">
+          <Card className="w-full max-w-md p-6 bg-white/90 backdrop-blur-2xl border-white/20 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Reset Password</h3>
               <button onClick={() => { setResetPasswordUser(null); setError(''); }} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-5 h-5" /></button>

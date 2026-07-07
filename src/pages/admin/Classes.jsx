@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, School, Users, Menu, Bell, AlertCircle,
   Pencil, Trash2, ArrowRight,
-  X, Check, Loader2, Moon, Sun, CheckCircle2
+  X, Check, Loader2, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -11,6 +11,7 @@ import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -84,8 +85,6 @@ export default function ClassesPage() {
         setSaved('Class created successfully');
       }
       resetForm();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to save class');
     }
@@ -97,8 +96,6 @@ export default function ClassesPage() {
     try {
       await deleteClass(id);
       setSaved('Class deleted successfully');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSaved(''), 3000);
     } catch (err) {
       setError(err.message || 'Failed to delete class');
     }
@@ -161,11 +158,7 @@ export default function ClassesPage() {
               <AlertCircle className="w-4 h-4" /> {error}
             </div>
           )}
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" /> {saved}
-            </div>
-          )}
+
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">All Classes</h2>
@@ -179,7 +172,7 @@ export default function ClassesPage() {
           {/* Add/Edit Form Modal */}
           {showForm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && resetForm()}>
-              <Card className="w-full max-w-md p-6 bg-card border-border shadow-2xl animate-fade-in">
+              <Card className="w-full max-w-md p-6 bg-card border-border shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-card-foreground">{editingId ? 'Edit Class' : 'Add New Class'}</h3>
                   <button onClick={resetForm} className="p-1 rounded-lg hover:bg-accent text-gray-400">
@@ -290,6 +283,7 @@ export default function ClassesPage() {
         </main>
       </div>
 
+      <SuccessModal open={!!saved} title="Success" message={saved} onClose={() => setSaved('')} autoCloseMs={3000} />
       <ConfirmModal
         open={deleteConfirm !== null}
         title="Delete Class?"

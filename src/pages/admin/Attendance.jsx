@@ -13,6 +13,7 @@ import useAttendanceStore from '../../store/attendanceStore';
 import useSettingsStore from '../../store/settingsStore';
 import { semesterLabel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
+import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -98,8 +99,6 @@ export default function AttendancePage() {
     }
     setSaving(false);
     setSaved(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setSaved(false), 3000);
   };
 
   const year = today.getFullYear();
@@ -149,11 +148,7 @@ export default function AttendancePage() {
               <AlertCircle className="w-4 h-4" /> {error}
             </div>
           )}
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" /> Attendance saved
-            </div>
-          )}
+
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 space-y-4">
@@ -297,6 +292,7 @@ export default function AttendancePage() {
           </div>
         </main>
       </div>
+      <SuccessModal open={saved} title="Saved" message="Attendance saved" onClose={() => setSaved(false)} autoCloseMs={3000} />
     </div>
   );
 }

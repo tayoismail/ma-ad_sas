@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Save, User, Menu, Loader2, CheckCircle2, AlertCircle, Moon, Sun
+  ArrowLeft, Save, User, Menu, Loader2, AlertCircle, Moon, Sun
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -13,6 +13,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import AdminSidebar from '../../components/AdminSidebar';
+import SuccessModal from '../../components/SuccessModal';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 
 export default function StudentForm() {
@@ -159,12 +160,7 @@ export default function StudentForm() {
               <AlertCircle className="w-4 h-4" /> {formError}
             </div>
           )}
-          {saved && (
-            <div className="mb-6 flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" />
-              Student {isEdit ? 'updated' : 'registered'} successfully!
-            </div>
-          )}
+
 
           <Card className="p-6 lg:p-8 bg-card border-border">
             <div className="flex items-center gap-3 mb-8">
@@ -301,6 +297,7 @@ export default function StudentForm() {
           </Card>
         </main>
       </div>
+      <SuccessModal open={saved} title="Success" message={`Student ${isEdit ? 'updated' : 'registered'} successfully!`} onClose={() => { setSaved(false); navigate('/admin/students'); }} />
     </div>
   );
 }

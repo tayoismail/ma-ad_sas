@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Save, School,
-  Calendar, Layers, Loader2, CheckCircle2,
+  Calendar, Layers, Loader2,
   AlertCircle, Menu,
   Lock, Unlock, Moon, Sun
 } from 'lucide-react';
@@ -11,6 +11,7 @@ import useSettingsStore from '../../store/settingsStore';
 import { useThemeStore } from '../../store/themeStore';
 import { validateGradingScale, gradeStyle } from '../../lib/grading';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -86,8 +87,6 @@ export default function SettingsPage() {
     }
     setSaving(false);
     setSaved(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setSaved(false), 3000);
   };
 
   const handleFinalize = async (semester) => {
@@ -103,8 +102,6 @@ export default function SettingsPage() {
     setFinalizing(false);
     setFinalizeConfirm(null);
     setSaved(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setSaved(false), 3000);
   };
 
   const isSemesterFinalized = (sem) => form.semestersFinalized?.[`${form.currentSession}_sem${sem}`];
@@ -159,12 +156,7 @@ export default function SettingsPage() {
               {error}
             </div>
           )}
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" />
-              Settings saved successfully
-            </div>
-          )}
+
 
           {/* School Info */}
           <Card className="p-6 bg-card border-border">
@@ -414,6 +406,7 @@ export default function SettingsPage() {
         </main>
       </div>
 
+      <SuccessModal open={saved} title="Success" message="Settings saved successfully" onClose={() => setSaved(false)} autoCloseMs={3000} />
       <ConfirmModal
         open={finalizeConfirm !== null}
         title="Finalize Semester?"

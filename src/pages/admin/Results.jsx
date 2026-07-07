@@ -21,6 +21,7 @@ import { Input } from '../../components/ui/input';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import AdminSidebar from '../../components/AdminSidebar';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 
 export default function ResultsPage() {
   const navigate = useNavigate();
@@ -203,8 +204,6 @@ export default function ResultsPage() {
       return;
     }
     setSaved(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setSaved(false), 3000);
   };
 
   const handleSaveAll = async () => {
@@ -301,9 +300,8 @@ export default function ResultsPage() {
     setUploadResult(count);
     setUploading(false);
     setUploadData([]);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (filters.className && filters.subjectId) handleLoadResults();
-    setTimeout(() => setUploadResult(null), 5000);
+
   };
 
   const downloadTemplate = () => {
@@ -365,11 +363,7 @@ export default function ResultsPage() {
               </div>
             </div>
           )}
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" /> Results saved successfully
-            </div>
-          )}
+
           <ConfirmModal
             open={!!missingConfirm}
             title="Students Without Scores"
@@ -381,11 +375,7 @@ export default function ResultsPage() {
             onCancel={() => setMissingConfirm(null)}
           />
 
-          {uploadResult && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" /> {uploadResult} results imported
-            </div>
-          )}
+
 
           {/* Mass Upload */}
           {showMassUpload && user?.role !== 'teacher' && (
@@ -651,6 +641,8 @@ export default function ResultsPage() {
           )}
         </main>
       </div>
+      <SuccessModal open={saved} title="Success" message="Results saved successfully" onClose={() => setSaved(false)} autoCloseMs={3000} />
+      <SuccessModal open={!!uploadResult} title="Import Complete" message={`${uploadResult} results imported`} onClose={() => setUploadResult(null)} autoCloseMs={4000} />
     </div>
   );
 }

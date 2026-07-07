@@ -10,6 +10,7 @@ import useSettingsStore from '../../store/settingsStore';
 import usePromotionStore from '../../store/promotionStore';
 import useClassesStore from '../../store/classesStore';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -27,6 +28,11 @@ export default function PromotionPage() {
   const [calculated, setCalculated] = useState(false);
   const [calcLoading, setCalcLoading] = useState(false);
   const [confirmAllOpen, setConfirmAllOpen] = useState(false);
+  const [success, setSuccess] = useState('');
+
+  const showSuccess = (msg) => {
+    setSuccess(msg);
+  };
 
   const confirmed = (studentId) => promotions.find((p) => p.studentId === studentId && p.status === 'confirmed');
 
@@ -117,6 +123,7 @@ export default function PromotionPage() {
     try {
       await calculateCumulative(settings?.currentSession || '2024/2025');
       setCalculated(true);
+      showSuccess('Cumulative scores calculated successfully');
     } catch (err) {
       console.error('Failed to calculate cumulative:', err);
     }
@@ -146,6 +153,8 @@ export default function PromotionPage() {
         </header>
 
         <main className="p-4 lg:p-8 space-y-6">
+
+
           <Card className="p-6 bg-card border-border">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
@@ -223,7 +232,7 @@ export default function PromotionPage() {
                               {confirmed(d.studentId) ? (
                                 <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle2 className="w-3 h-3" /> Done</span>
                               ) : (
-                                <Button size="sm" variant="outline" onClick={() => confirmPromotion(d.studentId, settings?.currentSession)}>
+                                <Button size="sm" variant="outline" onClick={() => { confirmPromotion(d.studentId, settings?.currentSession); showSuccess(`${d.studentName} promoted successfully`); }}>
                                   <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Promote
                                 </Button>
                               )}
@@ -261,7 +270,7 @@ export default function PromotionPage() {
                               {confirmed(d.studentId) ? (
                                 <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle2 className="w-3 h-3" /> Confirmed Repeat</span>
                               ) : (
-                                <Button size="sm" variant="outline" className="text-amber-600 border-amber-200" onClick={() => confirmPromotion(d.studentId, settings?.currentSession)}>
+                                <Button size="sm" variant="outline" className="text-amber-600 border-amber-200" onClick={() => { confirmPromotion(d.studentId, settings?.currentSession); showSuccess(`${d.studentName} repeat confirmed`); }}>
                                   Confirm Repeat
                                 </Button>
                               )}
@@ -286,13 +295,14 @@ export default function PromotionPage() {
         </main>
       </div>
 
+      <SuccessModal open={!!success} title="Success" message={success} onClose={() => setSuccess('')} autoCloseMs={3000} />
       <ConfirmModal
         open={confirmAllOpen}
         title="Confirm All Promotions?"
         message={`This will promote ${promoted.length} student(s) and confirm ${repeating.length} student(s) to repeat. This action updates student class assignments.`}
         confirmLabel={`Confirm All (${promoted.length + repeating.length})`}
         variant="warning"
-        onConfirm={() => { confirmAll(settings?.currentSession); setConfirmAllOpen(false); }}
+        onConfirm={() => { confirmAll(settings?.currentSession); setConfirmAllOpen(false); showSuccess('Promotions confirmed successfully'); }}
         onCancel={() => setConfirmAllOpen(false)}
       />
     </div>
