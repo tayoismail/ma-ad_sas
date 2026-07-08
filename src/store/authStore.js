@@ -26,6 +26,26 @@ const SESSION_TIMEOUT_DEFAULT = 2 * 60 * 60 * 1000;
 const SESSION_TIMEOUT_REMEMBER = 7 * 24 * 60 * 60 * 1000;
 const API_KEY = import.meta.env.VITE_FIREBASE_API_KEY;
 
+/**
+ * Bootstrap helper: if a Firebase Auth user has no Firestore profile,
+ * auto-create an admin profile ONLY when the users collection is empty
+ * (first-time setup). Returns the profile data, or null if the user
+ * should be rejected / signed out.
+ */
+async function bootstrapProfile(firebaseUser) {
+  const existingUsers = await getDocs(collection(db, 'users'));
+  if (!existingUsers.empty) return null;
+  const profile = {
+    name: firebaseUser.email.split('@')[0],
+    email: firebaseUser.email,
+    role: 'admin',
+    createdAt: new Date().toISOString(),
+  };
+  await setDoc(doc(db, 'users', firebaseUser.uid), profile);
+  auditLog('user.create', 'users', { name: profile.name, email: profile.email, role: 'admin' });
+  return profile;
+}
+
 const useAuthStore = create((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -73,16 +93,19 @@ const useAuthStore = create((set, get) => ({
             get().updateLastActivity();
             setAuditUser({ id: firebaseUser.uid, ...userData });
           } else {
-            const profile = {
-              name: firebaseUser.email.split('@')[0],
-              email: firebaseUser.email,
-              role: 'admin',
-              createdAt: new Date().toISOString(),
-            };
-            await setDoc(doc(db, 'users', firebaseUser.uid), profile);
-            set({ user: { id: firebaseUser.uid, ...profile }, isAuthenticated: true, isLoading: false });
-            setAuditUser({ id: firebaseUser.uid, ...profile });
-            auditLog('user.create', 'users', { name: profile.name, email: profile.email, role: 'admin' });
+            // Firebase Auth user has no Firestore profile.
+            const profile = await bootstrapProfile(firebaseUser);
+            if (profile) {
+              set({ user: { id: firebaseUser.uid, ...profile }, isAuthenticated: true, isLoading: false });
+              setAuditUser({ id: firebaseUser.uid, ...profile });
+            } else {
+              // Users exist — this account has no profile and must be set
+              // up by an existing admin via the Users page.
+              console.warn(`Firebase Auth user ${firebaseUser.uid} has no Firestore profile. Signing out.`);
+              await signOut(auth);
+              sessionStorage.removeItem('maad_session');
+              set({ user: null, isAuthenticated: false, isLoading: false });
+            }
           }
         } catch {
           set({ isLoading: false });
@@ -144,11 +167,16 @@ const useAuthStore = create((set, get) => ({
       }
       throw new Error('Login failed. Please try again.', { cause: err });
     }
+    let profile;
     const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-    if (!userDoc.exists()) {
-      throw new Error('Login failed. Please try again.');
+    if (userDoc.exists()) {
+      profile = userDoc.data();
+    } else {
+      profile = await bootstrapProfile(userCredential.user);
+      if (!profile) {
+        throw new Error('Account not found. Please contact an administrator.');
+      }
     }
-    const profile = userDoc.data();
     try {
       await updateDoc(doc(db, 'users', userCredential.user.uid), { lastLogin: new Date().toISOString() });
     } catch { /* lastLogin is best-effort */ }
