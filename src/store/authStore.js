@@ -207,21 +207,17 @@ const useAuthStore = create((set, get) => ({
   },
 
   deleteUser: async (id) => {
-    // Delete from Firestore first, then revoke Firebase Auth via REST API
+    // Guard: never allow self-deletion (prevents accidental admin lockout)
+    const currentUser = auth.currentUser;
+    if (currentUser && currentUser.uid === id) {
+      throw new Error('Cannot delete your own account');
+    }
+    // Delete the Firestore profile only.
+    // Firebase Auth account cleanup requires the Admin SDK (server-side);
+    // the client REST API can only delete the *currently logged-in* user,
+    // so calling it here would accidentally delete the admin's own auth account.
     await deleteDoc(doc(db, 'users', id));
     auditLog('user.delete', 'users', { id });
-    try {
-      const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken: await auth.currentUser?.getIdToken() }),
-        }
-      );
-      // If delete targets a different user, we need admin SDK — log warning instead
-      if (!res.ok) console.warn('Could not revoke auth for deleted user. Use Firebase Admin SDK for full cleanup.');
-    } catch { /* best-effort auth cleanup */ }
   },
 
   resetPassword: async (email) => {
