@@ -6,6 +6,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
+import NetworkStatus from './components/NetworkStatus';
+import UpdatePrompt from './components/UpdatePrompt';
 
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
@@ -85,7 +87,9 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="min-h-screen gradient-secondary flex items-center justify-center"><div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+      <NetworkStatus />
+      <UpdatePrompt />
+      <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /><p className="text-muted-foreground text-sm animate-pulse">Loading page...</p></div></div>}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />

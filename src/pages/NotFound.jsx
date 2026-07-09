@@ -8,7 +8,7 @@ export default function NotFound() {
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <div className="min-h-screen bg-slate-300 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="text-center max-w-md">
         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6">
           <FileQuestion className="w-10 h-10 text-primary" />
