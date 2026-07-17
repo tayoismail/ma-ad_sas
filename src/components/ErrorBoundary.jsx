@@ -23,8 +23,17 @@ export default class ErrorBoundary extends Component {
   };
 
   handleRetry = () => {
+    if (this.state.isChunkLoad) {
+      // Chunk errors mean a lazy-loaded module is missing — retrying the
+      // same import will fail every time.  Force a hard reload so the
+      // browser fetches a fresh HTML shell with updated chunk references.
+      window.location.reload();
+      return;
+    }
     this.setState({ hasError: false, error: null, isChunkLoad: false });
   };
+
+
 
   render() {
     if (this.state.hasError) {

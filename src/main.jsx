@@ -20,16 +20,22 @@ const errorHTML = (title, message, detail) => `
   </div>
 </div>`;
 
+const CHUNK_RETRY_KEY = 'maad_chunk_retries';
+function getChunkRetries() {
+  return parseInt(sessionStorage.getItem(CHUNK_RETRY_KEY) || '0', 10);
+}
+
 window.addEventListener('error', (e) => {
   console.error('Global error caught:', e.error || e.message);
   const isChunkError = /Loading chunk|dynamically imported module|import\(\) failed/i.test(e.message || e.error?.message || '');
   if (isChunkError) {
-    document.getElementById('root').innerHTML = errorHTML(
-      'Network Error',
-      'Failed to load part of the application. Please check your internet connection.',
-      ''
-    );
-    return;
+    const retries = getChunkRetries();
+    if (retries < 1) {
+      sessionStorage.setItem(CHUNK_RETRY_KEY, String(retries + 1));
+      window.location.reload();
+      return;
+    }
+    sessionStorage.removeItem(CHUNK_RETRY_KEY);
   }
   document.getElementById('root').innerHTML = errorHTML(
     'Something went wrong',
@@ -41,6 +47,13 @@ window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled rejection:', e.reason);
   const isChunkError = /Loading chunk|dynamically imported module|import\(\) failed/i.test(e.reason?.message || '');
   if (isChunkError) {
+    const retries = getChunkRetries();
+    if (retries < 1) {
+      sessionStorage.setItem(CHUNK_RETRY_KEY, String(retries + 1));
+      window.location.reload();
+      return;
+    }
+    sessionStorage.removeItem(CHUNK_RETRY_KEY);
     document.getElementById('root').innerHTML = errorHTML(
       'Network Error',
       'Failed to load part of the application. Please check your internet connection and try again.',

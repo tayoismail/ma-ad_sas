@@ -14,21 +14,18 @@ function isCacheableRequest(request) {
   if (url.origin !== self.location.origin) return false;
   // Only same-origin requests (JS, CSS, images, fonts, SVG)
   const ext = url.pathname.split('.').pop().toLowerCase();
-  return ['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'woff', 'woff2', 'ttf', 'eot'].includes(ext);
+  return ['js', 'css', 'html', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'woff', 'woff2', 'ttf', 'eot'].includes(ext);
 }
 
-// Install: pre-cache the app shell (index.html)
+// Install: activate immediately so new deploys propagate without stale caches.
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(['/']).catch(() => {});
-    })
-  );
-  // Do NOT call skipWaiting() here — let the UpdatePrompt component
-  // handle it when the user clicks 'Reload' via the SKIP_WAITING message.
+  // skipWaiting() + clients.claim() below ensures a new deployment
+  // replaces the old SW right away instead of letting stale cached
+  // index.html (with old chunk hashes) linger in background tabs.
+  event.waitUntil(self.skipWaiting());
 });
 
-// Listen for skip-waiting message from the app
+// Listen for skip-waiting message from the app (kept for backward compat)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
