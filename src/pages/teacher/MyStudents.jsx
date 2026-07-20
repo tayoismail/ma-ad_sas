@@ -94,7 +94,7 @@ export default function TeacherMyStudents() {
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
               <button onClick={() => navigate('/teacher/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
-              <h1 className="text-lg font-semibold text-card-foreground">My Students</h1>
+              <h1 className="text-lg font-semibold text-card-foreground">Students</h1>
             </div>
             <div className="flex items-center gap-3">
               <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
@@ -124,7 +124,7 @@ export default function TeacherMyStudents() {
             <>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">My Students</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Students</h2>
                   <p className="text-sm text-gray-500 mt-0.5">{classStudents.length} student{classStudents.length !== 1 ? 's' : ''} across {filteredClasses.length} class{filteredClasses.length !== 1 ? 'es' : ''}</p>
                 </div>
               </div>

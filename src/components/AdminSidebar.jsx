@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Users, GraduationCap, School, BookMarked, CalendarDays,
-  Award, Printer, TrendingUp, Database, Settings, LayoutDashboard, LogOut, Shield
+  Award, Printer, TrendingUp, Database, Settings, LayoutDashboard, LogOut, Shield, ClipboardList
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { Button } from './ui/button';
@@ -23,8 +23,9 @@ const allLinks = [
 
 const teacherLinks = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/teacher/dashboard' },
-  { label: 'My Students', icon: GraduationCap, path: '/teacher/students' },
-  { label: 'My Results', icon: Award, path: '/teacher/results' },
+  { label: 'Subjects', icon: ClipboardList, path: '/teacher/assignments' },
+  { label: 'Students', icon: GraduationCap, path: '/teacher/students' },
+  { label: 'Results', icon: Award, path: '/teacher/results' },
   { label: 'Attendance', icon: CalendarDays, path: '/teacher/attendance' },
   { label: 'Promotion', icon: TrendingUp, path: '/admin/promotion' },
 ];

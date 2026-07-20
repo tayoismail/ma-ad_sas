@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Award, LogOut, ClipboardList, School, TrendingUp, Moon, Sun, AlertCircle, CalendarDays, ArrowLeft, Menu } from 'lucide-react';
+import { BookOpen, Users, Award, LogOut, ClipboardList, School, TrendingUp, Moon, Sun, AlertCircle, CalendarDays, ArrowLeft, Menu, ClipboardCheck } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
@@ -43,8 +43,8 @@ export default function TeacherDashboard() {
   const assignedResults = results.filter((r) => teacherSubjectSet.has(r.subjectId));
 
   const stats = [
-    { label: 'Classes', value: assignedClassesList.length, icon: School, cardBg: 'from-blue-600 to-indigo-700' },
-    { label: 'Subjects', value: assignedSubjectList.length, icon: BookOpen, cardBg: 'from-purple-600 to-pink-700' },
+    { label: 'Classes', value: assignedClassesList.length, icon: School, cardBg: 'from-blue-600 to-indigo-700', onClick: () => navigate('/teacher/assignments') },
+    { label: 'Subjects', value: assignedSubjectList.length, icon: BookOpen, cardBg: 'from-purple-600 to-pink-700', onClick: () => navigate('/teacher/assignments') },
     { label: 'Students', value: assignedStudents.length, icon: Users, cardBg: 'from-emerald-600 to-teal-700' },
     { label: 'Results Entered', value: assignedResults.length, icon: ClipboardList, cardBg: 'from-amber-600 to-orange-700' },
   ];
@@ -101,7 +101,7 @@ export default function TeacherDashboard() {
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {stats.map((stat) => (
-            <Card key={stat.label} className={`p-5 border-0 bg-gradient-to-br ${stat.cardBg} text-white shadow-xl hover:shadow-2xl hover:shadow-black/20 transition-all duration-300 hover:-translate-y-1`}>
+            <Card key={stat.label} className={`p-5 border-0 bg-gradient-to-br ${stat.cardBg} text-white shadow-xl hover:shadow-2xl hover:shadow-black/20 transition-all duration-300 hover:-translate-y-1 ${stat.onClick ? 'cursor-pointer' : ''}`} onClick={stat.onClick}>
               <div className="flex items-start justify-between">
                 <div><p className="text-sm font-bold text-white/80 mb-1 tracking-wide uppercase">{stat.label}</p><p className="text-3xl font-extrabold text-white">{stat.value}</p></div>
                 <div className="p-3 rounded-xl bg-white/20"><stat.icon className="w-6 h-6 text-white" /></div>
@@ -112,7 +112,7 @@ export default function TeacherDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="p-6 border-border shadow-md">
-            <h3 className="text-base font-bold text-card-foreground mb-5 flex items-center gap-2"><School className="w-5 h-5 text-purple-500" /> My Classes</h3>
+            <h3 className="text-base font-bold text-card-foreground mb-5 flex items-center gap-2"><School className="w-5 h-5 text-purple-500" /> Classes</h3>
             <div className="space-y-2">
               {assignedClassesList.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">No classes assigned yet.</p>
@@ -136,10 +136,13 @@ export default function TeacherDashboard() {
                 <Award className="w-4 h-4 mr-2" /> Enter Results
               </Button>
               <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/teacher/students')}>
-                <Users className="w-4 h-4 mr-2" /> My Students
+                <Users className="w-4 h-4 mr-2" /> Students
               </Button>
               <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/teacher/attendance')}>
                 <CalendarDays className="w-4 h-4 mr-2" /> Take Attendance
+              </Button>
+              <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/teacher/assignments')}>
+                <ClipboardCheck className="w-4 h-4 mr-2" /> Subjects
               </Button>
               <Button variant="outline" className="w-full justify-start font-semibold text-sm" onClick={() => navigate('/admin/promotion')}>
                 <TrendingUp className="w-4 h-4 mr-2" /> Promotion Status

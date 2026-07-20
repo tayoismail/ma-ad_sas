@@ -23,6 +23,7 @@ const TeacherDashboard = lazy(() => import('./pages/teacher/Dashboard'));
 const TeacherMyStudents = lazy(() => import('./pages/teacher/MyStudents'));
 const TeacherMyResults = lazy(() => import('./pages/teacher/MyResults'));
 const TeacherMyAttendance = lazy(() => import('./pages/teacher/MyAttendance'));
+const TeacherMyAssignments = lazy(() => import('./pages/teacher/MyAssignments'));
 const StudentDashboard = lazy(() => import('./pages/student/Dashboard'));
 const StudentMyResults = lazy(() => import('./pages/student/MyResults'));
 const StudentMyAttendance = lazy(() => import('./pages/student/MyAttendance'));
@@ -114,6 +115,7 @@ export default function App() {
         <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyStudents /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/results" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyResults /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyAttendance /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/teacher/assignments" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyAssignments /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/student/dashboard" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentDashboard /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/student/results" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentMyResults /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/student/attendance" element={<ProtectedRoute roles={['student']}><ErrorBoundary><StudentMyAttendance /></ErrorBoundary></ProtectedRoute>} />

@@ -182,7 +182,7 @@ export default function TeacherMyResults() {
             <div className="flex items-center gap-4">
               <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><Menu className="w-5 h-5" /></button>
               <button onClick={() => navigate('/teacher/dashboard')} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground"><ArrowLeft className="w-5 h-5" /></button>
-              <h1 className="text-lg font-semibold text-card-foreground">My Results</h1>
+              <h1 className="text-lg font-semibold text-card-foreground">Results</h1>
             </div>
             <div className="flex items-center gap-3">
               <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>

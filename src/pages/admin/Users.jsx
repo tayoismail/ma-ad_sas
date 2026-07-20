@@ -181,10 +181,10 @@ export default function UsersPage() {
       <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium capitalize text-center ${roleColors[u.role] || 'bg-gray-100 text-gray-600'}`}>{u.role}</span>
     )},
     { key: 'actions', label: 'Actions', sortable: false, width: '140px', render: (u) => (
-      <div className="flex items-center justify-end gap-1">
-        <button onClick={(e) => { e.stopPropagation(); handleEdit(u); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500"><Pencil className="w-3.5 h-3.5" /></button>
-        <button onClick={(e) => { e.stopPropagation(); setResetPasswordUser(u); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500"><Key className="w-3.5 h-3.5" /></button>
-        <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(u); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+      <div className="flex items-center justify-end gap-1.5">
+        <button onClick={(e) => { e.stopPropagation(); handleEdit(u); }} className="p-2 rounded-lg hover:bg-amber-50 text-amber-500"><Pencil className="w-4 h-4 sm:w-3.5 sm:h-3.5" /></button>
+        <button onClick={(e) => { e.stopPropagation(); setResetPasswordUser(u); }} className="p-2 rounded-lg hover:bg-blue-50 text-blue-500"><Key className="w-4 h-4 sm:w-3.5 sm:h-3.5" /></button>
+        <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(u); }} className="p-2 rounded-lg hover:bg-red-50 text-red-500"><Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" /></button>
       </div>
     )},
   ];
