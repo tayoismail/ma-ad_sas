@@ -11,7 +11,7 @@ import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import useSettingsStore from '../../store/settingsStore';
-import { semesterLabel } from '../../lib/utils';
+import { semesterLabel, formatStudentName } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
@@ -244,9 +244,9 @@ export default function AttendancePage() {
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
                                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
-                                      {student.name?.charAt(0)?.toUpperCase() || '?'}
+                                      {formatStudentName(student.name)?.charAt(0)?.toUpperCase() || '?'}
                                     </div>
-                                    <span className="font-medium text-gray-900 text-sm">{student.name}</span>
+                                    <span className="font-medium text-gray-900 text-sm">{formatStudentName(student.name)}</span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 text-xs font-mono text-gray-400 hidden md:table-cell">{student.studentId || '--'}</td>

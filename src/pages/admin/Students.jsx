@@ -21,6 +21,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+import { formatStudentName, downloadExcel } from '../../lib/utils';
 
 export default function StudentsPage() {
   const navigate = useNavigate();
@@ -138,6 +139,21 @@ export default function StudentsPage() {
     }, 150);
   };
 
+  const handleDownloadExcel = () => {
+    const data = filtered.map((s, i) => ({
+      '#': i + 1,
+      'Student ID': s.studentId || '',
+      'Name': formatStudentName(s.name),
+      'Class': s.className || '',
+      'Sex': s.sex || '',
+      'Date of Birth': s.dateOfBirth || '',
+      'Parent Name': formatStudentName(s.parentName) || '',
+      'Parent Phone': s.parentPhone || '',
+      'Parent Email': s.parentEmail || '',
+    }));
+    downloadExcel(data, 'student_list');
+  };
+
   const columns = [
     {
       key: 'studentId',
@@ -152,10 +168,10 @@ export default function StudentsPage() {
       render: (row) => (
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
-            {row.name?.charAt(0)?.toUpperCase() || '?'}
+            {formatStudentName(row.name)?.charAt(0)?.toUpperCase() || '?'}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{row.name}</p>
+            <p className="font-medium text-gray-900">{formatStudentName(row.name)}</p>
           </div>
         </div>
       ),
@@ -184,7 +200,7 @@ export default function StudentsPage() {
       hideOnMobile: true,
       render: (row) => (
         <div className="text-sm">
-          <p className="text-gray-700">{row.parentName || '--'}</p>
+          <p className="text-gray-700">{formatStudentName(row.parentName) || '--'}</p>
           {row.parentPhone && <p className="text-xs text-gray-400">{row.parentPhone}</p>}
         </div>
       ),
@@ -250,6 +266,9 @@ export default function StudentsPage() {
               <h1 className="text-lg font-semibold text-card-foreground">Students</h1>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={handleDownloadExcel} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground" title="Download Excel">
+                <Download className="w-5 h-5" />
+              </button>
               <button onClick={handlePrint} className="p-2 rounded-lg hover:bg-gray-100 text-muted-foreground" title="Print Student List">
                 <Printer className="w-5 h-5" />
               </button>
@@ -470,10 +489,10 @@ export default function StudentsPage() {
                 <tr key={s.id || i}>
                   <td className="print-cell-center">{i + 1}</td>
                   <td className="print-cell-center">{s.studentId || '--'}</td>
-                  <td>{s.name}</td>
+                  <td>{formatStudentName(s.name)}</td>
                   <td className="print-cell-center">{s.className}</td>
                   <td className="print-cell-center">{s.sex || '--'}</td>
-                  <td>{s.parentName || '--'}</td>
+                  <td>{formatStudentName(s.parentName) || '--'}</td>
                   <td className="print-cell-center">{s.parentPhone || '--'}</td>
                 </tr>
               ))}

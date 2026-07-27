@@ -15,6 +15,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { gradeStyle } from '../../lib/grading';
+import { formatStudentName } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 
 export default function PromotionPage() {
@@ -53,7 +54,7 @@ export default function PromotionPage() {
         return `
         <tr>
           <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;color:#666;">${i + 1}</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;font-weight:600;">${d.studentName}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;font-weight:600;">${d.studentName.replace(/[\/\\]/g, ' ').replace(/\s+/g, ' ').trim()}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;text-align:center;font-weight:600;">${d.cumulative}</td>
           <td style="padding:8px 12px;border-bottom:1px solid #ddd;font-size:13px;text-align:center;">
             <span style="padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;background:${gs.hex}20;color:${gs.hex};">${d.grade}</span>
@@ -221,7 +222,7 @@ export default function PromotionPage() {
                       <tbody>
                         {promoted.map((d) => (
                           <tr key={d.studentId} className="border-b border-white/10 hover:bg-white/30">
-                            <td className="px-4 py-3 font-medium text-gray-900">{d.studentName}</td>
+                            <td className="px-4 py-3 font-medium text-gray-900">{formatStudentName(d.studentName)}</td>
                             <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{d.className}</td>
                             <td className="px-4 py-3 text-emerald-600 font-medium">{d.promoteTo}</td>
                             <td className="px-4 py-3 text-center font-semibold text-gray-900">{d.cumulative}</td>
@@ -262,7 +263,7 @@ export default function PromotionPage() {
                       <tbody>
                         {repeating.map((d) => (
                           <tr key={d.studentId} className="border-b border-white/10 hover:bg-white/30">
-                            <td className="px-4 py-3 font-medium text-gray-900">{d.studentName}</td>
+                            <td className="px-4 py-3 font-medium text-gray-900">{formatStudentName(d.studentName)}</td>
                             <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{d.className}</td>
                             <td className="px-4 py-3 text-center font-semibold text-red-600">{d.cumulative}</td>
                             <td className="px-4 py-3 text-center hidden sm:table-cell"><span className="px-2 py-0.5 rounded text-xs font-medium bg-red-500/10 text-red-600">{d.grade}</span></td>

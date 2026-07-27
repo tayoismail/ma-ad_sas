@@ -10,7 +10,7 @@ import useSettingsStore from '../../store/settingsStore';
 import { useThemeStore } from '../../store/themeStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import useSubjectsStore from '../../store/subjectsStore';
-import { semesterLabel } from '../../lib/utils';
+import { semesterLabel, formatStudentName } from '../../lib/utils';
 import { gradeStyle } from '../../lib/grading';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -215,7 +215,7 @@ export default function TranscriptPage() {
 
           <div className="p-6 border-b border-gray-100">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student Name</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.name}</p></div>
+              <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student Name</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{formatStudentName(student.name)}</p></div>
               <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student ID</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.studentId || '--'}</p></div>
               <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Current Class</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.className}</p></div>
               <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Date of Birth</p><p className="text-sm font-semibold text-gray-900 mt-0.5">{student.dateOfBirth || '--'}</p></div>

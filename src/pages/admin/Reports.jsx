@@ -15,7 +15,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { calculateGrade, gradeStyle } from '../../lib/grading';
-import { semesterLabel } from '../../lib/utils';
+import { semesterLabel, formatStudentName, downloadExcel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 
 export default function ReportsPage() {
@@ -128,6 +128,31 @@ export default function ReportsPage() {
     setTimeout(() => { win.print(); win.close(); }, 300);
   };
 
+  const handleDownloadClassExcel = () => {
+    const sorted = [...studentRows].sort((a, b) => (b.avg || 0) - (a.avg || 0));
+    const data = sorted.map((sr, i) => {
+      const g = sr.avg !== null ? gradeInfo(sr.avg) : { grade: '--' };
+      const promo = Number(classFilters.semester) === 2 ? promotionStatus(sr.avg) : null;
+      const obj = {
+        '#': i + 1,
+        'Student Name': formatStudentName(sr.student.name),
+        'Student ID': sr.student.studentId || '--',
+      };
+      classSubjects.forEach((subj) => {
+        const score = sr.subjectScores[classSubjects.indexOf(subj)];
+        obj[subj] = score?.total ?? '';
+      });
+      obj['Total'] = sr.total || 0;
+      obj['Average'] = sr.avg !== null ? sr.avg : '';
+      obj['Grade'] = g.grade;
+      if (promo) {
+        obj['Status'] = promo.en;
+      }
+      return obj;
+    });
+    downloadExcel(data, `${classFilters.className}_results_sem${classFilters.semester}`);
+  };
+
   const gradeInfo = (total) => {
     const calc = calculateGrade(total, settings?.gradingScale);
     const s = gradeStyle(calc.grade);
@@ -163,6 +188,7 @@ export default function ReportsPage() {
               </button>
               {activeTab === 'class' && classGenerated && (
                 <div className="flex gap-2 max-sm:hidden">
+                  <Button size="sm" variant="outline" onClick={handleDownloadClassExcel}><Download className="w-4 h-4 mr-1" /> Excel</Button>
                   <Button size="sm" variant="outline" onClick={() => handlePrint(classReportRef)}><Printer className="w-4 h-4 mr-1" /> Print</Button>
                   <Button size="sm" onClick={() => downloadPDF(classReportRef, `${classFilters.className}_semester_${classFilters.semester}_results.pdf`)} className="gradient-accent text-white border-0"><Download className="w-4 h-4 mr-1" /> PDF</Button>
                 </div>
@@ -268,7 +294,7 @@ export default function ReportsPage() {
                         return (
                           <tr key={row.student.id} className="border-b border-gray-200 hover:bg-gray-50/50">
                             <td className="px-3 py-2.5 text-gray-500 text-xs hidden sm:table-cell">{i + 1}</td>
-                            <td className="px-3 py-2.5 font-semibold text-gray-900">{row.student.name}</td>
+                            <td className="px-3 py-2.5 font-semibold text-gray-900">{formatStudentName(row.student.name)}</td>
                             <td className="px-3 py-2.5 text-gray-600 text-xs font-mono hidden md:table-cell">{row.student.studentId || '--'}</td>
                             {classSubjects.map((subj) => {
                               const sr = row.subjectScores[classSubjects.indexOf(subj)];
@@ -343,7 +369,7 @@ export default function ReportsPage() {
                     className="flex h-10 w-full rounded-xl border-2 border-border/50 bg-white/80 px-3 text-sm focus:outline-none focus:border-primary/40"
                     disabled={!studentFilters.className}>
                     <option value="">Select Student</option>
-                    {filteredStudents.map((s) => <option key={s.studentId} value={s.studentId}>{s.name} ({s.studentId})</option>)}
+                    {filteredStudents.map((s) => <option key={s.studentId} value={s.studentId}>{formatStudentName(s.name)} ({s.studentId})</option>)}
                   </select>
                 </div>
                 <div className="flex items-end">
@@ -378,7 +404,7 @@ export default function ReportsPage() {
                 {selectedStudent && (
                   <div className="p-5 border-b border-gray-100">
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student Name</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.name}</p></div>
+                      <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student Name</p><p className="text-sm font-semibold text-gray-900">{formatStudentName(selectedStudent.name)}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Sex</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.sex || '--'}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Student ID</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.studentId}</p></div>
                       <div><p className="text-[10px] text-gray-400 uppercase tracking-wider">Class</p><p className="text-sm font-semibold text-gray-900">{selectedStudent.className}</p></div>

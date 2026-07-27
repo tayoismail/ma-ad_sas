@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Loader2, FileText, Menu,
-  Printer, Moon, Sun
+  Printer, Moon, Sun, Download
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
@@ -10,7 +10,7 @@ import useClassesStore from '../../store/classesStore';
 import useStudentsStore from '../../store/studentsStore';
 import useAttendanceStore from '../../store/attendanceStore';
 import useSettingsStore from '../../store/settingsStore';
-import { semesterLabel } from '../../lib/utils';
+import { semesterLabel, formatStudentName, downloadExcel } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -69,6 +69,17 @@ export default function AttendanceReportPage() {
 
   const handlePrint = () => { window.print(); };
 
+  const handleDownloadExcel = () => {
+    const data = reportData.map((d, i) => ({
+      '#': i + 1,
+      'Student ID': d.studentId || '',
+      'Student Name': formatStudentName(d.name),
+      'Attendance %': d.attendance !== null ? d.attendance : '',
+      'Status': d.attendance !== null ? (d.attendance >= 90 ? 'Excellent' : d.attendance >= 50 ? 'Fair' : 'Poor') : 'No data',
+    }));
+    downloadExcel(data, `${filters.className}_attendance_report`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-300 print:bg-white">
       <AdminSidebar activePath="/admin/attendance/report" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} className="print:hidden" />
@@ -85,6 +96,9 @@ export default function AttendanceReportPage() {
               <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
+              {reportData.length > 0 && (
+                <Button size="sm" variant="outline" onClick={handleDownloadExcel}><Download className="w-4 h-4 mr-1" /> Excel</Button>
+              )}
               <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="w-4 h-4 mr-1" /> Print</Button>
               <Avatar className="ring-2 ring-primary/20"><AvatarFallback className="bg-primary/10 text-primary">{(user?.name || 'A').charAt(0).toUpperCase()}</AvatarFallback></Avatar>
             </div>
@@ -164,7 +178,7 @@ export default function AttendanceReportPage() {
                       {reportData.map((d, i) => (
                         <tr key={d.studentId} className="border-b border-white/10 hover:bg-white/30">
                           <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium text-gray-900">{d.name}</td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{formatStudentName(d.name)}</td>
                           <td className="px-4 py-3 text-xs font-mono text-gray-400 hidden md:table-cell">{d.studentId}</td>
                           <td className="px-4 py-3 text-center">
                             {d.attendance !== null ? (

@@ -13,7 +13,7 @@ import useStudentsStore from '../../store/studentsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import useResultsStore from '../../store/resultsStore';
 import { calculateGrade, calculateTotal, gradeStyle } from '../../lib/grading';
-import { semesterLabel } from '../../lib/utils';
+import { semesterLabel, semesterShortLabel, formatStudentName, downloadExcel } from '../../lib/utils';
 import * as XLSX from 'xlsx';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -314,6 +314,30 @@ export default function ResultsPage() {
     XLSX.writeFile(wb, 'results_upload_template.xlsx');
   };
 
+  const handleDownloadExcel = () => {
+    const data = classStudents.map((student, i) => {
+      const s = scores[student.studentId] || {};
+      const exam = Number(s.examScore) || 0;
+      const test = useTest ? (Number(s.testScore) || 0) : 0;
+      const total = calculateTotal(exam, test);
+      const g = calculateGrade(total, settings?.gradingScale);
+      return {
+        '#': i + 1,
+        'Student ID': student.studentId || '',
+        'Student Name': formatStudentName(student.name),
+        'Sex': student.sex || '',
+        'Exam Score': exam,
+        ...(useTest ? { 'CA Score': test } : {}),
+        ...(useAttendance ? { 'Attendance %': Number(s.attendance) || '' } : {}),
+        'Total': total,
+        'Grade': g.grade,
+        'Remark': g.remarkAr || '',
+      };
+    });
+    const subj = subjects.find((s) => String(s.id) === String(filters.subjectId));
+    downloadExcel(data, `${filters.className}_${subj?.name || 'results'}_${semesterShortLabel(filters.semester)}`);
+  };
+
   const gradeBadge = (total, large) => {
     const g = calculateGrade(total, settings?.gradingScale);
     const s = gradeStyle(g.grade);
@@ -338,8 +362,11 @@ export default function ResultsPage() {
               <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-gray-100 text-muted-foreground transition-colors" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
+              {filters.className && filters.subjectId && (
+                <Button variant="outline" size="sm" onClick={handleDownloadExcel}><Download className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Excel</span></Button>
+              )}
               {user?.role !== 'teacher' && (
-                <Button variant="outline" size="sm" onClick={() => setShowMassUpload(!showMassUpload)}><Upload className="w-4 h-4 mr-1" /> Mass Upload</Button>
+                <Button variant="outline" size="sm" onClick={() => setShowMassUpload(!showMassUpload)}><Upload className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Mass Upload</span><span className="sm:hidden">Upload</span></Button>
               )}
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <p className="text-sm font-medium text-card-foreground hidden sm:block">{user?.name || 'Admin'}</p>
@@ -514,10 +541,10 @@ export default function ResultsPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
-                            {student.name?.charAt(0)?.toUpperCase() || '?'}
+                            {formatStudentName(student.name)?.charAt(0)?.toUpperCase() || '?'}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900 text-sm">{student.name}</p>
+                            <p className="font-semibold text-gray-900 text-sm">{formatStudentName(student.name)}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <p className="text-xs font-semibold text-gray-600">{student.studentId}</p>
                               {student.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${student.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{student.sex}</span>}
@@ -589,10 +616,10 @@ export default function ResultsPage() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
-                                {student.name?.charAt(0)?.toUpperCase() || '?'}
+                                {formatStudentName(student.name)?.charAt(0)?.toUpperCase() || '?'}
                               </div>
                               <div>
-                                <p className="font-semibold text-gray-900 text-base">{student.name}</p>
+                                <p className="font-semibold text-gray-900 text-base">{formatStudentName(student.name)}</p>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                   {student.sex && <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${student.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{student.sex}</span>}
                                 </div>

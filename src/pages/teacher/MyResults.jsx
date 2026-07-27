@@ -9,7 +9,7 @@ import useStudentsStore from '../../store/studentsStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import useResultsStore from '../../store/resultsStore';
 import { calculateGrade, calculateTotal, gradeStyle } from '../../lib/grading';
-import { semesterLabel } from '../../lib/utils';
+import { semesterLabel, formatStudentName } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 import ConfirmModal from '../../components/ConfirmModal';
 import { Card } from '../../components/ui/card';
@@ -303,10 +303,10 @@ export default function TeacherMyResults() {
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
-                                {s.name?.charAt(0)?.toUpperCase() || '?'}
+                                {formatStudentName(s.name)?.charAt(0)?.toUpperCase() || '?'}
                               </div>
                               <div>
-                                <p className="font-semibold text-card-foreground text-sm">{s.name}</p>
+                                <p className="font-semibold text-card-foreground text-sm">{formatStudentName(s.name)}</p>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                   <p className="text-xs font-semibold text-card-foreground">{s.studentId}</p>
                                   {s.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${s.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{s.sex}</span>}
@@ -374,10 +374,10 @@ export default function TeacherMyResults() {
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-sm font-bold text-primary">
-                                    {s.name?.charAt(0)?.toUpperCase() || '?'}
+                                    {formatStudentName(s.name)?.charAt(0)?.toUpperCase() || '?'}
                                   </div>
                                   <div>
-                                    <p className="font-semibold text-card-foreground text-base">{s.name}</p>
+                                    <p className="font-semibold text-card-foreground text-base">{formatStudentName(s.name)}</p>
                                     <p className="text-sm text-muted-foreground">{s.studentId}</p>
                                   </div>
                                 </div>

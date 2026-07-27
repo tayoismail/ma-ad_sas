@@ -13,6 +13,7 @@ import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+import { formatStudentName } from '../../lib/utils';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -202,10 +203,10 @@ export default function TeacherMyAttendance() {
                           <div key={s.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 hover:bg-muted/20 transition-colors">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
-                                {s.name?.charAt(0)?.toUpperCase() || '?'}
+                                {formatStudentName(s.name)?.charAt(0)?.toUpperCase() || '?'}
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-card-foreground">{s.name}</p>
+                                <p className="text-sm font-medium text-card-foreground">{formatStudentName(s.name)}</p>
                                 <div className="flex items-center gap-1.5">
                                   <p className="text-xs font-semibold text-muted-foreground">{s.studentId}</p>
                                   {s.sex && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${s.sex === 'Male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>{s.sex}</span>}

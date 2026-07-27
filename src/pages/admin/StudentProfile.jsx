@@ -11,6 +11,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import AdminSidebar from '../../components/AdminSidebar';
+import { formatStudentName } from '../../lib/utils';
 
 export default function StudentProfile() {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ export default function StudentProfile() {
     { icon: User, label: 'Sex', value: student.sex || '--' },
     { icon: School, label: 'Class', value: student.className || '--' },
     { icon: Calendar, label: 'Enrolled', value: student.enrollmentDate || '--' },
-    { icon: User, label: 'Parent', value: student.parentName || '--' },
+    { icon: User, label: 'Parent', value: formatStudentName(student.parentName) || '--' },
     { icon: Phone, label: 'Parent Phone', value: student.parentPhone || '--' },
     { icon: Mail, label: 'Parent Email', value: student.parentEmail || '--' },
   ];
@@ -112,10 +113,10 @@ export default function StudentProfile() {
             <Card className="p-6 lg:p-8 bg-card border-border">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                  <span className="text-3xl font-bold text-primary">{student.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                  <span className="text-3xl font-bold text-primary">{formatStudentName(student.name)?.charAt(0)?.toUpperCase() || '?'}</span>
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-900">{student.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{formatStudentName(student.name)}</h2>
                   <div className="flex flex-wrap gap-2 mt-3">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       <School className="w-3 h-3" /> {student.className}

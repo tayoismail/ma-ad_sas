@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Menu, Eye, FileText, GraduationCap, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Search, Menu, Eye, FileText, GraduationCap, ArrowLeft, Moon, Sun, Download } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useClassesStore from '../../store/classesStore';
@@ -9,8 +9,10 @@ import useSubjectsStore from '../../store/subjectsStore';
 import AdminSidebar from '../../components/AdminSidebar';
 import DataTable from '../../components/DataTable';
 import { Card } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+import { formatStudentName, downloadExcel } from '../../lib/utils';
 
 export default function TeacherMyStudents() {
   const navigate = useNavigate();
@@ -50,6 +52,16 @@ export default function TeacherMyStudents() {
     });
   }, [classStudents, search, classFilter]);
 
+  const handleDownloadExcel = () => {
+    const data = filtered.map((s, i) => ({
+      '#': i + 1,
+      'Student ID': s.studentId || '',
+      'Name': formatStudentName(s.name),
+      'Class': s.className || '',
+    }));
+    downloadExcel(data, 'my_students');
+  };
+
   const columns = [
     {
       key: 'studentId', label: 'ID',
@@ -60,10 +72,10 @@ export default function TeacherMyStudents() {
       render: (row) => (
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center text-xs font-bold text-primary">
-            {row.name?.charAt(0)?.toUpperCase() || '?'}
+            {formatStudentName(row.name)?.charAt(0)?.toUpperCase() || '?'}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{row.name}</p>
+            <p className="font-medium text-gray-900">{formatStudentName(row.name)}</p>
           </div>
         </div>
       ),
@@ -126,6 +138,11 @@ export default function TeacherMyStudents() {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Students</h2>
                   <p className="text-sm text-gray-500 mt-0.5">{classStudents.length} student{classStudents.length !== 1 ? 's' : ''} across {filteredClasses.length} class{filteredClasses.length !== 1 ? 'es' : ''}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={handleDownloadExcel}>
+                    <Download className="w-4 h-4 mr-1" /> Excel
+                  </Button>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
