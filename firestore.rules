@@ -26,6 +26,21 @@ service cloud.firestore {
       return getRole() == 'teacher' && (allowed == null || className in allowed);
     }
 
+    // Returns the teacher's assigned sexes (Male/Female). If the field is
+    // unset or empty, returns null so the teacher can save for all students.
+    function getTeacherSexes() {
+      let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      let sexes = doc.data.teacherSexes;
+      return sexes == null || size(sexes) == 0 ? null : sexes;
+    }
+
+    // True if the teacher may record results for students of the given sex.
+    // If getTeacherSexes() returns null (no field set), allow all sexes (migration fallback).
+    function isTeacherAssignedSex(sex) {
+      let allowed = getTeacherSexes();
+      return getRole() == 'teacher' && (allowed == null || sex in allowed);
+    }
+
     // ─── Admins: full access to everything ──────────────────────
     match /{document=**} {
       allow read, write: if isAuth() && getRole() == 'admin';
@@ -59,12 +74,13 @@ service cloud.firestore {
       );
     }
 
-    // ─── Results: teachers restricted to assigned classes ───────
+    // ─── Results: teachers restricted to assigned classes & sexes ─
     match /results/{doc} {
       allow read: if isAuth();
       allow write: if isAuth() && (
         getRole() == 'admin' ||
-        isTeacherAssignedClass(request.resource.data.className)
+        (isTeacherAssignedClass(request.resource.data.className) &&
+         isTeacherAssignedSex(request.resource.data.sex))
       );
     }
 

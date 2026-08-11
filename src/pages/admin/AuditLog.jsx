@@ -86,9 +86,14 @@ function formatDetails(action, details) {
   const parts = [];
   if (details.name) parts.push(details.name);
   if (details.className) parts.push(details.className);
+  if (details.subjectName) parts.push(details.subjectName);
+  else if (details.subjectId != null) parts.push(`Subject #${details.subjectId}`);
+  if (details.sex) parts.push(`Sex: ${details.sex}`);
   if (details.count != null) parts.push(`${details.count} records`);
   if (details.success != null && details.errors != null) parts.push(`${details.success} ok, ${details.errors} errors`);
   if (details.created != null && details.updated != null) parts.push(`${details.created} new, ${details.updated} updated`);
+  if (details.session) parts.push(details.session);
+  if (details.semester != null) parts.push(`Sem ${details.semester}`);
   if (details.email) parts.push(details.email);
   if (details.fields && !action.includes('login') && !action.includes('logout')) parts.push(`fields: ${details.fields.join(', ')}`);
   if (details.cascadeDeletes) parts.push(`${details.cascadeDeletes} related records deleted`);

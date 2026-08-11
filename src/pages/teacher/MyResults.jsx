@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, Award, Menu, Loader2, CheckCircle2, AlertCircle, BookOpen, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Save, Award, Menu, Loader2, AlertCircle, BookOpen, ArrowLeft, Moon, Sun } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
 import useSettingsStore from '../../store/settingsStore';
@@ -12,6 +12,7 @@ import { calculateGrade, calculateTotal, gradeStyle } from '../../lib/grading';
 import { semesterLabel, formatStudentName } from '../../lib/utils';
 import AdminSidebar from '../../components/AdminSidebar';
 import ConfirmModal from '../../components/ConfirmModal';
+import SuccessModal from '../../components/SuccessModal';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -54,6 +55,8 @@ export default function TeacherMyResults() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const teacherSubjectIds = user?.teacherSubjects || [];
+  // Sexes this teacher is allowed to record results for (defaults to both).
+  const teacherSexes = user?.teacherSexes?.length ? user.teacherSexes : ['Male', 'Female'];
   const teacherClassNames = [...new Set(
     subjects.filter((s) => teacherSubjectIds.includes(s.id)).map((s) => s.className)
   )];
@@ -63,6 +66,8 @@ export default function TeacherMyResults() {
   );
   const classStudents = students.filter((s) => {
     if (s.className !== filters.className) return false;
+    // Teachers only ever see/save students of their assigned sex(es).
+    if (!teacherSexes.includes(s.sex)) return false;
     if (filters.sex && s.sex !== filters.sex) return false;
     if (studentSearch.trim()) {
       const q = studentSearch.trim().toLowerCase();
@@ -142,6 +147,7 @@ export default function TeacherMyResults() {
       const gradeInfo = calculateGrade(total, settings?.gradingScale);
       return {
         studentId: s.studentId, className: filters.className,
+        sex: s.sex || '',
         subjectId: filters.subjectId, subjectName: subj?.name || '',
         session: filters.session, semester: Number(filters.semester),
         examScore: exam,
@@ -154,8 +160,18 @@ export default function TeacherMyResults() {
     });
     try {
       const ok = await saveResults(records);
-      if (ok > 0) { setSaved(true); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => setSaved(false), 3000); }
-      else setError('No records were saved. Check if the semester is finalized.');
+      if (ok === records.length) {
+        // All records saved — clear the score inputs so the same results
+        // cannot be saved twice by mistake.
+        setScores({});
+        setSaved(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (ok > 0) {
+        // Some records failed — keep the scores so the teacher can retry them.
+        setError(`${records.length - ok} of ${records.length} records could not be saved. Please check the highlighted students and try again.`);
+      } else {
+        setError('No records were saved.');
+      }
     } catch (err) {
       setError(err.message || 'Failed to save results');
     }
@@ -199,9 +215,12 @@ export default function TeacherMyResults() {
           {error && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm"><AlertCircle className="w-4 h-4" /> {error}</div>
           )}
-          {saved && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm"><CheckCircle2 className="w-4 h-4" /> Results saved successfully</div>
-          )}
+          <SuccessModal
+            open={saved}
+            title="Results Saved"
+            message={`Results saved for ${filters.className} — ${subjects.find((s) => String(s.id) === String(filters.subjectId))?.name || ''} (${semesterLabel(Number(filters.semester))} · ${filters.session})`}
+            onClose={() => setSaved(false)}
+          />
           <ConfirmModal
             open={!!missingConfirm}
             title="Students Without Scores"
@@ -231,6 +250,9 @@ export default function TeacherMyResults() {
             <span>Semester: <strong>{semesterLabel(Number(filters.semester))}</strong></span>
           </div>
           <div className="flex flex-wrap items-center gap-4">
+            <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-primary/10 text-primary">
+              You can save results for: {teacherSexes.join(' & ')} students
+            </span>
             <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
               <input type="checkbox" checked={useTest} onChange={handleToggleUseTest} className="rounded border-gray-300" />
               Include CA (Continuous Assessment)
@@ -244,8 +266,7 @@ export default function TeacherMyResults() {
               <select value={filters.sex} onChange={(e) => setFilters({ ...filters, sex: e.target.value })}
                 className="h-9 rounded-lg border-2 border-border/50 bg-white/60 px-3 text-sm focus:outline-none focus:border-primary/40">
                 <option value="">All</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+                {teacherSexes.map((sex) => <option key={sex} value={sex}>{sex}</option>)}
               </select>
             </div>
           </div>

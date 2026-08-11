@@ -203,6 +203,12 @@ export default function ResultsPage() {
       setError(lastError.message || 'Failed to save results');
       return;
     }
+    if (savedCount < classStudents.length) {
+      setError(`${classStudents.length - savedCount} of ${classStudents.length} records could not be saved. ${lastError?.message || ''}`);
+      return;
+    }
+    // All records saved — clear the inputs so the same results cannot be saved twice.
+    setScores({});
     setSaved(true);
   };
 
@@ -668,8 +674,8 @@ export default function ResultsPage() {
           )}
         </main>
       </div>
-      <SuccessModal open={saved} title="Success" message="Results saved successfully" onClose={() => setSaved(false)} autoCloseMs={3000} />
-      <SuccessModal open={!!uploadResult} title="Import Complete" message={`${uploadResult} results imported`} onClose={() => setUploadResult(null)} autoCloseMs={4000} />
+      <SuccessModal open={saved} title="Results Saved" message={`Results saved for ${filters.className} — ${subjects.find((s) => String(s.id) === String(filters.subjectId))?.name || ''} (${semesterLabel(filters.semester)} · ${filters.session})`} onClose={() => setSaved(false)} />
+      <SuccessModal open={!!uploadResult} title="Import Complete" message={`${uploadResult} results imported`} onClose={() => setUploadResult(null)} />
     </div>
   );
 }

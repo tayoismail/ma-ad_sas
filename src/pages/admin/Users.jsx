@@ -31,7 +31,7 @@ export default function UsersPage() {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [] });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [], teacherSexes: ['Male', 'Female'] });
   const [subjectSearch, setSubjectSearch] = useState('');
 
   const loadUsers = async () => {
@@ -51,7 +51,7 @@ export default function UsersPage() {
   }, []);
 
   const resetForm = () => {
-    setForm({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [] });
+    setForm({ name: '', email: '', password: '', role: 'teacher', teacherSubjects: [], teacherSexes: ['Male', 'Female'] });
     setEditingId(null);
     setShowForm(false);
     setError('');
@@ -59,7 +59,7 @@ export default function UsersPage() {
   };
 
   const handleEdit = (u) => {
-    setForm({ name: u.name, email: u.email, password: '', role: u.role, teacherSubjects: u.teacherSubjects || [] });
+    setForm({ name: u.name, email: u.email, password: '', role: u.role, teacherSubjects: u.teacherSubjects || [], teacherSexes: u.teacherSexes?.length ? u.teacherSexes : ['Male', 'Female'] });
     setEditingId(u.id);
     setShowForm(true);
     setError('');
@@ -75,14 +75,18 @@ export default function UsersPage() {
       const teacherClasses = form.role === 'teacher'
         ? [...new Set(subjects.filter((s) => form.teacherSubjects.includes(s.id)).map((s) => s.className))]
         : [];
+      // Which sexes this teacher may record results for (Male, Female, or both).
+      const teacherSexes = form.role === 'teacher' && form.teacherSexes?.length
+        ? form.teacherSexes
+        : form.role === 'teacher' ? ['Male', 'Female'] : [];
       if (editingId) {
-        const updates = { name: form.name, email: form.email, role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses };
+        const updates = { name: form.name, email: form.email, role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses, teacherSexes };
         await useAuthStore.getState().updateUser(editingId, updates);
         setSaved('User updated successfully');
       } else {
         await useAuthStore.getState().addUser({
           name: form.name, email: form.email, password: form.password,
-          role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses,
+          role: form.role, teacherSubjects: form.teacherSubjects, teacherClasses, teacherSexes,
         });
         setSaved('User created successfully');
       }
@@ -101,6 +105,16 @@ export default function UsersPage() {
         ? current.filter((id) => id !== subjectId)
         : [...current, subjectId];
       return { ...prev, teacherSubjects: updated };
+    });
+  };
+
+  const toggleSex = (sex) => {
+    setForm((prev) => {
+      const current = prev.teacherSexes || [];
+      const updated = current.includes(sex)
+        ? current.filter((s) => s !== sex)
+        : [...current, sex];
+      return { ...prev, teacherSexes: updated };
     });
   };
 
@@ -297,6 +311,27 @@ export default function UsersPage() {
                       </div>
                       {previewClasses.length > 0 && (
                         <p className="text-xs text-gray-500 mt-1.5">Access will be granted to classes: <strong>{previewClasses.join(', ')}</strong></p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Assigned Sex(es) — results this teacher may save</label>
+                      <div className="flex gap-3">
+                        {['Male', 'Female'].map((sex) => (
+                          <label key={sex} className="flex items-center gap-2 cursor-pointer bg-white/80 rounded-xl border-2 border-border/50 px-3 py-2 hover:border-primary/40 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={(form.teacherSexes || []).includes(sex)}
+                              onChange={() => toggleSex(sex)}
+                              className="rounded border-gray-300 text-primary focus:ring-primary/30"
+                            />
+                            <span className="text-sm text-gray-700">{sex} students</span>
+                          </label>
+                        ))}
+                      </div>
+                      {form.teacherSexes?.length === 0 ? (
+                        <p className="text-xs text-amber-600 mt-1.5">No sex selected — this teacher will be able to save results for all students.</p>
+                      ) : (
+                        <p className="text-xs text-gray-500 mt-1.5">Teacher can save results for: <strong>{form.teacherSexes.join(' & ')}</strong> students</p>
                       )}
                     </div>
                     </>

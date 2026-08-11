@@ -55,11 +55,11 @@ const useResultsStore = create((set) => ({
 
     if (existing) {
       await updateDoc(doc(db, 'results', existing.id), data);
-      auditLog('results.update', 'results', { studentId: data.studentId, subjectId: data.subjectId, className: data.className });
+      auditLog('results.update', 'results', { studentId: data.studentId, subjectId: data.subjectId, subjectName: data.subjectName, className: data.className, sex: data.sex, session: data.session, semester: data.semester });
       return existing.id;
     }
     const docRef = await addDoc(collection(db, 'results'), data);
-    auditLog('results.create', 'results', { studentId: data.studentId, subjectId: data.subjectId, className: data.className });
+    auditLog('results.create', 'results', { studentId: data.studentId, subjectId: data.subjectId, subjectName: data.subjectName, className: data.className, sex: data.sex, session: data.session, semester: data.semester });
     return docRef.id;
   },
 
@@ -77,6 +77,7 @@ const useResultsStore = create((set) => ({
       const key = `${r.studentId}|${r.subjectId}|${r.session}|${r.semester}`;
       existingMap[key] = d.id;
     }
+    let firstError = null;
     for (const r of records) {
       try {
         const key = `${r.studentId}|${r.subjectId}|${r.session}|${r.semester}`;
@@ -88,9 +89,27 @@ const useResultsStore = create((set) => ({
           created++;
         }
         success++;
-      } catch { /* skip individual record errors */ }
+      } catch (err) {
+        // Keep going, but remember the first failure so callers get the real reason.
+        firstError = firstError || err;
+        console.error('Failed to save result for student', r.studentId, err);
+      }
     }
-    if (success > 0) auditLog('results.save_batch', 'results', { total: records.length, created, updated, className: records[0]?.className, subjectId: records[0]?.subjectId, session: records[0]?.session, semester: records[0]?.semester });
+    // If every write failed, surface the underlying error (e.g. permissions)
+    // instead of hiding it behind a generic message.
+    if (success === 0 && firstError) throw firstError;
+    if (success > 0) {
+      const sexes = [...new Set(records.map((r) => r.sex).filter(Boolean))];
+      auditLog('results.save_batch', 'results', {
+        total: records.length, created, updated,
+        className: records[0]?.className,
+        subjectId: records[0]?.subjectId,
+        subjectName: records[0]?.subjectName,
+        session: records[0]?.session,
+        semester: records[0]?.semester,
+        sex: sexes.length ? sexes.join(' & ') : null,
+      });
+    }
     const all = await getDocs(collection(db, 'results'));
     set({ results: all.docs.map((d) => ({ id: d.id, ...d.data() })) });
     return success;

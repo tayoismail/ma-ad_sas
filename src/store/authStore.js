@@ -89,6 +89,13 @@ const useAuthStore = create((set, get) => ({
                 userData.teacherClasses = teacherClasses;
               } catch { /* best-effort backfill */ }
             }
+            // Backfill teacherSexes for existing teachers (defaults to both sexes)
+            if (userData.role === 'teacher' && !userData.teacherSexes?.length) {
+              try {
+                await updateDoc(doc(db, 'users', firebaseUser.uid), { teacherSexes: ['Male', 'Female'] });
+                userData.teacherSexes = ['Male', 'Female'];
+              } catch { /* best-effort backfill */ }
+            }
             set({ user: { id: firebaseUser.uid, ...userData }, isAuthenticated: true, isLoading: false });
             get().updateLastActivity();
             setAuditUser({ id: firebaseUser.uid, ...userData });
@@ -219,6 +226,7 @@ const useAuthStore = create((set, get) => ({
       role: data.role,
       teacherSubjects: data.teacherSubjects || [],
       teacherClasses: data.teacherClasses || [],
+      teacherSexes: data.teacherSexes?.length ? data.teacherSexes : ['Male', 'Female'],
       createdAt: new Date().toISOString(),
     });
     auditLog('user.create', 'users', { name: data.name, email: data.email, role: data.role });
