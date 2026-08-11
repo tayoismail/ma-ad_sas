@@ -75,7 +75,7 @@ export default function Login() {
                 name="email"
                 type="email"
                 autoComplete="username"
-                placeholder="admin@maad.edu"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-primary/50 focus:ring-primary/20"
