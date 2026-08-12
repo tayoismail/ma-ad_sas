@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, CreditCard, Printer, Download, ArrowLeft, GraduationCap, CheckCircle2, Loader2, AlertCircle, Moon, Sun, FileText, Award } from 'lucide-react';
-import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useThemeStore } from '../store/themeStore';
@@ -76,8 +76,12 @@ export default function ReportCard() {
         } else {
           setPaymentStatus('unpaid');
         }
+      } else {
+        // Settings not loaded yet, show unpaid state
+        setPaymentStatus('unpaid');
       }
     } catch (err) {
+      console.error('Search error:', err);
       setError('Failed to look up student. Please try again.');
     }
     setLoading(false);
@@ -97,15 +101,14 @@ export default function ReportCard() {
       setResults(resultsData);
       setShowReport(true);
     } catch (err) {
+      console.error('Load results error:', err);
       setError('Failed to load results. Please try again.');
     }
   };
 
-  const handlePayment = async () => {
-    if (!student || !settings) return;
-    setPaymentLoading(true);
-
-    const flutterwaveConfig = {
+  const flutterwaveConfig = useMemo(() => {
+    if (!student || !settings) return null;
+    return {
       public_key: FLW_PUBLIC_KEY,
       tx_ref: `${student.studentId}_${Date.now()}`,
       amount: PAYMENT_AMOUNT,
@@ -116,51 +119,41 @@ export default function ReportCard() {
         name: student.name,
       },
       customizations: {
-        title: 'MA\'AD AHLIL AATHAR',
+        title: "MA'AD AHLIL AATHAR",
         description: `Report Card Fee - ${student.name} (${student.className})`,
         logo: '',
       },
     };
+  }, [student, settings]);
 
-    const handleFlutterwavePayment = useFlutterwave(flutterwaveConfig);
-
-    try {
-      await handleFlutterwavePayment({
-        callback: async (response) => {
-          closePaymentModal(); // Close the modal
-
-          if (response.status === 'successful') {
-            // Mark as paid in Firestore
-            const paymentId = `${student.studentId}_${settings.currentSession}_sem${settings.currentSemester}`;
-            await setDoc(doc(db, 'payments', paymentId), {
-              studentId: student.studentId,
-              studentName: student.name,
-              className: student.className,
-              session: settings.currentSession,
-              semester: settings.currentSemester,
-              amount: PAYMENT_AMOUNT,
-              currency: 'NGN',
-              transactionId: response.transaction_id,
-              reference: response.tx_ref,
-              status: 'completed',
-              paidAt: new Date().toISOString(),
-            });
-
-            setPaymentStatus('paid');
-            await loadResults(student, settings);
-          } else {
-            setError('Payment was not successful. Please try again.');
-          }
-          setPaymentLoading(false);
-        },
-        onClose: () => {
-          setPaymentLoading(false);
-        },
-      });
-    } catch (err) {
-      setError('Payment failed. Please try again.');
-      setPaymentLoading(false);
+  const handleFlutterwaveCallback = async (response) => {
+    closePaymentModal();
+    if (response.status === 'successful') {
+      try {
+        const paymentId = `${student.studentId}_${settings.currentSession}_sem${settings.currentSemester}`;
+        await setDoc(doc(db, 'payments', paymentId), {
+          studentId: student.studentId,
+          studentName: student.name,
+          className: student.className,
+          session: settings.currentSession,
+          semester: settings.currentSemester,
+          amount: PAYMENT_AMOUNT,
+          currency: 'NGN',
+          transactionId: response.transaction_id,
+          reference: response.tx_ref,
+          status: 'completed',
+          paidAt: new Date().toISOString(),
+        });
+        setPaymentStatus('paid');
+        await loadResults(student, settings);
+      } catch (err) {
+        console.error('Payment save error:', err);
+        setError('Payment verified but failed to save. Please contact support.');
+      }
+    } else {
+      setError('Payment was not successful. Please try again.');
     }
+    setPaymentLoading(false);
   };
 
   const handlePrint = () => {
@@ -300,18 +293,22 @@ export default function ReportCard() {
                 </div>
               </div>
               <div className="flex-shrink-0">
-                <Button
-                  onClick={handlePayment}
-                  disabled={paymentLoading}
-                  className="gradient-accent text-white h-12 px-8 text-lg font-bold"
-                >
-                  {paymentLoading ? (
+                {flutterwaveConfig ? (
+                  <FlutterWaveButton
+                    {...flutterwaveConfig}
+                    callback={handleFlutterwaveCallback}
+                    onClose={() => setPaymentLoading(false)}
+                    className="gradient-accent text-white h-12 px-8 text-lg font-bold rounded-xl border-0 cursor-pointer"
+                  >
+                    <CreditCard className="w-5 h-5 mr-2 inline" />
+                    Pay ₦{PAYMENT_AMOUNT.toLocaleString()}
+                  </FlutterWaveButton>
+                ) : (
+                  <Button disabled className="h-12 px-8 text-lg font-bold">
                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  ) : (
-                    <CreditCard className="w-5 h-5 mr-2" />
-                  )}
-                  Pay Now
-                </Button>
+                    Loading...
+                  </Button>
+                )}
               </div>
             </div>
             <p className="text-xs text-muted-foreground text-center sm:text-left mt-4">
