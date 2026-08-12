@@ -80,22 +80,22 @@ service cloud.firestore {
       allow write: if isAuth() && getRole() == 'admin';
     }
 
-    // ─── Settings: only admins can write ────────────────────────
+    // ─── Settings: anyone can read, admin-only write ───────────────
     match /settings/{doc} {
-      allow read: if isAuth();
+      allow read: if true;  // public for report card page
     }
 
-    // ─── Classes, Subjects: authenticated users can read ────────
+    // ─── Classes, Subjects: anyone can read ─────────────────────
     match /classes/{doc} {
-      allow read: if isAuth();
+      allow read: if true;  // public for report card page
     }
     match /subjects/{doc} {
-      allow read: if isAuth();
+      allow read: if true;  // public for report card page
     }
 
-    // ─── Students: admin-only write (teachers read only) ─────
+    // ─── Students: public read, admin-only write ──────────────────
     match /students/{doc} {
-      allow read: if isAuth();
+      allow read: if true;  // public for report card lookup by studentId
       allow write: if isAuth() && getRole() == 'admin';
     }
 
