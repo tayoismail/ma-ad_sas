@@ -180,6 +180,9 @@ export default function ResultsPage() {
         await saveResult({
           studentId: student.studentId,
           studentName: student.name,
+          // The sex field is required by the Firestore rules so teachers can
+          // save results from this shared page (sex-based write permission).
+          sex: student.sex || '',
           subjectId: filters.subjectId,
           subjectName: subj?.name || '',
           className: filters.className,
@@ -294,6 +297,7 @@ export default function ResultsPage() {
       return {
         ...r,
         studentName: student?.name || '',
+        sex: student?.sex || '',
         subjectName: subj?.name || '',
         className: student?.className || '',
         total,

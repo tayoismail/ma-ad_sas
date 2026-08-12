@@ -7,14 +7,17 @@ service cloud.firestore {
       return request.auth != null;
     }
     function getRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      // Null-safe: a missing/unreadable profile must never crash the rule —
+      // it simply denies the operation (secure by default).
+      return doc != null && doc.data != null ? doc.data.role : null;
     }
 
     // Returns the teacher's assigned class names array.
     // Falls back to empty array if field doesn't exist yet (migration period).
     function getTeacherClasses() {
       let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      let classes = doc.data.teacherClasses;
+      let classes = doc != null && doc.data != null ? doc.data.teacherClasses : null;
       // If teacherClasses not set or empty, allow all (migration fallback)
       return classes == null || size(classes) == 0 ? null : classes;
     }
@@ -30,15 +33,17 @@ service cloud.firestore {
     // unset or empty, returns null so the teacher can save for all students.
     function getTeacherSexes() {
       let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      let sexes = doc.data.teacherSexes;
+      let sexes = doc != null && doc.data != null ? doc.data.teacherSexes : null;
       return sexes == null || size(sexes) == 0 ? null : sexes;
     }
 
     // True if the teacher may record results for students of the given sex.
     // If getTeacherSexes() returns null (no field set), allow all sexes (migration fallback).
+    // A missing/empty sex is also allowed so teachers are never blocked from
+    // saving results for students whose profile has no sex value yet.
     function isTeacherAssignedSex(sex) {
       let allowed = getTeacherSexes();
-      return getRole() == 'teacher' && (allowed == null || sex in allowed);
+      return getRole() == 'teacher' && (allowed == null || sex == null || sex == '' || sex in allowed);
     }
 
     // ─── Admins: full access to everything ──────────────────────
