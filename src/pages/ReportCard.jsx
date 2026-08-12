@@ -107,7 +107,9 @@ export default function ReportCard() {
   };
 
   const flutterwaveConfig = useMemo(() => {
-    if (!student || !settings) return null;
+    if (!student) return null;
+    const session = settings?.currentSession || '2024/2025';
+    const semester = settings?.currentSemester || 1;
     return {
       public_key: FLW_PUBLIC_KEY,
       tx_ref: `${student.studentId}_${Date.now()}`,
@@ -124,7 +126,7 @@ export default function ReportCard() {
         logo: '',
       },
     };
-  }, [student, settings]);
+  }, [student]);
 
   const handleFlutterwaveCallback = async (response) => {
     closePaymentModal();
@@ -312,7 +314,7 @@ export default function ReportCard() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground text-center sm:text-left mt-4">
-              You need to pay ₦{PAYMENT_AMOUNT.toLocaleString()} to view your report card for {settings?.currentSession} ({semesterLabel(settings?.currentSemester)}).
+              You need to pay ₦{PAYMENT_AMOUNT.toLocaleString()} to view your report card for {settings?.currentSession || '2024/2025'} ({semesterLabel(settings?.currentSemester || 1)}).
             </p>
           </Card>
         )}
