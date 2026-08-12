@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, GraduationCap, Settings, School, Calendar, Menu, ArrowUpRight, ChevronRight, Award, Moon, Sun, BarChart3, BookMarked, TrendingUp, Bell, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Users, GraduationCap, Settings, School, Calendar, Menu, ArrowUpRight, ChevronRight, Award, Moon, Sun, BarChart3, BookMarked, TrendingUp, Bell, AlertTriangle, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 import AdminSidebar from '../../components/AdminSidebar';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import useAuthStore from '../../store/authStore';
@@ -9,6 +9,7 @@ import useClassesStore from '../../store/classesStore';
 import useSubjectsStore from '../../store/subjectsStore';
 import useStudentsStore from '../../store/studentsStore';
 import useResultsStore from '../../store/resultsStore';
+import usePaymentsStore from '../../store/paymentsStore';
 import { useThemeStore } from '../../store/themeStore';
 import { semesterLabel } from '../../lib/utils';
 import { gradeStyle } from '../../lib/grading';
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
   const { subjects, loadSubjects } = useSubjectsStore();
   const { students, loadStudents } = useStudentsStore();
   const { results, loadResults } = useResultsStore();
+  const { payments, loadPayments } = usePaymentsStore();
   const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
 
@@ -83,11 +85,29 @@ export default function AdminDashboard() {
     }
   }, [settings, subjects, loadPendingTeachers]);
 
+  // Load payments when settings are available
+  useEffect(() => {
+    if (settings) {
+      loadPayments(settings.currentSession, settings.currentSemester);
+    }
+  }, [settings, loadPayments]);
+
+  const paymentStats = useMemo(() => {
+    if (!payments.length || !settings) return { count: 0, amount: 0 };
+    const filtered = payments.filter(
+      (p) => p.session === settings.currentSession && p.semester === settings.currentSemester && p.status === 'completed'
+    );
+    return {
+      count: filtered.length,
+      amount: filtered.reduce((sum, p) => sum + (p.amount || 0), 0),
+    };
+  }, [payments, settings]);
+
   const stats = [
     { label: 'Total Students', value: students.length || '--', icon: Users, cardBg: 'from-blue-600 to-indigo-700' },
     { label: 'Total Subjects', value: subjects.length || '--', icon: BookMarked, cardBg: 'from-purple-600 to-pink-700' },
     { label: 'Active Classes', value: classes.length || '--', icon: School, cardBg: 'from-emerald-600 to-teal-700' },
-    { label: 'Current Session', value: settings?.currentSession || '--', icon: Calendar, cardBg: 'from-amber-600 to-orange-700' },
+    { label: 'Report Card Payments', value: `${paymentStats.count} (₦${paymentStats.amount.toLocaleString()})`, icon: CreditCard, cardBg: 'from-cyan-600 to-blue-700' },
   ];
 
   const quickActions = [

@@ -15,35 +15,58 @@ service cloud.firestore {
 
     // Returns the teacher's assigned class names array.
     // Falls back to empty array if field doesn't exist yet (migration period).
+    // Secure by default: teachers without assigned classes cannot write anything.
     function getTeacherClasses() {
       let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
       let classes = doc != null && doc.data != null ? doc.data.teacherClasses : null;
-      // If teacherClasses not set or empty, allow all (migration fallback)
-      return classes == null || size(classes) == 0 ? null : classes;
+      return classes == null || classes[0] == null ? [] : classes;
     }
 
     // Check if a className is in the teacher's assigned classes.
-    // If getTeacherClasses() returns null (no field set), allow all classes (migration fallback).
     function isTeacherAssignedClass(className) {
       let allowed = getTeacherClasses();
-      return getRole() == 'teacher' && (allowed == null || className in allowed);
+      return getRole() == 'teacher' && className in allowed;
     }
 
-    // Returns the teacher's assigned sexes (Male/Female). If the field is
-    // unset or empty, returns null so the teacher can save for all students.
+    // Returns the teacher's assigned subject ID array.
+    // Falls back to empty array if the field doesn't exist yet.
+    function getTeacherSubjects() {
+      let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      let subs = doc != null && doc.data != null ? doc.data.teacherSubjects : null;
+      return subs == null || subs[0] == null ? [] : subs;
+    }
+
+    // Check if a subjectId is in the teacher's assigned subjects AND the
+    // subject actually belongs to the record's class. The subjectId must be
+    // non-empty: combined with the class-OR in the results write rule,
+    // allowing blank IDs here would let a teacher save results for ANY class,
+    // bypassing the class restriction entirely.
+    // NOTE: rules functions only allow `let` + a single `return` expression,
+    // so the guard and the class check are chained with short-circuit &&.
+    function isTeacherAssignedSubject(subjectId, className) {
+      let subs = getTeacherSubjects();
+      return getRole() == 'teacher'
+        && subjectId != null && subjectId != ''
+        && subjectId in subs
+        && get(/databases/$(database)/documents/subjects/$(subjectId)).data != null
+        && get(/databases/$(database)/documents/subjects/$(subjectId)).data.className == className;
+    }
+
+    // Returns the teacher's assigned sexes (Male/Female).
+    // Falls back to empty array if field doesn't exist yet (migration period).
+    // Secure by default: teachers without assigned sexes cannot save results.
     function getTeacherSexes() {
       let doc = get(/databases/$(database)/documents/users/$(request.auth.uid));
       let sexes = doc != null && doc.data != null ? doc.data.teacherSexes : null;
-      return sexes == null || size(sexes) == 0 ? null : sexes;
+      return sexes == null || sexes[0] == null ? [] : sexes;
     }
 
     // True if the teacher may record results for students of the given sex.
-    // If getTeacherSexes() returns null (no field set), allow all sexes (migration fallback).
     // A missing/empty sex is also allowed so teachers are never blocked from
     // saving results for students whose profile has no sex value yet.
     function isTeacherAssignedSex(sex) {
       let allowed = getTeacherSexes();
-      return getRole() == 'teacher' && (allowed == null || sex == null || sex == '' || sex in allowed);
+      return getRole() == 'teacher' && (sex == null || sex == '' || sex in allowed);
     }
 
     // ─── Admins: full access to everything ──────────────────────
@@ -70,22 +93,25 @@ service cloud.firestore {
       allow read: if isAuth();
     }
 
-    // ─── Students: teachers restricted to assigned classes ─────
+    // ─── Students: admin-only write (teachers read only) ─────
     match /students/{doc} {
       allow read: if isAuth();
-      allow write: if isAuth() && (
-        getRole() == 'admin' ||
-        isTeacherAssignedClass(request.resource.data.className)
-      );
+      allow write: if isAuth() && getRole() == 'admin';
     }
 
     // ─── Results: teachers restricted to assigned classes & sexes ─
+    // A write passes if the teacher is assigned to the record's class OR its
+    // subject (subjectId must be non-empty), AND the sex check passes. The
+    // subject path mirrors what the teacher UI actually filters on
+    // (teacherSubjects), so a stale teacherClasses array can never lock a
+    // teacher out of saving.
     match /results/{doc} {
       allow read: if isAuth();
       allow write: if isAuth() && (
         getRole() == 'admin' ||
-        (isTeacherAssignedClass(request.resource.data.className) &&
-         isTeacherAssignedSex(request.resource.data.sex))
+        (isTeacherAssignedSex(request.resource.data.sex) &&
+         (isTeacherAssignedClass(request.resource.data.className) ||
+          isTeacherAssignedSubject(request.resource.data.subjectId, request.resource.data.className)))
       );
     }
 
@@ -107,6 +133,13 @@ service cloud.firestore {
     // ─── Audit Logs: append-only, admin-readable only ──────────
     match /auditLogs/{doc} {
       allow read: if isAuth() && getRole() == 'admin';
+      allow create: if isAuth();
+      allow update, delete: if false;  // immutable — no edits or deletions
+    }
+
+    // ─── Payments: append-only for authenticated users, admin-readable ──
+    match /payments/{doc} {
+      allow read: if isAuth();
       allow create: if isAuth();
       allow update, delete: if false;  // immutable — no edits or deletions
     }

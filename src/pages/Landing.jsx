@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, BookOpen, MapPin, Phone, ArrowRight, Sparkles } from 'lucide-react';
+import { GraduationCap, BookOpen, MapPin, Phone, ArrowRight, Sparkles, FileText } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
 export default function Landing() {
@@ -28,12 +28,13 @@ export default function Landing() {
         </div>
       </div>
 
-      <div className="absolute top-4 right-3 sm:top-8 sm:right-8 z-10 animate-fade-in flex items-center gap-3">
+      <div className="absolute top-4 right-3 sm:top-8 sm:right-8 z-10 animate-fade-in flex items-center gap-2 sm:gap-3">
         <Button
-          onClick={() => navigate('/login')}
+          onClick={() => navigate('/report-card')}
           className="bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-11 text-xs sm:text-sm px-3 sm:px-4"
         >
-          Sign In <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+          <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          View Report Card
         </Button>
       </div>
 

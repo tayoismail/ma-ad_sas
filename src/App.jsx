@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
+import ReportCard from './pages/ReportCard';
 import NetworkStatus from './components/NetworkStatus';
 import UpdatePrompt from './components/UpdatePrompt';
 
@@ -94,6 +95,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/report-card" element={<ReportCard />} />
         <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><UsersPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AdminDashboard /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AdminSettings /></ErrorBoundary></ProtectedRoute>} />

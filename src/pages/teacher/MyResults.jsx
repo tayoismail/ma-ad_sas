@@ -173,7 +173,11 @@ export default function TeacherMyResults() {
         setError('No records were saved.');
       }
     } catch (err) {
-      setError(err.message || 'Failed to save results');
+      if (err?.code === 'permission-denied' || /permission/i.test(err?.message || '')) {
+        setError('Permission denied while saving. The Firestore security rules may be out of date — ask your admin to publish the latest firestore.rules, then try again.');
+      } else {
+        setError(err.message || 'Failed to save results');
+      }
     }
     setSaving(false);
   };
