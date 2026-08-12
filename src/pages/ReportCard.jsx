@@ -35,9 +35,16 @@ export default function ReportCard() {
 
   const loadSettings = async () => {
     try {
+      console.log('Loading settings from school_settings...');
       const snap = await getDoc(doc(db, 'settings', 'school_settings'));
-      if (snap.exists()) setSettings(snap.data());
-    } catch { /* ignore */ }
+      console.log('Settings exists:', snap.exists());
+      if (snap.exists()) {
+        console.log('Settings data:', snap.data());
+        setSettings(snap.data());
+      }
+    } catch (err) {
+      console.error('Settings load error:', err);
+    }
   };
 
   const handleSearch = async () => {
@@ -53,8 +60,12 @@ export default function ReportCard() {
     setShowReport(false);
 
     try {
+      console.log('Searching for student ID:', studentId.trim());
+      
       // Find student by studentId
       const studentsSnap = await getDocs(query(collection(db, 'students'), where('studentId', '==', studentId.trim())));
+      console.log('Students found:', studentsSnap.size);
+      
       if (studentsSnap.empty) {
         setError('Student not found. Please check your Student ID.');
         setLoading(false);
@@ -63,11 +74,13 @@ export default function ReportCard() {
 
       const studentDoc = studentsSnap.docs[0];
       const studentData = { id: studentDoc.id, ...studentDoc.data() };
+      console.log('Student data:', studentData);
       setStudent(studentData);
 
       // Check payment status for current semester
       if (settings) {
         const paymentId = `${studentData.studentId}_${settings.currentSession}_sem${settings.currentSemester}`;
+        console.log('Checking payment ID:', paymentId);
         const paymentSnap = await getDoc(doc(db, 'payments', paymentId));
         
         if (paymentSnap.exists() && paymentSnap.data().status === 'completed') {
@@ -77,12 +90,13 @@ export default function ReportCard() {
           setPaymentStatus('unpaid');
         }
       } else {
+        console.log('Settings not loaded yet');
         // Settings not loaded yet, show unpaid state
         setPaymentStatus('unpaid');
       }
     } catch (err) {
-      console.error('Search error:', err);
-      setError('Failed to look up student. Please try again.');
+      console.error('Search error details:', err.message, err.code, err);
+      setError(`Failed to look up student: ${err.message}`);
     }
     setLoading(false);
   };
