@@ -37,11 +37,6 @@ export function downloadExcel(data, filename, sheetName = 'Sheet1') {
 
 export function semesterLabel(sem) {
   const num = Number(sem);
-  return num === 1 ? 'First Semester' : 'Second Semester';
-}
-
-export function semesterLabelAr(sem) {
-  const num = Number(sem);
   return num === 1 ? 'الفصل الدراسي الأول' : 'الفصل الدراسي الثاني';
 }
 

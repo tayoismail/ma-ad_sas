@@ -35,7 +35,7 @@ export default function ReportCard() {
 
   const loadSettings = async () => {
     try {
-      const snap = await getDoc(doc(db, 'settings', 'config'));
+      const snap = await getDoc(doc(db, 'settings', 'school_settings'));
       if (snap.exists()) setSettings(snap.data());
     } catch { /* ignore */ }
   };
