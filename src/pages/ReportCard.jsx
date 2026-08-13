@@ -35,11 +35,8 @@ export default function ReportCard() {
 
   const loadSettings = async () => {
     try {
-      console.log('Loading settings from school_settings...');
       const snap = await getDoc(doc(db, 'settings', 'school_settings'));
-      console.log('Settings exists:', snap.exists());
       if (snap.exists()) {
-        console.log('Settings data:', snap.data());
         setSettings(snap.data());
       }
     } catch (err) {
@@ -60,11 +57,8 @@ export default function ReportCard() {
     setShowReport(false);
 
     try {
-      console.log('Searching for student ID:', studentId.trim());
-      
       // Find student by studentId
       const studentsSnap = await getDocs(query(collection(db, 'students'), where('studentId', '==', studentId.trim())));
-      console.log('Students found:', studentsSnap.size);
       
       if (studentsSnap.empty) {
         setError('Student not found. Please check your Student ID.');
@@ -74,15 +68,12 @@ export default function ReportCard() {
 
       const studentDoc = studentsSnap.docs[0];
       const studentData = { id: studentDoc.id, ...studentDoc.data() };
-      console.log('Student data:', studentData);
       setStudent(studentData);
 
       // Check payment status for current semester
       if (settings) {
-        // Replace / with - in session to avoid invalid Firestore document path
         const safeSession = settings.currentSession.replace(/\//g, '-');
         const paymentId = `${studentData.studentId}_${safeSession}_sem${settings.currentSemester}`;
-        console.log('Checking payment ID:', paymentId);
         const paymentSnap = await getDoc(doc(db, 'payments', paymentId));
         
         if (paymentSnap.exists() && paymentSnap.data().status === 'completed') {
@@ -92,12 +83,10 @@ export default function ReportCard() {
           setPaymentStatus('unpaid');
         }
       } else {
-        console.log('Settings not loaded yet');
-        // Settings not loaded yet, show unpaid state
         setPaymentStatus('unpaid');
       }
     } catch (err) {
-      console.error('Search error details:', err.message, err.code, err);
+      console.error('Search error:', err);
       setError(`Failed to look up student: ${err.message}`);
     }
     setLoading(false);
@@ -124,8 +113,6 @@ export default function ReportCard() {
 
   const flutterwaveConfig = useMemo(() => {
     if (!student) return null;
-    const session = settings?.currentSession || '2024/2025';
-    const semester = settings?.currentSemester || 1;
     return {
       public_key: FLW_PUBLIC_KEY,
       tx_ref: `${student.studentId}_${Date.now()}`,
@@ -181,29 +168,236 @@ export default function ReportCard() {
     
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Report Card - ${student?.name}</title>
           <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; color: #333; }
-            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-            .school-name { font-size: 24px; font-weight: bold; margin: 0; }
-            .school-motto { font-style: italic; color: #666; margin: 5px 0; }
-            .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
-            .info-item { display: flex; gap: 10px; }
-            .info-label { font-weight: bold; min-width: 100px; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background: #f0f0f0; font-weight: bold; }
-            .grade-a { color: #16a34a; font-weight: bold; }
-            .grade-b { color: #2563eb; font-weight: bold; }
-            .grade-c { color: #ca8a04; font-weight: bold; }
-            .grade-d { color: #ea580c; font-weight: bold; }
-            .grade-f { color: #dc2626; font-weight: bold; }
-            .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+            
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            
+            body {
+              font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              color: #1f2937;
+              background: #fff;
+              line-height: 1.5;
+            }
+            
+            .report-container {
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 30px;
+            }
+            
+            /* Header */
+            .report-header {
+              text-align: center;
+              padding-bottom: 20px;
+              margin-bottom: 24px;
+              border-bottom: 3px solid #1f2937;
+            }
+            
+            .school-name {
+              font-size: 28px;
+              font-weight: 800;
+              color: #1f2937;
+              margin-bottom: 4px;
+              letter-spacing: -0.5px;
+            }
+            
+            .school-address {
+              font-size: 12px;
+              color: #6b7280;
+              margin-bottom: 16px;
+            }
+            
+            .report-title {
+              font-size: 18px;
+              font-weight: 700;
+              color: #374151;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+              background: #f3f4f6;
+              padding: 8px 24px;
+              border-radius: 6px;
+              display: inline-block;
+            }
+            
+            /* Student Info */
+            .student-info {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 16px;
+              padding: 16px;
+              background: #f9fafb;
+              border-radius: 10px;
+              margin-bottom: 24px;
+              border: 1px solid #e5e7eb;
+            }
+            
+            .info-item {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+            }
+            
+            .info-label {
+              font-size: 10px;
+              font-weight: 600;
+              color: #9ca3af;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            
+            .info-value {
+              font-size: 14px;
+              font-weight: 600;
+              color: #1f2937;
+            }
+            
+            /* Table */
+            .results-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 24px;
+            }
+            
+            .results-table thead th {
+              background: #1f2937;
+              color: #fff;
+              padding: 12px 16px;
+              text-align: left;
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            
+            .results-table thead th:first-child {
+              border-radius: 8px 0 0 0;
+            }
+            
+            .results-table thead th:last-child {
+              border-radius: 0 8px 0 0;
+            }
+            
+            .results-table tbody td {
+              padding: 12px 16px;
+              border-bottom: 1px solid #e5e7eb;
+              font-size: 13px;
+            }
+            
+            .results-table tbody tr:nth-child(even) {
+              background: #f9fafb;
+            }
+            
+            .results-table tbody tr:hover {
+              background: #f3f4f6;
+            }
+            
+            .results-table tfoot td {
+              padding: 14px 16px;
+              border-top: 3px solid #1f2937;
+              font-weight: 700;
+              background: #f3f4f6;
+            }
+            
+            .text-center { text-align: center; }
+            .text-right { text-align: right; }
+            
+            .grade-badge {
+              display: inline-block;
+              padding: 3px 10px;
+              border-radius: 20px;
+              font-size: 12px;
+              font-weight: 700;
+            }
+            
+            .grade-A { background: #dcfce7; color: #166534; }
+            .grade-B { background: #dbeafe; color: #1e40af; }
+            .grade-C { background: #fef9c3; color: #854d0e; }
+            .grade-D { background: #ffedd5; color: #9a3412; }
+            .grade-F { background: #fee2e2; color: #991b1b; }
+            
+            /* Summary */
+            .summary-section {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 16px;
+              padding: 20px;
+              background: #eff6ff;
+              border-radius: 10px;
+              margin-bottom: 24px;
+              border: 1px solid #bfdbfe;
+            }
+            
+            .summary-item {
+              text-align: center;
+            }
+            
+            .summary-label {
+              font-size: 10px;
+              font-weight: 600;
+              color: #6b7280;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 4px;
+            }
+            
+            .summary-value {
+              font-size: 24px;
+              font-weight: 800;
+              color: #1e40af;
+            }
+            
+            /* Signatures */
+            .signatures {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 40px;
+              margin-top: 40px;
+              padding-top: 24px;
+            }
+            
+            .signature-box {
+              text-align: center;
+            }
+            
+            .signature-line {
+              height: 50px;
+              border-bottom: 1px solid #9ca3af;
+              margin-bottom: 8px;
+            }
+            
+            .signature-label {
+              font-size: 11px;
+              font-weight: 600;
+              color: #374151;
+            }
+            
+            .signature-sublabel {
+              font-size: 9px;
+              color: #9ca3af;
+            }
+            
+            /* Footer */
+            .report-footer {
+              text-align: center;
+              margin-top: 32px;
+              padding-top: 16px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 11px;
+              color: #9ca3af;
+            }
+            
             @media print {
-              body { margin: 0; }
-              .no-print { display: none; }
+              body { margin: 0; padding: 0; }
+              .report-container { padding: 20px; max-width: 100%; }
+              .results-table thead th { background: #1f2937 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .results-table tbody tr:nth-child(even) { background: #f9fafb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .summary-section { background: #eff6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .grade-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
           </style>
         </head>
@@ -217,7 +411,7 @@ export default function ReportCard() {
   };
 
   const handleDownload = () => {
-    handlePrint(); // Same as print for now - user can save as PDF from print dialog
+    handlePrint();
   };
 
   // Calculate totals
@@ -355,77 +549,147 @@ export default function ReportCard() {
             </div>
 
             {/* Printable Report Card */}
-            <Card ref={reportRef} className="p-6 sm:p-8 border-border">
+            <div ref={reportRef} className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden print:shadow-none print:border-0">
               {/* Header */}
-              <div className="text-center border-b-2 border-border pb-6 mb-6">
-                <h1 className="text-2xl sm:text-3xl font-black text-card-foreground mb-1">MA'AD AHLIL AATHAR</h1>
-                <p className="text-muted-foreground italic mb-1">Assessment System</p>
-                <p className="text-sm text-muted-foreground">No 3, Mosadoluwa Street, behind Osogbo Local Govt., Oke Baale, Osogbo, Osun State</p>
+              <div className="text-center py-8 px-6 border-b-4 border-gray-800">
+                <h1 className="text-3xl font-black text-gray-900 mb-1 tracking-tight">MA'AD AHLIL AATHAR</h1>
+                <p className="text-sm text-gray-500 italic mb-2">Assessment System</p>
+                <p className="text-xs text-gray-400">No 3, Mosadoluwa Street, behind Osogbo Local Govt., Oke Baale, Osogbo, Osun State</p>
+                <div className="w-20 h-1 bg-gray-800 mx-auto my-4" />
+                <div className="inline-block bg-gray-100 px-6 py-2 rounded-lg">
+                  <p className="text-sm font-bold text-gray-700 uppercase tracking-widest">Student Report Card</p>
+                </div>
               </div>
 
               {/* Student Info */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-xl mb-6">
-                <div><span className="font-semibold text-card-foreground">Name:</span> <span className="text-muted-foreground">{formatStudentName(student.name)}</span></div>
-                <div><span className="font-semibold text-card-foreground">Student ID:</span> <span className="text-muted-foreground">{student.studentId}</span></div>
-                <div><span className="font-semibold text-card-foreground">Class:</span> <span className="text-muted-foreground">{student.className}</span></div>
-                <div><span className="font-semibold text-card-foreground">Session:</span> <span className="text-muted-foreground">{settings?.currentSession}</span></div>
-                <div><span className="font-semibold text-card-foreground">Term:</span> <span className="text-muted-foreground">{semesterLabel(settings?.currentSemester)}</span></div>
-                <div><span className="font-semibold text-card-foreground">No. of Subjects:</span> <span className="text-muted-foreground">{results.length}</span></div>
+              <div className="p-6 bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="info-item">
+                    <span className="info-label">Student Name</span>
+                    <span className="info-value">{formatStudentName(student.name)}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Student ID</span>
+                    <span className="info-value">{student.studentId}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Class</span>
+                    <span className="info-value">{student.className}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Session</span>
+                    <span className="info-value">{settings?.currentSession}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Term</span>
+                    <span className="info-value">{semesterLabel(settings?.currentSemester)}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">No. of Subjects</span>
+                    <span className="info-value">{results.length}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Results Table */}
-              {results.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              <div className="p-6">
+                {results.length > 0 ? (
+                  <table className="results-table">
                     <thead>
-                      <tr className="bg-muted/50">
-                        <th className="text-left px-4 py-3 font-semibold text-card-foreground">Subject</th>
-                        <th className="text-center px-4 py-3 font-semibold text-card-foreground">Exam</th>
-                        <th className="text-center px-4 py-3 font-semibold text-card-foreground">CA</th>
-                        <th className="text-center px-4 py-3 font-semibold text-card-foreground">Total</th>
-                        <th className="text-center px-4 py-3 font-semibold text-card-foreground">Grade</th>
+                      <tr>
+                        <th className="text-center" style={{ width: '40px' }}>#</th>
+                        <th>Subject</th>
+                        <th className="text-center">Exam</th>
+                        <th className="text-center">CA</th>
+                        <th className="text-center">Total</th>
+                        <th className="text-center">Grade</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {results.map((r) => {
+                      {results.map((r, idx) => {
                         const g = calculateGrade(r.total, settings?.gradingScale);
-                        const gs = gradeStyle(g.grade);
                         return (
-                          <tr key={r.id} className="border-t border-border">
-                            <td className="px-4 py-3 font-medium text-card-foreground">{r.subjectName}</td>
-                            <td className="px-4 py-3 text-center text-muted-foreground">{r.examScore ?? '-'}</td>
-                            <td className="px-4 py-3 text-center text-muted-foreground">{r.testScore ?? '-'}</td>
-                            <td className="px-4 py-3 text-center font-semibold text-card-foreground">{r.total}</td>
-                            <td className="px-4 py-3 text-center">
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${gs.text} ${gs.bg}`}>{g.grade}</span>
+                          <tr key={r.id}>
+                            <td className="text-center text-gray-400">{idx + 1}</td>
+                            <td style={{ fontWeight: 600 }}>{r.subjectName}</td>
+                            <td className="text-center">{r.examScore ?? '-'}</td>
+                            <td className="text-center">{r.testScore ?? '-'}</td>
+                            <td className="text-center" style={{ fontWeight: 700 }}>{r.total}</td>
+                            <td className="text-center">
+                              <span className={`grade-badge grade-${g.grade}`}>{g.grade}</span>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                     <tfoot>
-                      <tr className="border-t-2 border-border bg-muted/30">
-                        <td colSpan={3} className="px-4 py-3 font-bold text-card-foreground text-right">Average:</td>
-                        <td className="px-4 py-3 text-center font-bold text-card-foreground text-lg">{averageScore}</td>
-                        <td className="px-4 py-3 text-center">
-                          {(() => { const gs = gradeStyle(overallGrade.grade); return <span className={`px-2 py-0.5 rounded text-xs font-bold ${gs.text} ${gs.bg}`}>{overallGrade.grade}</span>; })()}
+                      <tr>
+                        <td colSpan={4} className="text-right" style={{ fontWeight: 800 }}>Average:</td>
+                        <td className="text-center" style={{ fontSize: '18px', fontWeight: 800 }}>{averageScore}</td>
+                        <td className="text-center">
+                          <span className={`grade-badge grade-${overallGrade.grade}`} style={{ fontSize: '14px' }}>{overallGrade.grade}</span>
                         </td>
                       </tr>
                     </tfoot>
                   </table>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No results available for this term.</p>
+                ) : (
+                  <div className="text-center py-12 text-gray-400">
+                    <p className="text-lg">No results available for this term.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Summary */}
+              {results.length > 0 && (
+                <div className="px-6 pb-6">
+                  <div className="summary-section">
+                    <div className="summary-item">
+                      <p className="summary-label">Total Subjects</p>
+                      <p className="summary-value">{results.length}</p>
+                    </div>
+                    <div className="summary-item">
+                      <p className="summary-label">Total Score</p>
+                      <p className="summary-value">{totalScore}</p>
+                    </div>
+                    <div className="summary-item">
+                      <p className="summary-label">Average</p>
+                      <p className="summary-value">{averageScore}</p>
+                    </div>
+                    <div className="summary-item">
+                      <p className="summary-label">Grade</p>
+                      <p className="summary-value">{overallGrade.grade}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
+              {/* Signatures */}
+              <div className="px-6 pb-6">
+                <div className="signatures">
+                  <div className="signature-box">
+                    <div className="signature-line" />
+                    <p className="signature-label">Class Teacher</p>
+                    <p className="signature-sublabel">Signature & Date</p>
+                  </div>
+                  <div className="signature-box">
+                    <div className="signature-line" />
+                    <p className="signature-label">Principal</p>
+                    <p className="signature-sublabel">Signature & Date</p>
+                  </div>
+                  <div className="signature-box">
+                    <div className="signature-line" />
+                    <p className="signature-label">School Stamp</p>
+                    <p className="signature-sublabel">Official Seal</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Footer */}
-              <div className="mt-8 pt-6 border-t border-border text-center text-xs text-muted-foreground">
+              <div className="report-footer">
                 <p>Generated on {new Date().toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 <p className="mt-1">&copy; {new Date().getFullYear()} MA'AD AHLIL AATHAR. All rights reserved.</p>
               </div>
-            </Card>
+            </div>
           </>
         )}
 

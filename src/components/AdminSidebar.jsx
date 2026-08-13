@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Users, GraduationCap, School, BookMarked, CalendarDays,
-  Award, Printer, TrendingUp, Database, Settings, LayoutDashboard, LogOut, Shield, ClipboardList
+  Award, Printer, TrendingUp, Database, Settings, LayoutDashboard, LogOut, Shield, ClipboardList, CreditCard
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { Button } from './ui/button';
@@ -15,6 +15,7 @@ const allLinks = [
   { label: 'Attendance', icon: CalendarDays, path: '/admin/attendance' },
   { label: 'Results', icon: Award, path: '/admin/results' },
   { label: 'Reports', icon: Printer, path: '/admin/reports' },
+  { label: 'Payments', icon: CreditCard, path: '/admin/payments' },
   { label: 'Promotion', icon: TrendingUp, path: '/admin/promotion' },
   { label: 'Backup', icon: Database, path: '/admin/backup' },
   { label: 'Audit Log', icon: Shield, path: '/admin/audit' },

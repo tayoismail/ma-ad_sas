@@ -38,6 +38,7 @@ const ParentChildrenResults = lazy(() => import('./pages/parent/ChildrenResults'
 const ParentChildrenAttendance = lazy(() => import('./pages/parent/ChildrenAttendance'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AuditLogPage = lazy(() => import('./pages/admin/AuditLog'));
+const PaymentsPage = lazy(() => import('./pages/admin/Payments'));
 
 export default function App() {
   const { init, isLoading, isAuthenticated, updateLastActivity, checkSession, logout } = useAuthStore();
@@ -112,6 +113,7 @@ export default function App() {
         <Route path="/admin/transcript/:id" element={<ProtectedRoute roles={['admin', 'teacher', 'student']}><ErrorBoundary><AdminTranscript /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'teacher']}><ErrorBoundary><ReportsPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/backup" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><BackupPage /></ErrorBoundary></ProtectedRoute>} />
+        <Route path="/admin/payments" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><PaymentsPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/admin/audit" element={<ProtectedRoute roles={['admin']}><ErrorBoundary><AuditLogPage /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherDashboard /></ErrorBoundary></ProtectedRoute>} />
         <Route path="/teacher/students" element={<ProtectedRoute roles={['teacher']}><ErrorBoundary><TeacherMyStudents /></ErrorBoundary></ProtectedRoute>} />
