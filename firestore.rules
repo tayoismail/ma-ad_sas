@@ -137,9 +137,9 @@ service cloud.firestore {
       allow update, delete: if false;  // immutable — no edits or deletions
     }
 
-    // ─── Payments: append-only for authenticated users, admin-readable ──
+    // ─── Payments: public read (for report card page), authenticated create ──
     match /payments/{doc} {
-      allow read: if isAuth();
+      allow read: if true;  // public for report card payment verification
       allow create: if isAuth();
       allow update, delete: if false;  // immutable — no edits or deletions
     }
