@@ -79,7 +79,9 @@ export default function ReportCard() {
 
       // Check payment status for current semester
       if (settings) {
-        const paymentId = `${studentData.studentId}_${settings.currentSession}_sem${settings.currentSemester}`;
+        // Replace / with - in session to avoid invalid Firestore document path
+        const safeSession = settings.currentSession.replace(/\//g, '-');
+        const paymentId = `${studentData.studentId}_${safeSession}_sem${settings.currentSemester}`;
         console.log('Checking payment ID:', paymentId);
         const paymentSnap = await getDoc(doc(db, 'payments', paymentId));
         
@@ -146,7 +148,8 @@ export default function ReportCard() {
     closePaymentModal();
     if (response.status === 'successful') {
       try {
-        const paymentId = `${student.studentId}_${settings.currentSession}_sem${settings.currentSemester}`;
+        const safeSession = settings.currentSession.replace(/\//g, '-');
+        const paymentId = `${student.studentId}_${safeSession}_sem${settings.currentSemester}`;
         await setDoc(doc(db, 'payments', paymentId), {
           studentId: student.studentId,
           studentName: student.name,
