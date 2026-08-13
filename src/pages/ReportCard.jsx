@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, CreditCard, Printer, Download, ArrowLeft, GraduationCap, CheckCircle2, Loader2, AlertCircle, Moon, Sun, FileText, Award } from 'lucide-react';
-import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
+import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useThemeStore } from '../store/themeStore';
@@ -111,25 +111,22 @@ export default function ReportCard() {
     }
   };
 
-  const flutterwaveConfig = useMemo(() => {
-    if (!student) return null;
-    return {
-      public_key: FLW_PUBLIC_KEY,
-      tx_ref: `${student.studentId}_${Date.now()}`,
-      amount: PAYMENT_AMOUNT,
-      currency: 'NGN',
-      payment_options: 'card,banktransfer,ussd',
-      customer: {
-        email: `${student.studentId}@mahd.edu.ng`,
-        name: student.name,
-      },
-      customizations: {
-        title: "MA'AD AHLIL AATHAR",
-        description: `Report Card Fee - ${student.name} (${student.className})`,
-        logo: '',
-      },
-    };
-  }, [student]);
+  const handleFlutterwave = useFlutterwave({
+    public_key: FLW_PUBLIC_KEY,
+    tx_ref: student ? `${student.studentId}_${Date.now()}` : `unknown_${Date.now()}`,
+    amount: PAYMENT_AMOUNT,
+    currency: 'NGN',
+    payment_options: 'card,banktransfer,ussd',
+    customer: student ? {
+      email: `${student.studentId}@mahd.edu.ng`,
+      name: student.name,
+    } : { email: 'unknown@test.com', name: 'Unknown' },
+    customizations: {
+      title: "MA'AD AHLIL AATHAR",
+      description: student ? `Report Card Fee - ${student.name} (${student.className})` : 'Report Card Fee',
+      logo: '',
+    },
+  });
 
   const handleFlutterwaveCallback = async (response) => {
     closePaymentModal();
@@ -506,22 +503,13 @@ export default function ReportCard() {
                 </div>
               </div>
               <div className="flex-shrink-0">
-                {flutterwaveConfig ? (
-                  <FlutterWaveButton
-                    {...flutterwaveConfig}
-                    callback={handleFlutterwaveCallback}
-                    onClose={() => setPaymentLoading(false)}
-                    className="gradient-accent text-white h-12 px-8 text-lg font-bold rounded-xl border-0 cursor-pointer"
-                  >
-                    <CreditCard className="w-5 h-5 mr-2 inline" />
-                    Pay ₦{PAYMENT_AMOUNT.toLocaleString()}
-                  </FlutterWaveButton>
-                ) : (
-                  <Button disabled className="h-12 px-8 text-lg font-bold">
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    Loading...
-                  </Button>
-                )}
+                <Button
+                  onClick={() => handleFlutterwave({ callback: handleFlutterwaveCallback })}
+                  className="gradient-accent text-white h-12 px-8 text-lg font-bold rounded-xl"
+                >
+                  <CreditCard className="w-5 h-5 mr-2 inline" />
+                  Pay ₦{PAYMENT_AMOUNT.toLocaleString()}
+                </Button>
               </div>
             </div>
             <p className="text-xs text-muted-foreground text-center sm:text-left mt-4">
