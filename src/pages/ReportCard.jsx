@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, CreditCard, Printer, Download, ArrowLeft, GraduationCap, CheckCircle2, Loader2, AlertCircle, Moon, Sun, FileText, Award } from 'lucide-react';
-import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { Search, CreditCard, Printer, Download, ArrowLeft, GraduationCap, CheckCircle2, Loader2, AlertCircle, Moon, Sun, FileText } from 'lucide-react';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useThemeStore } from '../store/themeStore';
@@ -111,52 +110,87 @@ export default function ReportCard() {
     }
   };
 
-  const handleFlutterwave = useFlutterwave({
-    public_key: FLW_PUBLIC_KEY,
-    tx_ref: student ? `${student.studentId}_${Date.now()}` : `unknown_${Date.now()}`,
-    amount: PAYMENT_AMOUNT,
-    currency: 'NGN',
-    payment_options: 'card,banktransfer,ussd',
-    customer: student ? {
-      email: `${student.studentId}@mahd.edu.ng`,
-      name: student.name,
-    } : { email: 'unknown@test.com', name: 'Unknown' },
-    customizations: {
-      title: "MA'AD AHLIL AATHAR",
-      description: student ? `Report Card Fee - ${student.name} (${student.className})` : 'Report Card Fee',
-      logo: '',
-    },
-  });
+  // Load Flutterwave inline checkout script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.flutterwave.com/v3.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      // Don't remove on unmount in case other components use it
+    };
+  }, []);
 
-  const handleFlutterwaveCallback = async (response) => {
-    closePaymentModal();
-    if (response.status === 'successful') {
-      try {
-        const safeSession = settings.currentSession.replace(/\//g, '-');
-        const paymentId = `${student.studentId}_${safeSession}_sem${settings.currentSemester}`;
-        await setDoc(doc(db, 'payments', paymentId), {
-          studentId: student.studentId,
-          studentName: student.name,
-          className: student.className,
-          session: settings.currentSession,
-          semester: settings.currentSemester,
-          amount: PAYMENT_AMOUNT,
-          currency: 'NGN',
-          transactionId: response.transaction_id,
-          reference: response.tx_ref,
-          status: 'completed',
-          paidAt: new Date().toISOString(),
-        });
-        setPaymentStatus('paid');
-        await loadResults(student, settings);
-      } catch (err) {
-        console.error('Payment save error:', err);
-        setError('Payment verified but failed to save. Please contact support.');
-      }
-    } else {
-      setError('Payment was not successful. Please try again.');
+  const savePaymentRecord = async (response) => {
+    if (!student || !settings) return;
+    const safeSession = settings.currentSession.replace(/\//g, '-');
+    const paymentId = `${student.studentId}_${safeSession}_sem${settings.currentSemester}`;
+    try {
+      await setDoc(doc(db, 'payments', paymentId), {
+        studentId: student.studentId,
+        studentName: student.name,
+        className: student.className,
+        session: settings.currentSession,
+        semester: settings.currentSemester,
+        amount: PAYMENT_AMOUNT,
+        currency: 'NGN',
+        transactionId: response.transaction_id || '',
+        reference: response.tx_ref || '',
+        status: 'completed',
+        paidAt: new Date().toISOString(),
+      });
+      setPaymentStatus('paid');
+      await loadResults(student, settings);
+    } catch (err) {
+      console.error('Payment save error:', err);
+      setError('Payment verified but failed to save. Please contact support.');
     }
-    setPaymentLoading(false);
+  };
+
+  const openFlutterwaveCheckout = () => {
+    if (!student || !settings) return;
+    if (!window.FlutterwaveCheckout) {
+      setError('Payment system is still loading. Please wait a moment and try again.');
+      return;
+    }
+
+    const txRef = `${student.studentId}_${Date.now()}`;
+
+    try {
+      window.FlutterwaveCheckout({
+        public_key: FLW_PUBLIC_KEY,
+        tx_ref: txRef,
+        amount: PAYMENT_AMOUNT,
+        currency: 'NGN',
+        payment_options: 'card,banktransfer,ussd',
+        customer: {
+          email: `${student.studentId}@mahd.edu.ng`,
+          name: student.name,
+        },
+        customizations: {
+          title: "MA'AD AHLIL AATHAR",
+          description: `Report Card Fee - ${student.name} (${student.className})`,
+          logo: '',
+        },
+        callback: async function (response) {
+          console.log('Flutterwave callback:', response);
+          if (response.status === 'successful') {
+            await savePaymentRecord(response);
+          } else {
+            setError('Payment was not successful. Please try again.');
+            setPaymentLoading(false);
+          }
+        },
+        onclose: function () {
+          console.log('Flutterwave modal closed');
+          setPaymentLoading(false);
+        },
+      });
+    } catch (err) {
+      console.error('Flutterwave error:', err);
+      setError('Failed to initialize payment. Please try again.');
+      setPaymentLoading(false);
+    }
   };
 
   const handlePrint = () => {
@@ -504,7 +538,7 @@ export default function ReportCard() {
               </div>
               <div className="flex-shrink-0">
                 <Button
-                  onClick={() => handleFlutterwave({ callback: handleFlutterwaveCallback })}
+                  onClick={openFlutterwaveCheckout}
                   className="gradient-accent text-white h-12 px-8 text-lg font-bold rounded-xl"
                 >
                   <CreditCard className="w-5 h-5 mr-2 inline" />
